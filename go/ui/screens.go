@@ -1250,6 +1250,7 @@ func slotsKey(k string) bool {
 var (
 	capturing   bool
 	captureWait float64
+	captureHold float64
 )
 
 // openControls shows the rebinding table.
@@ -1276,7 +1277,16 @@ func PollCapture(dt float64) {
 	}
 	kind, code, ok := input.Capture()
 	if !ok {
-		return
+		// a key may already be down when the prompt opens; give the fresh-press
+		// path a moment, then accept a held key as well
+		if captureHold > 0 {
+			captureHold -= dt
+			return
+		}
+		kind, code, ok = input.CaptureDown()
+		if !ok {
+			return
+		}
 	}
 	acts := input.Actions()
 	if S.Control < 0 || S.Control >= len(acts) {
@@ -1331,7 +1341,11 @@ func controlsScreen(fb *render.FB) {
 		a := acts[idx]
 		fb.Text(input.Name(a), 16, y, col, 1)
 		if sel && capturing {
-			fb.TextR("PRESS KEY", 234, y, ColYellow, 1)
+			if seen := input.PeekDown(); seen != "" {
+				fb.TextR(seen, 234, y, ColGreen, 1)
+			} else {
+				fb.TextR("PRESS KEY", 234, y, ColYellow, 1)
+			}
 		} else {
 			fb.TextR(input.KeyDesc(a), 234, y, ColText, 1)
 		}
@@ -1343,9 +1357,13 @@ func controlsScreen(fb *render.FB) {
 	if off+visible < rows {
 		fb.Text("v", 296, 186, ColDim, 1)
 	}
-	if capturing {
+	switch {
+	case capturing:
 		Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
-	} else {
+	case input.PeekDown() != "":
+		// live read-out: makes it obvious whether the platform sends the key
+		Hint = "KEY SEEN: " + input.PeekDown() + "   ENTER REBIND   ESC BACK"
+	default:
 		Hint = "UP/DOWN   ENTER REBIND   ESC BACK"
 	}
 }
@@ -1376,6 +1394,7 @@ func controlsKey(k string) bool {
 		}
 		capturing = true
 		captureWait = 0.05
+		captureHold = 0.4
 		return true
 	}
 	return true

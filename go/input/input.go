@@ -224,6 +224,29 @@ func firstPad() ebiten.GamepadID {
 
 // Capture returns the first key or pad button pressed this frame, for the
 // rebinding prompt. ok is false when nothing is down.
+// CaptureDown reports a bindable key that is simply held. It is the fallback
+// for keys the platform never reports as a fresh press (a key that went down
+// before the window had focus, or a sticky/dead key on an unusual layout).
+func CaptureDown() (kind string, code int32, ok bool) {
+	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
+		if !Bindable(k) {
+			continue
+		}
+		if ebiten.IsKeyPressed(k) {
+			return "key", int32(k), true
+		}
+	}
+	return "", 0, false
+}
+
+// PeekDown names a bindable key currently held, for the rebinding prompt.
+func PeekDown() string {
+	if _, code, ok := CaptureDown(); ok {
+		return KeyName(code)
+	}
+	return ""
+}
+
 // Capture looks for a key or pad button pressed in this frame. It deliberately
 // watches for a fresh press, not for a held key: the Enter that starts the
 // prompt is often still down, and a held-key check bound Enter instead of

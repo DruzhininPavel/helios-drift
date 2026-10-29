@@ -4,7 +4,6 @@ go/heliosdrift
 go/elite16
 dist/
 *.app/
-*.icns
 *.zip
 *.tar.gz
 
