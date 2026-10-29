@@ -59,7 +59,8 @@ func (g *Game) Update(dt float64) {
 			if g.Classic() {
 				g.warnYaw()
 			} else {
-				p.Mat = p.Mat.Mul(render.RotY(g.In.Yaw * YawRate * dt))
+				// negative: a positive yaw input means "nose to the right"
+				p.Mat = p.Mat.Mul(render.RotY(-g.In.Yaw * YawRate * dt))
 			}
 		}
 		if g.In.Pitch != 0 || g.In.Roll != 0 || (!g.Classic() && g.In.Yaw != 0) {
