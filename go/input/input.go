@@ -69,7 +69,13 @@ type Binding struct {
 // Map is the full action table.
 type Map map[Action]Binding
 
-const noPad = int32(-1)
+// noPad and noKey are the "unbound" sentinels. Keys cannot use 0 for that:
+// ebiten.KeyA is the zero value, and treating it as "empty" made the A key
+// impossible to bind, display or press.
+const (
+	noPad = int32(-1)
+	noKey = int32(-1)
+)
 
 // Defaults returns the stock layout: arrows and WASD for steering, the keys the
 // game has always used for everything else, and pad buttons for the common acts.
@@ -155,7 +161,7 @@ func KeysPressed(a Action) bool {
 		return false
 	}
 	for _, k := range b.Keys {
-		if k > 0 && ebiten.IsKeyPressed(ebiten.Key(k)) {
+		if k >= 0 && ebiten.IsKeyPressed(ebiten.Key(k)) {
 			return true
 		}
 	}
@@ -200,7 +206,7 @@ func KeyDesc(a Action) string {
 	}
 	out := ""
 	for i, k := range b.Keys {
-		if k <= 0 {
+		if k < 0 {
 			continue
 		}
 		if i > 0 && out != "" {
@@ -228,7 +234,7 @@ func firstPad() ebiten.GamepadID {
 // for keys the platform never reports as a fresh press (a key that went down
 // before the window had focus, or a sticky/dead key on an unusual layout).
 func CaptureDown() (kind string, code int32, ok bool) {
-	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
+	for k := ebiten.Key(0); k <= ebiten.KeyMax; k++ {
 		if !Bindable(k) {
 			continue
 		}
@@ -252,7 +258,7 @@ func PeekDown() string {
 // prompt is often still down, and a held-key check bound Enter instead of
 // whatever the player was aiming for.
 func Capture() (kind string, code int32, ok bool) {
-	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
+	for k := ebiten.Key(0); k <= ebiten.KeyMax; k++ {
 		if !Bindable(k) {
 			continue
 		}

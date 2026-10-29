@@ -126,3 +126,35 @@ func TestBindableKeys(t *testing.T) {
 		}
 	}
 }
+
+// KeyA is the zero value of ebiten.Key, so a scan that starts at Key(1) skips
+// it. That is exactly how the A key became the one key nobody could bind.
+func TestKeyAIsScanned(t *testing.T) {
+	if ebiten.KeyA != 0 {
+		t.Skipf("ebiten.KeyA is %d; the scan start needs revisiting", ebiten.KeyA)
+	}
+	if !Bindable(ebiten.KeyA) {
+		t.Fatal("A must be bindable")
+	}
+	SetKey(RollLeft, int32(ebiten.KeyA))
+	if got := KeyDesc(RollLeft); got != "A" {
+		t.Fatalf("roll left = %q", got)
+	}
+	Reset()
+}
+
+// The stock layout has to show and honour A: it is the zero key value.
+func TestDefaultsIncludeA(t *testing.T) {
+	Reset()
+	if got := KeyDesc(RollLeft); got != "LEFT/A" {
+		t.Fatalf("roll left = %q, want LEFT/A", got)
+	}
+	if !KeysPressed(RollLeft) {
+		// nothing is physically pressed in a test, but the scan must not skip A
+		for _, k := range Cur[RollLeft].Keys {
+			if k < 0 {
+				t.Fatalf("roll left has an unset key: %v", Cur[RollLeft].Keys)
+			}
+		}
+	}
+}
