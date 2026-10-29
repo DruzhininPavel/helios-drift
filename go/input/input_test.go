@@ -274,3 +274,24 @@ func TestLegacyKeysFileMerges(t *testing.T) {
 	}
 	Reset()
 }
+
+// A stick counts when it crosses the threshold, not when it is already held.
+func TestAxisCrossing(t *testing.T) {
+	cases := []struct {
+		prev, cur float64
+		dir       int32
+		ok        bool
+	}{
+		{0, 0.8, 1, true},
+		{0, -0.9, -1, true},
+		{0.7, 0.9, 0, false}, // already past: no second trigger
+		{0.5, 0.3, 0, false}, // never crossed
+		{-0.8, -0.7, 0, false},
+	}
+	for _, c := range cases {
+		dir, ok := axisCrossed(c.prev, c.cur)
+		if ok != c.ok || dir != c.dir {
+			t.Fatalf("axisCrossed(%v,%v) = %d,%v want %d,%v", c.prev, c.cur, dir, ok, c.dir, c.ok)
+		}
+	}
+}

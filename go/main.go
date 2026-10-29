@@ -53,10 +53,6 @@ func (a *App) Update() error {
 	g := game.G
 	dt := 1.0 / 60.0
 
-	// keep the axis history fresh so a stick already pushed when a rebinding
-	// prompt opens is not captured by accident
-	input.Poll()
-
 	// rebinding prompt: while it is up, swallow everything except Escape
 	if ui.IsCapturing() {
 		if ebiten.IsKeyPressed(ebiten.KeyEscape) {

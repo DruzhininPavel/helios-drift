@@ -419,32 +419,44 @@ func Capture() (kind string, code, dir int32, ok bool) {
 			return "pad", int32(b), 0, true
 		}
 	}
+	// an axis counts once it crosses the threshold: the baseline is the
+	// position at the moment the prompt opened, so a stick already held does
+	// not bind itself
 	for ax := int32(0); ax <= AxisTR; ax++ {
 		v := ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
-		if prev[ax] > -AxisThreshold && prev[ax] < AxisThreshold &&
-			(v <= -AxisThreshold || v >= AxisThreshold) {
-			d := int32(1)
-			if v < 0 {
-				d = -1
-			}
+		if d, ok := axisCrossed(baseline[ax], v); ok {
 			return "axis", ax, d, true
 		}
 	}
 	return "", 0, 0, false
 }
 
-// prev remembers the last axis positions so a stick already pushed when the
-// prompt opened is not captured on the first frame.
-var prev [6]float64
+// axisCrossed reports a fresh push past the threshold.
+func axisCrossed(prev, cur float64) (int32, bool) {
+	if prev > -AxisThreshold && prev < AxisThreshold {
+		switch {
+		case cur <= -AxisThreshold:
+			return -1, true
+		case cur >= AxisThreshold:
+			return 1, true
+		}
+	}
+	return 0, false
+}
 
-// Poll records the axis positions; call it once per frame.
-func Poll() {
+// baseline holds the axis positions from when the prompt opened.
+var baseline [6]float64
+
+// BeginCapture snapshots the current axis positions, so the next push is what
+// gets bound and not a stick that was already held.
+func BeginCapture() {
+	baseline = [6]float64{}
 	id := firstPad()
 	if id < 0 {
 		return
 	}
 	for ax := int32(0); ax <= AxisTR; ax++ {
-		prev[ax] = ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
+		baseline[ax] = ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
 	}
 }
 
@@ -466,6 +478,32 @@ func CaptureDown() (kind string, code int32, ok bool) {
 func PeekDown() string {
 	if _, code, ok := CaptureDown(); ok {
 		return KeyName(code)
+	}
+	return ""
+}
+
+// PeekAxis names a stick or trigger currently deflected, so the rebinding
+// prompt can show that the push is being seen. Triggers only count upwards:
+// some drivers rest them at -1.
+func PeekAxis() string {
+	id := firstPad()
+	if id < 0 {
+		return ""
+	}
+	for ax := int32(0); ax <= AxisTR; ax++ {
+		v := ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
+		if ax >= AxisTL {
+			if v >= 0.3 {
+				return AxisName(ax, 1)
+			}
+			continue
+		}
+		if v <= -0.35 {
+			return AxisName(ax, -1)
+		}
+		if v >= 0.35 {
+			return AxisName(ax, 1)
+		}
 	}
 	return ""
 }
