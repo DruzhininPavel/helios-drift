@@ -552,8 +552,7 @@ func Key(k string) bool {
 	}
 	if g.Screen == "padtest" {
 		if k == "Escape" || k == "Enter" {
-			game.G.Screen = "settings"
-			S.Settings = 4
+			game.G.Screen = S.PadTestFrom
 		}
 		return true
 	}
@@ -567,10 +566,10 @@ func Key(k string) bool {
 	case "title":
 		switch k {
 		case "ArrowUp":
-			S.Title = (S.Title + 2) % 3
+			S.Title = (S.Title + 3) % 4
 			return true
 		case "ArrowDown":
-			S.Title = (S.Title + 1) % 3
+			S.Title = (S.Title + 1) % 4
 			return true
 		case "1":
 			openMode()
@@ -585,6 +584,9 @@ func Key(k string) bool {
 		case "3":
 			OpenSettings()
 			return true
+		case "4":
+			quitRequested = true
+			return true
 		case "Enter":
 			switch S.Title {
 			case 0:
@@ -597,6 +599,8 @@ func Key(k string) bool {
 				}
 			case 2:
 				OpenSettings()
+			case 3:
+				quitRequested = true
 			}
 			return true
 		}
@@ -930,7 +934,7 @@ func OpenSettings() {
 
 func settingsScreen(fb *render.FB) {
 	plate(fb, 40, 20, 240, 158, "")
-	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "CONTROLS", "PAD TEST", "BACK"}
+	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "CONTROLS", "BACK"}
 	for i, name := range rows {
 		y := 42 + i*28
 		sel := S.Settings == i
@@ -965,7 +969,7 @@ func settingsScreen(fb *render.FB) {
 				}
 				fb.FillRect(224+k*9, y-1, 230+k*9, y+6, c)
 			}
-		case 3, 4:
+		case 3:
 			fb.TextR(">", 264, y, ColGreen, 1)
 		}
 	}
@@ -976,9 +980,9 @@ func settingsScreen(fb *render.FB) {
 func settingsKey(k string) bool {
 	switch k {
 	case "ArrowUp":
-		S.Settings = (S.Settings + 5) % 6
+		S.Settings = (S.Settings + 4) % 5
 	case "ArrowDown":
-		S.Settings = (S.Settings + 1) % 6
+		S.Settings = (S.Settings + 1) % 5
 	case "Escape":
 		closeSettings()
 	case "Enter", "ArrowLeft", "ArrowRight":
@@ -1016,8 +1020,6 @@ func settingsKey(k string) bool {
 		case 3:
 			openControls()
 		case 4:
-			openPadTest()
-		case 5:
 			closeSettings()
 		}
 	}
@@ -1342,7 +1344,7 @@ func galSystems(g int) []*galaxy.System { return galaxy.Get(g).Systems }
 
 func controlsScreen(fb *render.FB) {
 	acts := input.Actions()
-	rows := len(acts) + 1
+	rows := len(acts) + 2
 	const visible = 10
 	plate(fb, 4, 16, 312, 184, "CONTROLS")
 	fb.Text("ACTION", 12, 28, ColDim, 1)
@@ -1366,6 +1368,10 @@ func controlsScreen(fb *render.FB) {
 		}
 		if idx == len(acts) {
 			fb.TextC("RESET DEFAULTS", 160, y, ColGreen, 1)
+			continue
+		}
+		if idx == len(acts)+1 {
+			fb.TextC("PAD TEST", 160, y, ColGreen, 1)
 			continue
 		}
 		a := acts[idx]
@@ -1417,7 +1423,7 @@ func controlsScreen(fb *render.FB) {
 
 func controlsKey(k string) bool {
 	acts := input.Actions()
-	rows := len(acts) + 1
+	rows := len(acts) + 2 // actions, RESET DEFAULTS, PAD TEST
 	switch k {
 	case "Escape":
 		capturing = false
@@ -1433,10 +1439,14 @@ func controlsKey(k string) bool {
 		S.Control = (S.Control + 1) % rows
 		return true
 	case "Enter":
-		if S.Control == rows-1 {
+		if S.Control == rows-2 {
 			input.Reset()
 			input.Save()
 			game.G.Message("CONTROLS RESET", "good")
+			return true
+		}
+		if S.Control == rows-1 {
+			openPadTest("controls")
 			return true
 		}
 		capturing = true
@@ -1470,7 +1480,8 @@ func shiftHeld() bool {
 // openPadTest shows, live, what the gamepad actually reports: raw SDL axes,
 // the standard stick axes and every button. It exists so a mapping problem can
 // be diagnosed by wiggling a stick instead of guessing.
-func openPadTest() {
+func openPadTest(from string) {
+	S.PadTestFrom = from
 	game.G.Screen = "padtest"
 }
 

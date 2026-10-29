@@ -68,6 +68,15 @@ func TestSettingsLanguageToggle(t *testing.T) {
 	lang.Set("en")
 }
 
+func TestTitleHasQuit(t *testing.T) {
+	newTitle()
+	S.Title = 3
+	Key("Enter")
+	if !QuitRequested() {
+		t.Fatal("QUIT did not ask to leave")
+	}
+}
+
 func TestSettingsNavigation(t *testing.T) {
 	newTitle()
 	OpenSettings()
@@ -81,8 +90,8 @@ func TestSettingsNavigation(t *testing.T) {
 		t.Fatalf("up -> %d, want 0", S.Settings)
 	}
 	Key("ArrowUp")
-	if S.Settings != 5 {
-		t.Fatalf("up from first -> %d, want 5 (wrap)", S.Settings)
+	if S.Settings != 4 {
+		t.Fatalf("up from first -> %d, want 4 (wrap)", S.Settings)
 	}
 }
 
@@ -160,7 +169,7 @@ func TestControlsScreen(t *testing.T) {
 	if S.Control != 1 {
 		t.Fatalf("selection = %d, want 1", S.Control)
 	}
-	rows := len(input.Actions()) + 1
+	rows := len(input.Actions()) + 2
 	S.Control = 0
 	Key("ArrowUp")
 	if S.Control != rows-1 {
@@ -175,9 +184,7 @@ func TestControlsScreen(t *testing.T) {
 	input.Reset()
 	want := input.KeyDesc(input.Fire)
 	input.SetKey(input.Fire, 999)
-	for i := 0; i < len(input.Actions()); i++ {
-		Key("ArrowDown")
-	}
+	S.Control = len(input.Actions())
 	if S.Control != len(input.Actions()) {
 		t.Fatalf("selection = %d, want the reset row %d", S.Control, len(input.Actions()))
 	}
@@ -270,13 +277,18 @@ func TestCampaignScreen(t *testing.T) {
 func TestPadTestReachable(t *testing.T) {
 	newTitle()
 	OpenSettings()
-	S.Settings = 4
+	S.Settings = 3 // CONTROLS
+	Key("Enter")
+	if game.G.Screen != "controls" {
+		t.Fatalf("screen = %q, want controls", game.G.Screen)
+	}
+	S.Control = len(input.Actions()) + 1 // PAD TEST is the last row
 	Key("Enter")
 	if game.G.Screen != "padtest" {
 		t.Fatalf("screen = %q, want padtest", game.G.Screen)
 	}
 	Key("Escape")
-	if game.G.Screen != "settings" {
-		t.Fatalf("after escape screen = %q", game.G.Screen)
+	if game.G.Screen != "controls" {
+		t.Fatalf("after escape screen = %q, want controls", game.G.Screen)
 	}
 }

@@ -38,9 +38,22 @@ type Sel struct {
 	Settings            int
 	PrevState           string
 	PrevScreen          string
+	PadTestFrom         string
 }
 
 var S = Sel{ChartCursor: -1}
+
+// quitRequested is set by the title screen and read by the main loop, which
+// is the only place that can end the run.
+var quitRequested bool
+
+// QuitRequested reports and clears a request to leave the game.
+func QuitRequested() bool {
+	q := quitRequested
+	quitRequested = false
+	return q
+}
+
 var Hint string
 
 func money(v float64) string { return strconv.FormatFloat(math.Round(v*10)/10, 'f', 1, 64) }
@@ -829,16 +842,24 @@ func Title(fb *render.FB) {
 	}
 	const menuX = 116
 	const markX = 102
-	fb.Text("NEW GAME", menuX, 150, newCol, 1)
-	fb.Text("LOAD COMMANDER", menuX, 164, loadCol2, 1)
-	fb.Text("SETTINGS", menuX, 178, setCol, 1)
+	quitCol := ColText
+	switch S.Title {
+	case 3:
+		quitCol = ColYellow
+	}
+	fb.Text("NEW GAME", menuX, 138, newCol, 1)
+	fb.Text("LOAD COMMANDER", menuX, 152, loadCol2, 1)
+	fb.Text("SETTINGS", menuX, 166, setCol, 1)
+	fb.Text("QUIT", menuX, 180, quitCol, 1)
 	switch S.Title {
 	case 0:
-		fb.Text(">", markX, 150, ColYellow, 1)
+		fb.Text(">", markX, 138, ColYellow, 1)
 	case 1:
-		fb.Text(">", markX, 164, ColYellow, 1)
+		fb.Text(">", markX, 152, ColYellow, 1)
 	case 2:
-		fb.Text(">", markX, 178, ColYellow, 1)
+		fb.Text(">", markX, 166, ColYellow, 1)
+	case 3:
+		fb.Text(">", markX, 180, ColYellow, 1)
 	}
 	fb.TextC("ARROWS / MOUSE STEER   SPACE FIRE   X/Z SPEED", 160, 196, ColDim, 1)
 	fb.TextC("C CHART   J JUMP   ESC CONTROLS", 160, 207, render.RGB(0x2d5f7a), 1)

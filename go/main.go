@@ -92,6 +92,9 @@ func (a *App) Update() error {
 				name := keyName(k)
 				if name != "" {
 					ui.Key(name)
+					if ui.QuitRequested() {
+						return ebiten.Termination
+					}
 				}
 			}
 		}
