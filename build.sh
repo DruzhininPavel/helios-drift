@@ -25,6 +25,11 @@ cp heliosdrift-linux-amd64 pkg-linux/heliosdrift
 cp heliosdrift-windows-amd64.exe pkg-win/heliosdrift.exe
 cp PACKAGE-README.txt pkg-linux/README.txt
 cp PACKAGE-README.txt pkg-win/README.txt
-COPYFILE_DISABLE=1 tar --no-mac-metadata -czf HeliosDrift-linux-x86_64.tar.gz -C pkg-linux .
+if [ "$(uname -s)" = "Darwin" ]; then
+	# bsdtar on macOS otherwise writes xattr headers GNU tar warns about
+	COPYFILE_DISABLE=1 tar --no-mac-metadata -czf HeliosDrift-linux-x86_64.tar.gz -C pkg-linux .
+else
+	tar czf HeliosDrift-linux-x86_64.tar.gz -C pkg-linux .
+fi
 (cd pkg-win && zip -q ../HeliosDrift-windows-x86_64.zip heliosdrift.exe README.txt)
 ls -lh HeliosDrift-*.tar.gz HeliosDrift-*.zip
