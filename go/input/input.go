@@ -256,19 +256,23 @@ func ClearSecondKey(a Action) {
 	}
 }
 
-// SetPad binds a standard gamepad button to an action.
+// SetPad binds a standard gamepad button to an action. A pad input has one
+// slot: binding a button replaces an axis binding, so the old control stops
+// working instead of quietly doing both.
 func SetPad(a Action, btn int32) {
 	steal(Binding{Btn: btn}, a)
 	b := Cur[a]
 	b.Btn = btn
+	b.Axis, b.Dir = noAxis, 0
 	Cur[a] = b
 }
 
-// SetAxis binds an axis direction to an action.
+// SetAxis binds an axis direction to an action, replacing its button binding.
 func SetAxis(a Action, axis, dir int32) {
 	steal(Binding{Axis: axis, Dir: dir}, a)
 	b := Cur[a]
 	b.Axis, b.Dir = axis, dir
+	b.Btn = noBtn
 	Cur[a] = b
 }
 
@@ -590,6 +594,11 @@ func Load() bool {
 		b, ok := f.Binds[Name(a)]
 		if !ok {
 			continue
+		}
+		if b.Axis >= 0 && b.Btn >= 0 {
+			// a pad input is one slot; files written before that rule can
+			// carry both, and the button would keep firing behind the axis
+			b.Btn = noBtn
 		}
 		if b.Axis > AxisMax {
 			// a raw axis index from an older build: not comparable to the

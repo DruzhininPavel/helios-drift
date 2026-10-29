@@ -288,3 +288,49 @@ func TestCaptureSettling(t *testing.T) {
 		t.Fatal("prompt should accept axes after the settle window")
 	}
 }
+
+// A pad input has one slot: binding an axis must clear the button and the
+// other way round, otherwise the old control keeps working behind the new one.
+func TestPadInputReplacesItself(t *testing.T) {
+	Reset()
+	if got := PadDesc(Fire); got != "A" {
+		t.Fatalf("fire = %q", got)
+	}
+	SetAxis(Fire, AxisRX, 1)
+	if got := PadDesc(Fire); got != "RSX+" {
+		t.Fatalf("after axis, fire = %q, want RSX+", got)
+	}
+	if PadButton(Fire) != noBtn {
+		t.Fatal("button survived the axis binding")
+	}
+	SetPad(Fire, PadB)
+	if got := PadDesc(Fire); got != "B" {
+		t.Fatalf("after button, fire = %q, want B", got)
+	}
+	if a, _ := AxisDir(Fire); a != noAxis {
+		t.Fatal("axis survived the button binding")
+	}
+	Reset()
+}
+
+// A file with both a button and an axis on one action is normalised to the
+// axis, so the old button does not keep firing.
+func TestLoadDropsDuplicatePadInput(t *testing.T) {
+	DirOverride = t.TempDir()
+	defer func() { DirOverride = "" }()
+
+	raw := `{"version":2,"binds":{"FIRE":{"keys":[],"btn":7,"axis":3,"dir":-1}}}`
+	if err := os.WriteFile(filepath.Join(DirOverride, ".heliosdrift-keys.json"), []byte(raw), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if !Load() {
+		t.Fatal("load")
+	}
+	if PadButton(Fire) != noBtn {
+		t.Fatalf("button survived: %d", PadButton(Fire))
+	}
+	if got := PadDesc(Fire); got != "RSY-" {
+		t.Fatalf("fire = %q", got)
+	}
+	Reset()
+}
