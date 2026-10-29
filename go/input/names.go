@@ -106,3 +106,34 @@ func PadName(b int32) string {
 	}
 	return "-"
 }
+
+// AxisName renders an axis and its direction for the controls screen.
+func AxisName(axis, dir int32) string {
+	switch axis {
+	case 0:
+		if dir < 0 {
+			return "LSX-"
+		}
+		return "LSX+"
+	case 1:
+		if dir < 0 {
+			return "LSY-"
+		}
+		return "LSY+"
+	case 2:
+		if dir < 0 {
+			return "RSX-"
+		}
+		return "RSX+"
+	case 3:
+		if dir < 0 {
+			return "RSY-"
+		}
+		return "RSY+"
+	case 4:
+		return "LT"
+	case 5:
+		return "RT"
+	}
+	return "AXIS"
+}

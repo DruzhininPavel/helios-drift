@@ -1278,7 +1278,7 @@ func PollCapture(dt float64) {
 		captureWait -= dt
 		return
 	}
-	kind, code, ok := input.Capture()
+	kind, code, dir, ok := input.Capture()
 	if !ok {
 		// a key may already be down when the prompt opens; give the fresh-press
 		// path a moment, then accept a held key as well
@@ -1296,21 +1296,30 @@ func PollCapture(dt float64) {
 		capturing = false
 		return
 	}
-	if kind == "key" {
+	var name string
+	// only keys have a second slot; a button or an axis replaces its own slot
+	if captureSlot == 1 && kind != "key" {
+		capturing = false
+		game.G.Message("SECOND SLOT TAKES A KEY", "bad")
+		return
+	}
+	switch kind {
+	case "key":
 		if captureSlot == 1 {
 			input.SetSecondKey(acts[S.Control], code)
 		} else {
 			input.SetKey(acts[S.Control], code)
 		}
-	} else {
+		name = input.KeyName(code)
+	case "axis":
+		input.SetAxis(acts[S.Control], code, dir)
+		name = input.AxisName(code, dir)
+	default:
 		input.SetPad(acts[S.Control], code)
+		name = input.PadName(code)
 	}
 	input.Save()
 	capturing = false
-	name := input.KeyName(code)
-	if kind != "key" {
-		name = "PAD " + input.PadName(code)
-	}
 	if captureSlot == 1 {
 		game.G.Message("SECOND KEY: "+name, "good")
 	} else {
@@ -1385,7 +1394,7 @@ func controlsScreen(fb *render.FB) {
 	case capturing && captureSlot == 1:
 		Hint = "PRESS THE SECOND KEY   ESC CANCEL"
 	case capturing:
-		Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
+		Hint = "PRESS KEY, BUTTON OR STICK   ESC CANCEL"
 	case input.PeekDown() != "":
 		// live read-out: makes it obvious whether the platform sends the key
 		Hint = "KEY SEEN: " + input.PeekDown() + "   ESC BACK"

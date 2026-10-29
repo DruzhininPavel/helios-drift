@@ -1,6 +1,9 @@
 package input
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -15,7 +18,7 @@ func TestBindRoundTrip(t *testing.T) {
 	Reset()
 	SetKey(PitchUp, int32(ebiten.KeyW))
 	SetKey(PitchDown, int32(ebiten.KeyS))
-	SetPad(Fire, int32(ebiten.GamepadButton3))
+	SetPad(Fire, PadY)
 	if !Save() {
 		t.Fatal("save failed")
 	}
@@ -101,7 +104,7 @@ func TestLoadRepairsSoundClash(t *testing.T) {
 	if !Save() {
 		t.Fatal("save")
 	}
-	Cur[Sound] = Binding{Keys: []int32{int32(ebiten.KeyM)}, Pad: noPad}
+	Cur[Sound] = Binding{Keys: []int32{int32(ebiten.KeyM)}, Btn: noBtn, Axis: noAxis}
 	if !Save() {
 		t.Fatal("save clash")
 	}
@@ -195,6 +198,79 @@ func TestSecondKeyEdgeCases(t *testing.T) {
 	SetSecondKey(RollLeft, int32(ebiten.KeyLeft)) // same as the primary
 	if got := KeyDesc(RollLeft); got != "LEFT/A" {
 		t.Fatalf("roll left = %q", got)
+	}
+	Reset()
+}
+
+// The D-pad must sit at the standard positions: 12 up, 13 down, 14 left,
+// 15 right. Using raw device indices here is what made "D-pad down" dead.
+func TestStandardPadIndices(t *testing.T) {
+	if PadUp != 12 || PadDown != 13 || PadLeft != 14 || PadRight != 15 {
+		t.Fatalf("d-pad positions: up=%d down=%d left=%d right=%d", PadUp, PadDown, PadLeft, PadRight)
+	}
+	if PadA != 0 || PadB != 1 || PadX != 2 || PadY != 3 {
+		t.Fatalf("face buttons: a=%d b=%d x=%d y=%d", PadA, PadB, PadX, PadY)
+	}
+	if PadLB != 4 || PadRB != 5 || PadStart != 9 || PadBack != 8 {
+		t.Fatalf("shoulders/start: lb=%d rb=%d start=%d back=%d", PadLB, PadRB, PadStart, PadBack)
+	}
+}
+
+// Axes are bindable with a direction and show up in the PAD column.
+func TestAxisBinding(t *testing.T) {
+	Reset()
+	SetAxis(PitchUp, AxisRY, -1)
+	if got := PadDesc(PitchUp); got != "RSY-" {
+		t.Fatalf("pitch up pad = %q", got)
+	}
+	if a, d := AxisDir(PitchUp); a != AxisRY || d != -1 {
+		t.Fatalf("axis=%d dir=%d", a, d)
+	}
+	// the same axis direction cannot drive two actions
+	SetAxis(RollLeft, AxisRY, -1)
+	if a, _ := AxisDir(PitchUp); a != noAxis {
+		t.Fatalf("pitch up still holds the axis: %d", a)
+	}
+	Reset()
+}
+
+// The stock layout names the familiar buttons.
+func TestDefaultPadNames(t *testing.T) {
+	Reset()
+	for a, want := range map[Action]string{
+		Fire: "A", Missile: "B", ECM: "X", Autopilot: "Y",
+		Bomb: "LB", Chart: "RB", JumpInSystem: "START", GalacticJump: "BACK",
+		Accel: "RT", Decel: "LT", PitchUp: "LSY-", RollLeft: "LSX-",
+	} {
+		if got := PadDesc(a); got != want {
+			t.Fatalf("%s = %q, want %q", Name(a), got, want)
+		}
+	}
+	Reset()
+}
+
+// A bindings file from before buttons were standard keeps its keys and gets
+// the default pad bindings, instead of binding some random raw index.
+func TestLegacyKeysFileMerges(t *testing.T) {
+	DirOverride = t.TempDir()
+	defer func() { DirOverride = "" }()
+
+	legacy := fmt.Sprintf(`{"binds":{"FIRE":{"keys":[%d],"pad":-1},"PITCH UP":{"keys":[%d],"pad":-1}}}`,
+		int(ebiten.KeySpace), int(ebiten.KeyW))
+	if err := os.WriteFile(filepath.Join(DirOverride, ".heliosdrift-keys.json"), []byte(legacy), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if !Load() {
+		t.Fatal("load")
+	}
+	if got := KeyDesc(Fire); got != "SPACE" {
+		t.Fatalf("fire key = %q", got)
+	}
+	if got := PadDesc(Fire); got != "A" {
+		t.Fatalf("fire pad = %q, want the default A", got)
+	}
+	if got := PadDesc(PitchUp); got != "LSY-" {
+		t.Fatalf("pitch up pad = %q", got)
 	}
 	Reset()
 }

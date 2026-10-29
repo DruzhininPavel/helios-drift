@@ -53,6 +53,10 @@ func (a *App) Update() error {
 	g := game.G
 	dt := 1.0 / 60.0
 
+	// keep the axis history fresh so a stick already pushed when a rebinding
+	// prompt opens is not captured by accident
+	input.Poll()
+
 	// rebinding prompt: while it is up, swallow everything except Escape
 	if ui.IsCapturing() {
 		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
@@ -96,21 +100,22 @@ func (a *App) Update() error {
 			}
 		}
 		// the pad drives the menus as well, so the game is playable on a
-		// handheld with no keyboard attached
+		// handheld with no keyboard attached; D-pad acts exactly like the
+		// arrow keys here
 		if pad := firstGamepad(); pad >= 0 {
 			for _, m := range []struct {
-				btn ebiten.GamepadButton
+				btn int32
 				key ebiten.Key
 			}{
-				{ebiten.GamepadButton0, ebiten.KeyEnter},
-				{ebiten.GamepadButton1, ebiten.KeyEscape},
-				{ebiten.GamepadButton7, ebiten.KeyEscape},
-				{ebiten.GamepadButton11, ebiten.KeyArrowUp},
-				{ebiten.GamepadButton12, ebiten.KeyArrowDown},
-				{ebiten.GamepadButton13, ebiten.KeyArrowLeft},
-				{ebiten.GamepadButton14, ebiten.KeyArrowRight},
+				{input.PadA, ebiten.KeyEnter},
+				{input.PadB, ebiten.KeyEscape},
+				{input.PadStart, ebiten.KeyEscape},
+				{input.PadUp, ebiten.KeyArrowUp},
+				{input.PadDown, ebiten.KeyArrowDown},
+				{input.PadLeft, ebiten.KeyArrowLeft},
+				{input.PadRight, ebiten.KeyArrowRight},
 			} {
-				if inpututil.IsGamepadButtonJustPressed(pad, m.btn) {
+				if inpututil.IsStandardGamepadButtonJustPressed(pad, ebiten.StandardGamepadButton(m.btn)) {
 					if name := keyName(m.key); name != "" {
 						ui.Key(name)
 					}
@@ -122,18 +127,21 @@ func (a *App) Update() error {
 	// flight input
 	if g.State == "flight" && g.Overlay == "" {
 		pitch, roll := 0.0, 0.0
-		if input.Held(input.PitchUp) {
+		// digital part (keys, buttons) and analogue part (bound axes) add up
+		if input.Digital(input.PitchUp) {
 			pitch += 1
 		}
-		if input.Held(input.PitchDown) {
+		if input.Digital(input.PitchDown) {
 			pitch -= 1
 		}
-		if input.Held(input.RollLeft) {
+		if input.Digital(input.RollLeft) {
 			roll -= 1
 		}
-		if input.Held(input.RollRight) {
+		if input.Digital(input.RollRight) {
 			roll += 1
 		}
+		pitch += input.AxisValue(input.PitchUp) - input.AxisValue(input.PitchDown)
+		roll += input.AxisValue(input.RollRight) - input.AxisValue(input.RollLeft)
 		if pitch == 0 && roll == 0 && a.mouse {
 			mx, my := ebiten.CursorPosition()
 			w, h := ebiten.WindowSize()
@@ -147,29 +155,15 @@ func (a *App) Update() error {
 			}
 		}
 		accel := 0.0
-		if input.Held(input.Accel) {
+		if input.Digital(input.Accel) {
 			accel += 1
 		}
-		if input.Held(input.Decel) {
+		if input.Digital(input.Decel) {
 			accel -= 1
 		}
+		accel += input.AxisValue(input.Accel) - input.AxisValue(input.Decel)
 		fire := input.Held(input.Fire) || ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
-		// gamepad sticks stay analogue; buttons go through the binding table
-		if pad := firstGamepad(); pad >= 0 {
-			if ax := ebiten.GamepadAxisValue(pad, 0); math.Abs(ax) > 0.12 {
-				roll = clampF(ax*1.25, -1, 1)
-			}
-			if ay := ebiten.GamepadAxisValue(pad, 1); math.Abs(ay) > 0.12 {
-				pitch = clampF(-ay*1.25, -1, 1)
-			}
-			if trig := ebiten.GamepadAxisValue(pad, 5); trig > 0.05 {
-				accel += trig
-			}
-			if trig := ebiten.GamepadAxisValue(pad, 4); trig > 0.05 {
-				accel -= trig
-			}
-		}
 		dispatchFlightActions()
 		g.In.Pitch = pitch
 		g.In.Roll = roll

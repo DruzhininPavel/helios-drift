@@ -238,6 +238,8 @@ var ru = map[string]string{
 	"UP/DOWN SELECT   ESC BACK": "ВВЕРХ/ВНИЗ ВЫБОР   ESC НАЗАД",
 
 	// ---- hints that were still English
+	"PRESS KEY, BUTTON OR STICK   ESC CANCEL":         "НАЖМИ КЛАВИШУ, КНОПКУ ИЛИ СТИК   ESC ОТМЕНА",
+	"SECOND SLOT TAKES A KEY":                         "ВО ВТОРОЙ СЛОТ ТОЛЬКО КЛАВИША",
 	"PRESS THE SECOND KEY   ESC CANCEL":               "НАЖМИ ВТОРУЮ КЛАВИШУ   ESC ОТМЕНА",
 	"PRESS 2ND":                                       "ВТОРАЯ",
 	"SECOND KEY: ":                                    "ВТОРАЯ КЛАВИША: ",
