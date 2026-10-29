@@ -1322,7 +1322,7 @@ func galSystems(g int) []*galaxy.System { return galaxy.Get(g).Systems }
 func controlsScreen(fb *render.FB) {
 	acts := input.Actions()
 	rows := len(acts) + 1
-	const visible = 12
+	const visible = 10
 	plate(fb, 4, 16, 312, 184, "CONTROLS")
 	fb.Text("ACTION", 12, 28, ColDim, 1)
 	fb.TextR("KEY", 234, 28, ColDim, 1)
@@ -1366,20 +1366,29 @@ func controlsScreen(fb *render.FB) {
 		fb.Text("^", 296, 36, ColDim, 1)
 	}
 	if off+visible < rows {
-		fb.Text("v", 296, 186, ColDim, 1)
+		fb.Text("v", 296, 152, ColDim, 1)
+	}
+	// legend under the list: three plain lines beat one crammed hint
+	lx, ly := 16, 162
+	for _, l := range []struct{ key, what string }{
+		{"ENTER", "SET KEY"},
+		{"RIGHT", "SET 2ND KEY"},
+		{"LEFT", "CLEAR 2ND"},
+	} {
+		fb.Text(l.key, lx, ly, ColYellow, 1)
+		fb.Text(l.what, lx+54, ly, ColText, 1)
+		ly += 11
 	}
 	switch {
+	case capturing && captureSlot == 1:
+		Hint = "PRESS THE SECOND KEY   ESC CANCEL"
 	case capturing:
-		if captureSlot == 1 {
-			Hint = "PRESS THE SECOND KEY   ESC CANCEL"
-		} else {
-			Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
-		}
+		Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
 	case input.PeekDown() != "":
 		// live read-out: makes it obvious whether the platform sends the key
-		Hint = "KEY SEEN: " + input.PeekDown() + "   ENTER REBIND   ESC BACK"
+		Hint = "KEY SEEN: " + input.PeekDown() + "   ESC BACK"
 	default:
-		Hint = "ENTER KEY   RIGHT 2ND KEY   LEFT CLEAR"
+		Hint = "UP/DOWN SELECT   ESC BACK"
 	}
 }
 
