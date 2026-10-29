@@ -604,6 +604,10 @@ func runShots() {
 	ui.Key("Enter")
 	shot("g52-controls")
 
+	ui.DrawPadTestSample(fb)
+	shot("g65-padtest")
+	g.Screen = "settings"
+
 	g.State = "title"
 	g.Screen = "mode"
 	ui.S.Mode = 0

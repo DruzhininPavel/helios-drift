@@ -549,6 +549,13 @@ func Key(k string) bool {
 	if g.Screen == "controls" {
 		return controlsKey(k)
 	}
+	if g.Screen == "padtest" {
+		if k == "Escape" || k == "Enter" {
+			game.G.Screen = "settings"
+			S.Settings = 4
+		}
+		return true
+	}
 	if g.Screen == "slots" && g.State == "title" {
 		return slotsKey(k)
 	}
@@ -922,7 +929,7 @@ func OpenSettings() {
 
 func settingsScreen(fb *render.FB) {
 	plate(fb, 40, 20, 240, 158, "")
-	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "CONTROLS", "BACK"}
+	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "CONTROLS", "PAD TEST", "BACK"}
 	for i, name := range rows {
 		y := 42 + i*28
 		sel := S.Settings == i
@@ -957,7 +964,7 @@ func settingsScreen(fb *render.FB) {
 				}
 				fb.FillRect(224+k*9, y-1, 230+k*9, y+6, c)
 			}
-		case 3:
+		case 3, 4:
 			fb.TextR(">", 264, y, ColGreen, 1)
 		}
 	}
@@ -968,9 +975,9 @@ func settingsScreen(fb *render.FB) {
 func settingsKey(k string) bool {
 	switch k {
 	case "ArrowUp":
-		S.Settings = (S.Settings + 4) % 5
+		S.Settings = (S.Settings + 5) % 6
 	case "ArrowDown":
-		S.Settings = (S.Settings + 1) % 5
+		S.Settings = (S.Settings + 1) % 6
 	case "Escape":
 		closeSettings()
 	case "Enter", "ArrowLeft", "ArrowRight":
@@ -1008,6 +1015,8 @@ func settingsKey(k string) bool {
 		case 3:
 			openControls()
 		case 4:
+			openPadTest()
+		case 5:
 			closeSettings()
 		}
 	}
@@ -1453,6 +1462,139 @@ func controlsKey(k string) bool {
 // it to tell "set the primary key" from "set the second key".
 func shiftHeld() bool {
 	return ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight)
+}
+
+// ---------------------------------------------------------------- pad test
+
+// openPadTest shows, live, what the gamepad actually reports: raw SDL axes,
+// the standard stick axes and every button. It exists so a mapping problem can
+// be diagnosed by wiggling a stick instead of guessing.
+func openPadTest() {
+	game.G.Screen = "padtest"
+}
+
+// padState is what the pad test screen draws; kept apart from Ebiten so the
+// screen can be rendered with sample values in the reference shots.
+type padState struct {
+	ok     bool
+	name   string
+	count  int
+	raw    []float64
+	std    [4]float64
+	btn    [17]bool
+	hasStd bool
+}
+
+func readPadState() padState {
+	var p padState
+	ids := ebiten.AppendGamepadIDs(nil)
+	if len(ids) == 0 {
+		return p
+	}
+	id := ids[0]
+	p.ok = true
+	p.name = ebiten.GamepadName(id)
+	p.count = len(ids)
+	p.hasStd = ebiten.IsStandardGamepadLayoutAvailable(id)
+	n := ebiten.GamepadAxisCount(id)
+	if n > 6 {
+		n = 6
+	}
+	for ax := 0; ax < n; ax++ {
+		p.raw = append(p.raw, ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax)))
+	}
+	for ax := 0; ax < 4; ax++ {
+		p.std[ax] = ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
+	}
+	for b := 0; b < 17; b++ {
+		p.btn[b] = ebiten.IsStandardGamepadButtonPressed(id, ebiten.StandardGamepadButton(b))
+	}
+	return p
+}
+
+// samplePad draws a plausible pad so the screen can be screenshotted without
+// hardware attached.
+func samplePad() padState {
+	p := padState{ok: true, name: "Sample Pad", count: 1, hasStd: true}
+	p.raw = []float64{0.62, -0.18, 0.00, -0.45, 0.12, 0.00}
+	p.std = [4]float64{0.62, -0.18, -0.45, 0.12}
+	p.btn[input.PadA] = true
+	p.btn[input.PadUp] = true
+	p.btn[input.PadRT] = true
+	return p
+}
+
+func padTestScreen(fb *render.FB) { drawPadTest(fb, readPadState()) }
+
+// DrawPadTestSample renders the pad test screen with sample values.
+func DrawPadTestSample(fb *render.FB) { drawPadTest(fb, samplePad()) }
+
+func drawPadTest(fb *render.FB, p padState) {
+	plate(fb, 4, 14, 312, 186, "PAD TEST")
+	if !p.ok {
+		fb.TextC("NO GAMEPAD CONNECTED", 160, 100, ColRed, 1)
+		fb.TextC("CONNECT ONE AND PRESS A BUTTON", 160, 116, ColDim, 1)
+		Hint = "ESC BACK"
+		return
+	}
+	fb.Text(strconv.Itoa(p.count)+" PAD  "+p.name, 12, 24, ColDim, 1)
+
+	fb.Text("RAW AXES", 12, 40, ColYellow, 1)
+	for ax, v := range p.raw {
+		y := 52 + ax*11
+		fb.Text(strconv.Itoa(ax)+" "+strconv.FormatFloat(v, 'f', 2, 64), 12, y, ColText, 1)
+		axisBar(fb, 70, y, v)
+	}
+
+	fb.Text("STD AXES", 172, 40, ColYellow, 1)
+	names := []string{"LX", "LY", "RX", "RY"}
+	for ax := 0; ax < 4; ax++ {
+		y := 52 + ax*11
+		fb.Text(names[ax]+" "+strconv.FormatFloat(p.std[ax], 'f', 2, 64), 172, y, ColText, 1)
+	}
+	if !p.hasStd {
+		fb.Text("NO STANDARD MAPPING", 172, 96, ColRed, 1)
+	}
+
+	fb.Text("BUTTONS 0-15", 12, 122, ColYellow, 1)
+	for b := 0; b < 16; b++ {
+		x := 12 + (b%8)*37
+		y := 134 + (b/8)*12
+		col := render.RGB(0x24425c)
+		if p.btn[b] {
+			col = ColGreen
+		}
+		fb.Text(strconv.Itoa(b), x, y, col, 1)
+		if b < 5 || b == 9 {
+			fb.Text(input.PadName(int32(b)), x+13, y, col, 1)
+		}
+	}
+
+	on := func(b int32) string {
+		if p.btn[b] {
+			return "DOWN"
+		}
+		return "-"
+	}
+	fb.Text("D-UP "+on(input.PadUp)+"  D-DOWN "+on(input.PadDown), 12, 166, ColText, 1)
+	fb.Text("D-LEFT "+on(input.PadLeft)+"  D-RIGHT "+on(input.PadRight), 12, 177, ColText, 1)
+	fb.Text("LT "+on(input.PadLT)+"  RT "+on(input.PadRT), 196, 166, ColText, 1)
+	fb.Text("LU "+on(input.PadLS)+"  RU "+on(input.PadRS), 196, 177, ColText, 1)
+	Hint = "WIGGLE STICKS AND PRESS BUTTONS   ESC BACK"
+}
+
+// axisBar draws a centred bar so a stick position is readable at a glance.
+func axisBar(fb *render.FB, x, y int, v float64) {
+	const w = 84
+	fb.FillRect(x, y+2, x+w, y+4, render.RGB(0x24425c))
+	c := int((v + 1) / 2 * float64(w-2))
+	if c < 0 {
+		c = 0
+	}
+	if c > w-2 {
+		c = w - 2
+	}
+	fb.FillRect(x+c, y, x+c+2, y+7, ColGreen)
 }
 
 // ----------------------------------------------------------------- game mode

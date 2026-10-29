@@ -81,8 +81,8 @@ func TestSettingsNavigation(t *testing.T) {
 		t.Fatalf("up -> %d, want 0", S.Settings)
 	}
 	Key("ArrowUp")
-	if S.Settings != 4 {
-		t.Fatalf("up from first -> %d, want 4 (wrap)", S.Settings)
+	if S.Settings != 5 {
+		t.Fatalf("up from first -> %d, want 5 (wrap)", S.Settings)
 	}
 }
 

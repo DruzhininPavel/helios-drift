@@ -231,6 +231,11 @@ var ru = map[string]string{
 	" TO ": " В ",
 
 	// ---- controls screen legend and row prompts
+	"PAD TEST":                                   "ТЕСТ ГЕЙМПАДА",
+	"NO GAMEPAD CONNECTED":                       "ГЕЙМПАД НЕ ПОДКЛЮЧЁН",
+	"CONNECT ONE AND PRESS A BUTTON":             "ПОДКЛЮЧИ И НАЖМИ КНОПКУ",
+	"NO STANDARD MAPPING":                        "НЕТ СТАНДАРТНОЙ РАСКЛАДКИ",
+	"WIGGLE STICKS AND PRESS BUTTONS   ESC BACK": "ШЕВЕЛИ СТИКИ И ЖМИ КНОПКИ   ESC НАЗАД",
 	"SET KEY":                   "ЗАДАТЬ КЛАВИШУ",
 	"SET 2ND KEY":               "ЗАДАТЬ ВТОРУЮ",
 	"RESET ROW":                 "СБРОСИТЬ СТРОКУ",

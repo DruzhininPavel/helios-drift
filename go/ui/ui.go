@@ -228,6 +228,12 @@ func Draw(fb *render.FB, dt float64) {
 		footer(fb)
 		return
 	}
+	if g.Screen == "padtest" {
+		chrome(fb, "PAD TEST")
+		padTestScreen(fb)
+		footer(fb)
+		return
+	}
 	if g.Screen == "mode" && g.State == "title" {
 		chrome(fb, "NEW GAME")
 		modeScreen(fb)
