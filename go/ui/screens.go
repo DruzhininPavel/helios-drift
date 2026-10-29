@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -1483,6 +1484,7 @@ type padState struct {
 	std    [4]float64
 	btn    [17]bool
 	hasStd bool
+	active []string
 }
 
 func readPadState() padState {
@@ -1509,6 +1511,11 @@ func readPadState() padState {
 	for b := 0; b < 17; b++ {
 		p.btn[b] = ebiten.IsStandardGamepadButtonPressed(id, ebiten.StandardGamepadButton(b))
 	}
+	for _, a := range input.Actions() {
+		if input.Held(a) {
+			p.active = append(p.active, input.Name(a))
+		}
+	}
 	return p
 }
 
@@ -1521,6 +1528,7 @@ func samplePad() padState {
 	p.btn[input.PadA] = true
 	p.btn[input.PadUp] = true
 	p.btn[input.PadRT] = true
+	p.active = []string{"ACCELERATE", "FIRE"}
 	return p
 }
 
@@ -1541,25 +1549,25 @@ func drawPadTest(fb *render.FB, p padState) {
 
 	fb.Text("RAW AXES", 12, 40, ColYellow, 1)
 	for ax, v := range p.raw {
-		y := 52 + ax*11
+		y := 50 + ax*9
 		fb.Text(strconv.Itoa(ax)+" "+strconv.FormatFloat(v, 'f', 2, 64), 12, y, ColText, 1)
-		axisBar(fb, 70, y, v)
+		axisBar(fb, 74, y, v)
 	}
 
-	fb.Text("STD AXES", 172, 40, ColYellow, 1)
+	fb.Text("STD AXES", 186, 40, ColYellow, 1)
 	names := []string{"LX", "LY", "RX", "RY"}
 	for ax := 0; ax < 4; ax++ {
-		y := 52 + ax*11
-		fb.Text(names[ax]+" "+strconv.FormatFloat(p.std[ax], 'f', 2, 64), 172, y, ColText, 1)
+		y := 50 + ax*9
+		fb.Text(names[ax]+" "+strconv.FormatFloat(p.std[ax], 'f', 2, 64), 186, y, ColText, 1)
 	}
 	if !p.hasStd {
-		fb.Text("NO STANDARD MAPPING", 172, 96, ColRed, 1)
+		fb.Text("NO STANDARD MAPPING", 186, 88, ColRed, 1)
 	}
 
-	fb.Text("BUTTONS 0-15", 12, 122, ColYellow, 1)
+	fb.Text("BUTTONS 0-15", 12, 106, ColYellow, 1)
 	for b := 0; b < 16; b++ {
 		x := 12 + (b%8)*37
-		y := 134 + (b/8)*12
+		y := 116 + (b/8)*11
 		col := render.RGB(0x24425c)
 		if p.btn[b] {
 			col = ColGreen
@@ -1576,10 +1584,12 @@ func drawPadTest(fb *render.FB, p padState) {
 		}
 		return "-"
 	}
-	fb.Text("D-UP "+on(input.PadUp)+"  D-DOWN "+on(input.PadDown), 12, 166, ColText, 1)
-	fb.Text("D-LEFT "+on(input.PadLeft)+"  D-RIGHT "+on(input.PadRight), 12, 177, ColText, 1)
-	fb.Text("LT "+on(input.PadLT)+"  RT "+on(input.PadRT), 196, 166, ColText, 1)
-	fb.Text("LU "+on(input.PadLS)+"  RU "+on(input.PadRS), 196, 177, ColText, 1)
+	fb.Text("D-UP "+on(input.PadUp)+"  DOWN "+on(input.PadDown)+"  LEFT "+on(input.PadLeft)+"  RIGHT "+on(input.PadRight), 12, 142, ColText, 1)
+	fb.Text("LT "+on(input.PadLT)+"  RT "+on(input.PadRT)+"  LS "+on(input.PadLS)+"  RS "+on(input.PadRS), 12, 153, ColText, 1)
+
+	// what the game itself thinks is pressed — the end-to-end check that a
+	// binding actually responds
+	fb.Text("ACTIVE: "+strings.Join(p.active, " "), 12, 168, ColGreen, 1)
 	Hint = "WIGGLE STICKS AND PRESS BUTTONS   ESC BACK"
 }
 
