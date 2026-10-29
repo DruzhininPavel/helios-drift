@@ -842,8 +842,9 @@ func Title(fb *render.FB) {
 	}
 	fb.TextC("ARROWS / MOUSE STEER   SPACE FIRE   X/Z SPEED", 160, 196, ColDim, 1)
 	fb.TextC("C CHART   J JUMP   ESC CONTROLS", 160, 207, render.RGB(0x2d5f7a), 1)
-	// build stamp, so a downloaded binary is identifiable at a glance
-	if game.Version != "" && game.Version != "dev" {
+	// build stamp, so a stale app or a downloaded binary is identifiable at a
+	// glance — a local build is stamped with its time
+	if game.Version != "" {
 		fb.TextR(game.Version, 316, 216, render.RGB(0x2b4a5e), 1)
 	}
 }

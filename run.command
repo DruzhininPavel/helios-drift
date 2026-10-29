@@ -17,7 +17,7 @@ if command -v go >/dev/null 2>&1; then
   NEWER=$(find go -name '*.go' -newer "$BIN" -print -quit 2>/dev/null)
   if [ ! -x "$BIN" ] || [ -n "$NEWER" ]; then
     echo "Сборка..."
-    ( cd go && go build -o "../$BIN" . ) || {
+    ( cd go && go build -ldflags "-X heliosdrift/game.Version=dev $(date '+%d.%m %H:%M')" -o "../$BIN" . ) || {
       echo "Ошибка сборки."
       read -n 1 -s -r -p "Enter..."
       exit 1
