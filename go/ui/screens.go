@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strconv"
 
+	"github.com/hajimehoshi/ebiten/v2"
+
 	"heliosdrift/galaxy"
 	"heliosdrift/game"
 	"heliosdrift/input"
@@ -1372,11 +1374,11 @@ func controlsScreen(fb *render.FB) {
 	lx, ly := 16, 162
 	for _, l := range []struct{ key, what string }{
 		{"ENTER", "SET KEY"},
-		{"RIGHT", "SET 2ND KEY"},
-		{"LEFT", "CLEAR 2ND"},
+		{"SHIFT+ENTER", "SET 2ND KEY"},
+		{"BACKSPACE", "RESET ROW"},
 	} {
 		fb.Text(l.key, lx, ly, ColYellow, 1)
-		fb.Text(l.what, lx+54, ly, ColText, 1)
+		fb.Text(l.what, lx+80, ly, ColText, 1)
 		ly += 11
 	}
 	switch {
@@ -1418,26 +1420,27 @@ func controlsKey(k string) bool {
 		}
 		capturing = true
 		captureSlot = 0
+		if shiftHeld() {
+			captureSlot = 1
+		}
 		captureWait = 0.05
 		captureHold = 0.4
 		return true
-	case "ArrowRight":
+	case "Backspace":
 		if S.Control < len(acts) {
-			capturing = true
-			captureSlot = 1
-			captureWait = 0.05
-			captureHold = 0.4
-		}
-		return true
-	case "ArrowLeft":
-		if S.Control < len(acts) {
-			input.ClearSecondKey(acts[S.Control])
+			input.ResetAction(acts[S.Control])
 			input.Save()
-			game.G.Message("SECOND KEY CLEARED", "info")
+			game.G.Message("RESTORED: "+input.Name(acts[S.Control]), "good")
 		}
 		return true
 	}
 	return true
+}
+
+// shiftHeld reports whether a shift modifier is down; the controls screen uses
+// it to tell "set the primary key" from "set the second key".
+func shiftHeld() bool {
+	return ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight)
 }
 
 // ----------------------------------------------------------------- game mode

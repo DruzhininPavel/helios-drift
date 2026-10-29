@@ -116,6 +116,13 @@ var Cur = Defaults()
 // Reset restores the stock layout.
 func Reset() { Cur = Defaults() }
 
+// ResetAction restores the stock binding of a single action.
+func ResetAction(a Action) {
+	if d, ok := Defaults()[a]; ok {
+		Cur[a] = d
+	}
+}
+
 // steal removes a key from every other action, in both slots: one key may
 // drive one action only.
 func steal(key int32, except Action) {

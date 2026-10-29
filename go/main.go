@@ -83,6 +83,7 @@ func (a *App) Update() error {
 			ebiten.KeyL, ebiten.KeyJ, ebiten.KeyF, ebiten.KeyB, ebiten.KeyS, ebiten.KeyX, ebiten.KeyZ,
 			ebiten.Key1, ebiten.Key2, ebiten.Key3, ebiten.Key4, ebiten.Key5, ebiten.Key6,
 			ebiten.Key7, ebiten.Key8, ebiten.Key9, ebiten.Key0, ebiten.KeyG, ebiten.KeyQ, ebiten.KeyH, ebiten.KeyK,
+			ebiten.KeyBackspace,
 		} {
 			if inpututil.IsKeyJustPressed(k) {
 				if k == ebiten.KeyQ && game.G.Overlay == "pause" {
@@ -248,6 +249,8 @@ func keyName(k ebiten.Key) string {
 	switch k {
 	case ebiten.KeyEnter:
 		return "Enter"
+	case ebiten.KeyBackspace:
+		return "Backspace"
 	case ebiten.KeyEscape:
 		return "Escape"
 	case ebiten.KeyTab:

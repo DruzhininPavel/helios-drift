@@ -230,12 +230,17 @@ var ru = map[string]string{
 	" IN ": " В ",
 	" TO ": " В ",
 
+	// ---- controls screen legend and row prompts
+	"SET KEY":                   "ЗАДАТЬ КЛАВИШУ",
+	"SET 2ND KEY":               "ЗАДАТЬ ВТОРУЮ",
+	"RESET ROW":                 "СБРОСИТЬ СТРОКУ",
+	"RESTORED: ":                "ВОССТАНОВЛЕНО: ",
+	"UP/DOWN SELECT   ESC BACK": "ВВЕРХ/ВНИЗ ВЫБОР   ESC НАЗАД",
+
 	// ---- hints that were still English
-	"ENTER KEY   RIGHT 2ND KEY   LEFT CLEAR":          "ENTER КЛАВИША   ВПРАВО ВТОРАЯ   ВЛЕВО СБРОС",
 	"PRESS THE SECOND KEY   ESC CANCEL":               "НАЖМИ ВТОРУЮ КЛАВИШУ   ESC ОТМЕНА",
 	"PRESS 2ND":                                       "ВТОРАЯ",
 	"SECOND KEY: ":                                    "ВТОРАЯ КЛАВИША: ",
-	"SECOND KEY CLEARED":                              "ВТОРАЯ КЛАВИША УБРАНА",
 	"ENTER ACCEPT   ESC DECLINE":                      "ENTER ПРИНЯТЬ   ESC ОТКАЗ",
 	"UP/DOWN SELECT   ENTER ACCEPT   ESC BACK":        "ВВЕРХ/ВНИЗ ВЫБОР   ENTER ПРИНЯТЬ   ESC",
 	"UP/DOWN   ENTER SAVE   ESC BACK":                 "ВВЕРХ/ВНИЗ   ENTER СОХРАНИТЬ   ESC",
