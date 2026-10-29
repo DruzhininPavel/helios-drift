@@ -99,7 +99,7 @@ func Defaults() Map {
 		Chart:        {Keys: k(ebiten.KeyC), Pad: p(ebiten.GamepadButton8)},
 		Status:       {Keys: k(ebiten.KeyV), Pad: noPad},
 		Pause:        {Keys: k(ebiten.KeyEscape), Pad: p(ebiten.GamepadButton9)},
-		Sound:        {Keys: k(ebiten.KeyM), Pad: noPad},
+		Sound:        {Keys: k(ebiten.KeyF10), Pad: noPad},
 	}
 }
 
@@ -109,15 +109,39 @@ var Cur = Defaults()
 // Reset restores the stock layout.
 func Reset() { Cur = Defaults() }
 
-// SetKey binds a single key to an action, clearing the second key.
+// SetKey binds a single key to an action. The key is taken away from any other
+// action that had it: without that, changing a binding left the old behaviour
+// in place and two actions fired at once.
 func SetKey(a Action, key int32) {
+	for other, b := range Cur {
+		if other == a {
+			continue
+		}
+		kept := b.Keys[:0]
+		for _, k := range b.Keys {
+			if k != key {
+				kept = append(kept, k)
+			}
+		}
+		b.Keys = kept
+		Cur[other] = b
+	}
 	b := Cur[a]
 	b.Keys = []int32{key}
 	Cur[a] = b
 }
 
-// SetPad binds a gamepad button to an action.
+// SetPad binds a gamepad button to an action, taking it from other actions.
 func SetPad(a Action, btn int32) {
+	for other, b := range Cur {
+		if other == a {
+			continue
+		}
+		if b.Pad == btn {
+			b.Pad = noPad
+			Cur[other] = b
+		}
+	}
 	b := Cur[a]
 	b.Pad = btn
 	Cur[a] = b
@@ -201,6 +225,9 @@ func firstPad() ebiten.GamepadID {
 // rebinding prompt. ok is false when nothing is down.
 func Capture() (kind string, code int32, ok bool) {
 	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
+		if isModifier(k) {
+			continue
+		}
 		if ebiten.IsKeyPressed(k) {
 			return "key", int32(k), true
 		}
@@ -213,6 +240,29 @@ func Capture() (kind string, code int32, ok bool) {
 		}
 	}
 	return "", 0, false
+}
+
+// isModifier reports whether the key is a bare modifier, which should not be
+// bound on its own: people press Shift while rebinding more often than they
+// mean to bind it.
+func isModifier(k ebiten.Key) bool {
+	switch k {
+	case ebiten.KeyShift, ebiten.KeyShiftLeft, ebiten.KeyShiftRight,
+		ebiten.KeyControl, ebiten.KeyControlLeft, ebiten.KeyControlRight,
+		ebiten.KeyAlt, ebiten.KeyAltLeft, ebiten.KeyAltRight,
+		ebiten.KeyMeta, ebiten.KeyMetaLeft, ebiten.KeyMetaRight,
+		ebiten.KeyCapsLock:
+		return true
+	}
+	return false
+}
+
+// repair fixes bindings files written by older builds: SOUND used to sit on
+// the missile key, so pressing M fired a missile and muted the game.
+func repair() {
+	if KeyDesc(Sound) == KeyDesc(Missile) {
+		Cur[Sound] = Binding{Keys: []int32{int32(ebiten.KeyF10)}, Pad: noPad}
+	}
 }
 
 // ---------------------------------------------------------------- persistence
@@ -264,5 +314,6 @@ func Load() bool {
 			Cur[a] = b
 		}
 	}
+	repair()
 	return true
 }

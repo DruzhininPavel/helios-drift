@@ -89,19 +89,6 @@ func (a *App) Update() error {
 					return ebiten.Termination
 				}
 				name := keyName(k)
-				if k == ebiten.KeyM && (ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight)) {
-					if bank != nil {
-						muted := bank.ToggleMute()
-						lang.Cfg.Muted = muted
-						lang.Save()
-						if muted {
-							game.G.Message("SOUND OFF", "info")
-						} else {
-							game.G.Message("SOUND ON", "info")
-						}
-					}
-					continue
-				}
 				if name != "" {
 					ui.Key(name)
 				}

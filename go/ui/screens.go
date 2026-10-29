@@ -1327,7 +1327,7 @@ func controlsScreen(fb *render.FB) {
 		a := acts[idx]
 		fb.Text(input.Name(a), 16, y, col, 1)
 		if sel && capturing {
-			fb.TextR("PRESS...", 234, y, ColYellow, 1)
+			fb.TextR("PRESS KEY", 234, y, ColYellow, 1)
 		} else {
 			fb.TextR(input.KeyDesc(a), 234, y, ColText, 1)
 		}
@@ -1339,7 +1339,11 @@ func controlsScreen(fb *render.FB) {
 	if off+visible < rows {
 		fb.Text("v", 296, 186, ColDim, 1)
 	}
-	Hint = "UP/DOWN   ENTER REBIND   ESC BACK"
+	if capturing {
+		Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
+	} else {
+		Hint = "UP/DOWN   ENTER REBIND   ESC BACK"
+	}
 }
 
 func controlsKey(k string) bool {
@@ -1367,7 +1371,7 @@ func controlsKey(k string) bool {
 			return true
 		}
 		capturing = true
-		captureWait = 0.45
+		captureWait = 0.2
 		return true
 	}
 	return true

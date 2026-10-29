@@ -23,3 +23,33 @@ func TestLegacyConfigFallback(t *testing.T) {
 		t.Fatal("legacy config ignored")
 	}
 }
+
+// The interface keeps its data labels, units and names in English; only prose
+// is translated. This is the split the player asked for.
+func TestLabelsStayEnglish(t *testing.T) {
+	Set("ru")
+	defer Set("en")
+	for _, s := range []string{
+		"HOLD 12/20 T", "STAGE 3/8", "SPD 210", "CASH 1200 CR", "FUEL 5.2 LY",
+		"KESTREL III", "LARGE CARGO BAY", "FOOD", "LEGEND", "RICH INDUSTRIAL",
+		"ANARCHY", "PAX 2   MAIL 1 T", "RADIUS 6400 KM", "TECH LEVEL 9",
+	} {
+		if got := TranslateLine(s); got != s {
+			t.Fatalf("%q was translated to %q", s, got)
+		}
+	}
+}
+
+// Prose, menus and messages still read in Russian.
+func TestProseTranslates(t *testing.T) {
+	Set("ru")
+	defer Set("en")
+	for _, s := range []string{
+		"BUY / SELL CARGO", "COMMANDER STATUS", "THE FRONTIER CLINIC IS OUT OF SUPPLIES.",
+		"CONTRACT ACCEPTED: MEDICAL RUN", "ARRIVED: LAVE",
+	} {
+		if got := TranslateLine(s); got == s {
+			t.Fatalf("%q was left in English", s)
+		}
+	}
+}

@@ -6,6 +6,7 @@ package game
 
 import (
 	"heliosdrift/galaxy"
+	"heliosdrift/lang"
 	"heliosdrift/models"
 )
 
@@ -175,11 +176,13 @@ func (g *Game) CampaignStatus() string {
 		return ""
 	}
 	sys := galaxy.Get(c.Galaxy).Systems[c.Target].Name
+	// the stage name and the connective read in the player's language; the
+	// system name stays as it is on the chart
 	switch q.Kind {
 	case QuestDeliver:
-		return q.Title + " TO " + sys
+		return lang.T(q.Title) + lang.T(" TO ") + sys
 	}
-	return q.Title + " IN " + sys
+	return lang.T(q.Title) + lang.T(" IN ") + sys
 }
 
 // campaignTarget returns the system the current stage points at.

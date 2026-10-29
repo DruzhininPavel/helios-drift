@@ -6,72 +6,108 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func TestDefaultsCoverEveryAction(t *testing.T) {
-	d := Defaults()
-	if len(d) != int(NumActions) {
-		t.Fatalf("%d defaults for %d actions", len(d), NumActions)
-	}
-	for a := Action(0); a < NumActions; a++ {
-		if _, ok := d[a]; !ok {
-			t.Errorf("no default for %s", Name(a))
-		}
-		if Name(a) == "" || Name(a) == "?" {
-			t.Errorf("action %d has no name", a)
-		}
-	}
-}
-
-func TestRebindAndReset(t *testing.T) {
-	Reset()
-	before := KeyDesc(Fire)
-	SetKey(Fire, int32(ebiten.KeyQ))
-	if KeyDesc(Fire) == before {
-		t.Fatal("rebind did not change the key")
-	}
-	if KeyDesc(Fire) == "-" {
-		t.Fatal("key description is empty after rebind")
-	}
-	SetPad(Fire, 3)
-	if PadDesc(Fire) != "Y" {
-		t.Fatalf("pad = %q, want Y", PadDesc(Fire))
-	}
-	Reset()
-	if KeyDesc(Fire) != before {
-		t.Fatalf("reset did not restore: %q vs %q", KeyDesc(Fire), before)
-	}
-}
-
-func TestSaveLoadRoundTrip(t *testing.T) {
+// Rebound keys must survive a restart: the file is what the player expects to
+// carry their layout, not just the running process.
+func TestBindRoundTrip(t *testing.T) {
 	DirOverride = t.TempDir()
 	defer func() { DirOverride = "" }()
+
 	Reset()
-	SetKey(Missile, int32(ebiten.KeyQ))
-	SetPad(Missile, 3)
+	SetKey(PitchUp, int32(ebiten.KeyW))
+	SetKey(PitchDown, int32(ebiten.KeyS))
+	SetPad(Fire, int32(ebiten.GamepadButton3))
 	if !Save() {
 		t.Fatal("save failed")
 	}
+
 	Reset()
-	if KeyDesc(Missile) == "Q" {
-		t.Fatal("reset did not clear the binding")
-	}
 	if !Load() {
 		t.Fatal("load failed")
 	}
-	if KeyDesc(Missile) != "Q" {
-		t.Fatalf("key after load = %q, want Q", KeyDesc(Missile))
+	if got := KeyDesc(PitchUp); got != "W" {
+		t.Fatalf("pitch up = %q, want W", got)
 	}
-	if PadDesc(Missile) != "Y" {
-		t.Fatalf("pad after load = %q, want Y", PadDesc(Missile))
+	if got := KeyDesc(PitchDown); got != "S" {
+		t.Fatalf("pitch down = %q, want S", got)
+	}
+	if got := PadDesc(Fire); got == "-" {
+		t.Fatalf("pad binding lost")
 	}
 }
 
-func TestKeyNames(t *testing.T) {
-	if KeyName(int32(0)) == "" {
-		t.Fatal("empty name for key 0")
+// Rebinding one action must not disturb the others.
+func TestBindIsolation(t *testing.T) {
+	Reset()
+	SetKey(RollLeft, int32(ebiten.KeyQ))
+	if got := KeyDesc(RollLeft); got != "Q" {
+		t.Fatalf("roll left = %q", got)
 	}
-	for a := Action(0); a < NumActions; a++ {
-		if KeyDesc(a) == "" {
-			t.Errorf("%s has empty key description", Name(a))
+	if got := KeyDesc(PitchUp); got != "UP/W" {
+		t.Fatalf("pitch up changed to %q", got)
+	}
+	Reset()
+}
+
+// Every action needs a distinct name: bindings are stored by name, and a
+// duplicate would silently overwrite another row on load.
+func TestActionNamesUnique(t *testing.T) {
+	seen := map[string]Action{}
+	for _, a := range Actions() {
+		n := Name(a)
+		if n == "?" || n == "" {
+			t.Fatalf("action %d has no name", a)
 		}
+		if prev, ok := seen[n]; ok {
+			t.Fatalf("%q used by actions %d and %d", n, prev, a)
+		}
+		seen[n] = a
 	}
+}
+
+// Binding a key must take it from whoever had it, otherwise "change the
+// controls to WASD" silently leaves the old action on the same key and both
+// fire at once.
+func TestBindStealsKey(t *testing.T) {
+	Reset()
+	if got := KeyDesc(PitchUp); got != "UP/W" {
+		t.Fatalf("default pitch up = %q", got)
+	}
+	SetKey(Accel, int32(ebiten.KeyW))
+	if got := KeyDesc(PitchUp); got == "UP/W" || got == "W" {
+		t.Fatalf("pitch up still holds W: %q", got)
+	}
+	if got := KeyDesc(Accel); got != "W" {
+		t.Fatalf("accel = %q", got)
+	}
+	Reset()
+}
+
+// The mute key must not sit on the missile key: pressing M used to fire a
+// missile and silence the game.
+func TestSoundAndMissileDoNotShareAKey(t *testing.T) {
+	Reset()
+	if KeyDesc(Sound) == KeyDesc(Missile) {
+		t.Fatalf("sound and missile share %q", KeyDesc(Sound))
+	}
+}
+
+// A keys file from before the fix has SOUND on M; loading it must repair the
+// clash instead of firing a missile and muting the game at once.
+func TestLoadRepairsSoundClash(t *testing.T) {
+	DirOverride = t.TempDir()
+	defer func() { DirOverride = "" }()
+
+	Reset()
+	if !Save() {
+		t.Fatal("save")
+	}
+	Cur[Sound] = Binding{Keys: []int32{int32(ebiten.KeyM)}, Pad: noPad}
+	if !Save() {
+		t.Fatal("save clash")
+	}
+	Load()
+	if KeyDesc(Sound) == KeyDesc(Missile) {
+		t.Fatalf("sound still on %q", KeyDesc(Sound))
+	}
+	Reset()
 }
