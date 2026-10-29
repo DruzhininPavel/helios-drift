@@ -7,7 +7,7 @@ Space trading game. Two modes: Classic (the 1984 rules) and Advanced
 RUN
 ---
 Linux:    chmod +x heliosdrift && ./heliosdrift
-Windows:  heliosdrift.exe
+Windows:  heliosdrift.exe  (heliosdrift-console.exe prints diagnostics)
 
 The game opens a 960x672 window, resizable. F11 toggles fullscreen.
 
