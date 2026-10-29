@@ -68,6 +68,11 @@ func (a *App) Update() error {
 		return nil
 	}
 
+	// F11 goes fullscreen: handy on a TV or a handheld
+	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
+		ebiten.SetFullscreen(!ebiten.IsFullscreen())
+	}
+
 	// menus are fixed; only flying uses the rebindable layout
 	freeFlight := g.State == "flight" && g.Overlay == ""
 	if !freeFlight {
@@ -99,6 +104,28 @@ func (a *App) Update() error {
 				}
 				if name != "" {
 					ui.Key(name)
+				}
+			}
+		}
+		// the pad drives the menus as well, so the game is playable on a
+		// handheld with no keyboard attached
+		if pad := firstGamepad(); pad >= 0 {
+			for _, m := range []struct {
+				btn ebiten.GamepadButton
+				key ebiten.Key
+			}{
+				{ebiten.GamepadButton0, ebiten.KeyEnter},
+				{ebiten.GamepadButton1, ebiten.KeyEscape},
+				{ebiten.GamepadButton7, ebiten.KeyEscape},
+				{ebiten.GamepadButton11, ebiten.KeyArrowUp},
+				{ebiten.GamepadButton12, ebiten.KeyArrowDown},
+				{ebiten.GamepadButton13, ebiten.KeyArrowLeft},
+				{ebiten.GamepadButton14, ebiten.KeyArrowRight},
+			} {
+				if inpututil.IsGamepadButtonJustPressed(pad, m.btn) {
+					if name := keyName(m.key); name != "" {
+						ui.Key(name)
+					}
 				}
 			}
 		}

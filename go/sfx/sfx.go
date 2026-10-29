@@ -5,8 +5,10 @@ package sfx
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 )
@@ -235,8 +237,15 @@ func (b *Bank) SetMaster(m float64) {
 	}
 }
 
-// Init creates the audio context and synthesises every effect.
+// Init creates the audio context and synthesises every effect. On a machine
+// with no sound server it returns an empty bank: every voice is nil and Play
+// is a no-op, so the game keeps running silently.
 func Init() *Bank {
+	if !AudioAvailable() || os.Getenv("HELIOS_NO_AUDIO") != "" {
+		fmt.Println("audio: no sound server found, running silent")
+		B = &Bank{}
+		return B
+	}
 	ctx = audio.NewContext(SampleRate)
 	b := &Bank{Master: 0.8}
 	b.Laser = newVoiceVol(sweep(1500, 260, 0.075, 0, 0.55), 4, 0.35)
