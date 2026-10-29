@@ -116,12 +116,11 @@ var Cur = Defaults()
 // Reset restores the stock layout.
 func Reset() { Cur = Defaults() }
 
-// SetKey binds a single key to an action. The key is taken away from any other
-// action that had it: without that, changing a binding left the old behaviour
-// in place and two actions fired at once.
-func SetKey(a Action, key int32) {
+// steal removes a key from every other action, in both slots: one key may
+// drive one action only.
+func steal(key int32, except Action) {
 	for other, b := range Cur {
-		if other == a {
+		if other == except {
 			continue
 		}
 		kept := b.Keys[:0]
@@ -133,8 +132,41 @@ func SetKey(a Action, key int32) {
 		b.Keys = kept
 		Cur[other] = b
 	}
+}
+
+// SetKey binds the primary key of an action. The secondary key, if there is
+// one, is kept: the stock layout is "LEFT/A" and rebinding the arrow should
+// not throw the letter away.
+func SetKey(a Action, key int32) {
 	b := Cur[a]
+	second := noKey
+	if len(b.Keys) > 1 {
+		second = b.Keys[1]
+	}
+	steal(key, a)
+	if second == key {
+		second = noKey
+	}
 	b.Keys = []int32{key}
+	if second >= 0 {
+		b.Keys = append(b.Keys, second)
+	}
+	Cur[a] = b
+}
+
+// SetSecondKey binds the second key of an action, leaving the primary alone.
+func SetSecondKey(a Action, key int32) {
+	b := Cur[a]
+	if len(b.Keys) == 0 {
+		b.Keys = []int32{key}
+		Cur[a] = b
+		return
+	}
+	if b.Keys[0] == key {
+		return
+	}
+	steal(key, a)
+	b.Keys = []int32{b.Keys[0], key}
 	Cur[a] = b
 }
 
@@ -152,6 +184,15 @@ func SetPad(a Action, btn int32) {
 	b := Cur[a]
 	b.Pad = btn
 	Cur[a] = b
+}
+
+// ClearSecondKey drops the second key of an action.
+func ClearSecondKey(a Action) {
+	b := Cur[a]
+	if len(b.Keys) > 1 {
+		b.Keys = b.Keys[:1]
+		Cur[a] = b
+	}
 }
 
 // KeysPressed reports whether any key bound to the action is held.

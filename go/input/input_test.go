@@ -39,8 +39,8 @@ func TestBindRoundTrip(t *testing.T) {
 func TestBindIsolation(t *testing.T) {
 	Reset()
 	SetKey(RollLeft, int32(ebiten.KeyQ))
-	if got := KeyDesc(RollLeft); got != "Q" {
-		t.Fatalf("roll left = %q", got)
+	if got := KeyDesc(RollLeft); got != "Q/A" {
+		t.Fatalf("roll left = %q, want Q/A (the second key is kept)", got)
 	}
 	if got := KeyDesc(PitchUp); got != "UP/W" {
 		t.Fatalf("pitch up changed to %q", got)
@@ -76,8 +76,8 @@ func TestBindStealsKey(t *testing.T) {
 	if got := KeyDesc(PitchUp); got == "UP/W" || got == "W" {
 		t.Fatalf("pitch up still holds W: %q", got)
 	}
-	if got := KeyDesc(Accel); got != "W" {
-		t.Fatalf("accel = %q", got)
+	if got := KeyDesc(Accel); got != "W/=" {
+		t.Fatalf("accel = %q, want W/= (primary replaced, second kept)", got)
 	}
 	Reset()
 }
@@ -157,4 +157,44 @@ func TestDefaultsIncludeA(t *testing.T) {
 			}
 		}
 	}
+}
+
+// An action can carry a primary and a second key, and both must work.
+func TestSecondKey(t *testing.T) {
+	Reset()
+	SetKey(RollLeft, int32(ebiten.KeyQ))
+	SetSecondKey(RollLeft, int32(ebiten.KeyE))
+	if got := KeyDesc(RollLeft); got != "Q/E" {
+		t.Fatalf("roll left = %q, want Q/E", got)
+	}
+	// the second key is taken from whoever had it
+	SetSecondKey(Fire, int32(ebiten.KeyA))
+	if got := KeyDesc(RollLeft); got != "Q/E" {
+		t.Fatalf("roll left changed to %q", got)
+	}
+	SetSecondKey(RollRight, int32(ebiten.KeyE))
+	if got := KeyDesc(RollLeft); got != "Q" {
+		t.Fatalf("roll left = %q, want Q after E moved away", got)
+	}
+	ClearSecondKey(RollRight)
+	if got := KeyDesc(RollRight); got != "RIGHT" {
+		t.Fatalf("roll right = %q", got)
+	}
+	Reset()
+}
+
+// Rebinding the primary must not silently drop the second key, and the second
+// key must never duplicate the primary.
+func TestSecondKeyEdgeCases(t *testing.T) {
+	Reset()
+	SetKey(RollLeft, int32(ebiten.KeyA)) // A is already the second key
+	if got := KeyDesc(RollLeft); got != "A" {
+		t.Fatalf("roll left = %q, want A without a duplicate", got)
+	}
+	Reset()
+	SetSecondKey(RollLeft, int32(ebiten.KeyLeft)) // same as the primary
+	if got := KeyDesc(RollLeft); got != "LEFT/A" {
+		t.Fatalf("roll left = %q", got)
+	}
+	Reset()
 }

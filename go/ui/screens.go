@@ -1251,6 +1251,7 @@ var (
 	capturing   bool
 	captureWait float64
 	captureHold float64
+	captureSlot int // 0 primary key, 1 second key
 )
 
 // openControls shows the rebinding table.
@@ -1294,7 +1295,11 @@ func PollCapture(dt float64) {
 		return
 	}
 	if kind == "key" {
-		input.SetKey(acts[S.Control], code)
+		if captureSlot == 1 {
+			input.SetSecondKey(acts[S.Control], code)
+		} else {
+			input.SetKey(acts[S.Control], code)
+		}
 	} else {
 		input.SetPad(acts[S.Control], code)
 	}
@@ -1304,7 +1309,11 @@ func PollCapture(dt float64) {
 	if kind != "key" {
 		name = "PAD " + input.PadName(code)
 	}
-	game.G.Message("BOUND: "+name, "good")
+	if captureSlot == 1 {
+		game.G.Message("SECOND KEY: "+name, "good")
+	} else {
+		game.G.Message("BOUND: "+name, "good")
+	}
 }
 
 // galSystems is a short alias used by the chart markers.
@@ -1343,6 +1352,8 @@ func controlsScreen(fb *render.FB) {
 		if sel && capturing {
 			if seen := input.PeekDown(); seen != "" {
 				fb.TextR(seen, 234, y, ColGreen, 1)
+			} else if captureSlot == 1 {
+				fb.TextR("PRESS 2ND", 234, y, ColYellow, 1)
 			} else {
 				fb.TextR("PRESS KEY", 234, y, ColYellow, 1)
 			}
@@ -1359,12 +1370,16 @@ func controlsScreen(fb *render.FB) {
 	}
 	switch {
 	case capturing:
-		Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
+		if captureSlot == 1 {
+			Hint = "PRESS THE SECOND KEY   ESC CANCEL"
+		} else {
+			Hint = "PRESS A KEY OR BUTTON   ESC CANCEL"
+		}
 	case input.PeekDown() != "":
 		// live read-out: makes it obvious whether the platform sends the key
 		Hint = "KEY SEEN: " + input.PeekDown() + "   ENTER REBIND   ESC BACK"
 	default:
-		Hint = "UP/DOWN   ENTER REBIND   ESC BACK"
+		Hint = "ENTER KEY   RIGHT 2ND KEY   LEFT CLEAR"
 	}
 }
 
@@ -1393,8 +1408,24 @@ func controlsKey(k string) bool {
 			return true
 		}
 		capturing = true
+		captureSlot = 0
 		captureWait = 0.05
 		captureHold = 0.4
+		return true
+	case "ArrowRight":
+		if S.Control < len(acts) {
+			capturing = true
+			captureSlot = 1
+			captureWait = 0.05
+			captureHold = 0.4
+		}
+		return true
+	case "ArrowLeft":
+		if S.Control < len(acts) {
+			input.ClearSecondKey(acts[S.Control])
+			input.Save()
+			game.G.Message("SECOND KEY CLEARED", "info")
+		}
 		return true
 	}
 	return true
