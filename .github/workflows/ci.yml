@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    defaults:
+      run:
+        working-directory: go
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test ./...
+
+      - name: build
+        shell: bash
+        run: |
+          exe=""
+          if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
+          go build -trimpath -o "heliosdrift$exe" .
+
+      # -sim never opens a window, so it runs on a headless runner and proves
+      # the binary itself starts, docks, jumps, fights and round-trips a save.
+      - name: headless smoke test
+        shell: bash
+        run: |
+          exe=""
+          if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
+          "./heliosdrift$exe" -sim | tee sim.log
+
+      - name: check simulation output
+        shell: bash
+        run: |
+          grep -q "hyperspace ok: true" sim.log
+          grep -q "load: true" sim.log
+          grep -q "docked after" sim.log
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: heliosdrift-${{ matrix.os }}
+          path: |
+            go/heliosdrift
+            go/heliosdrift.exe
+            go/sim.log
+          if-no-files-found: ignore

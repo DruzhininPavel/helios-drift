@@ -1,0 +1,37 @@
+name: Release
+
+# Tag a commit (git tag v1.1 && git push origin v1.1) and this publishes the
+# Linux, Windows and macOS binaries with the release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+
+      - name: tests
+        working-directory: go
+        run: go test ./...
+
+      - name: build all targets
+        run: ./build.sh
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/HeliosDrift-linux-x86_64.tar.gz
+            dist/HeliosDrift-windows-x86_64.zip
+            dist/HeliosDrift-linux-arm64
+            dist/heliosdrift-darwin-arm64
+          generate_release_notes: true
