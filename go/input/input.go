@@ -121,14 +121,16 @@ const (
 	PadRight = int32(ebiten.StandardGamepadButtonLeftRight)
 )
 
-// Axis indices: four sticks, then the two triggers.
+// Axes are the four standard stick axes. Triggers are not axes here: the raw
+// SDL order differs between controllers (some pads report LT right after LY),
+// so they are bound as the standard LT/RT buttons instead. A stick can be put
+// on any action when an analogue value is wanted.
 const (
-	AxisLX = int32(0)
-	AxisLY = int32(1)
-	AxisRX = int32(2)
-	AxisRY = int32(3)
-	AxisTL = int32(4)
-	AxisTR = int32(5)
+	AxisLX  = int32(ebiten.StandardGamepadAxisLeftStickHorizontal)
+	AxisLY  = int32(ebiten.StandardGamepadAxisLeftStickVertical)
+	AxisRX  = int32(ebiten.StandardGamepadAxisRightStickHorizontal)
+	AxisRY  = int32(ebiten.StandardGamepadAxisRightStickVertical)
+	AxisMax = AxisRY
 )
 
 // Defaults returns the stock layout: arrows and WASD plus the left stick for
@@ -149,8 +151,8 @@ func Defaults() Map {
 		RollLeft:     {Keys: k(ebiten.KeyArrowLeft, ebiten.KeyA), Btn: noBtn, Axis: AxisLX, Dir: -1},
 		RollRight:    {Keys: k(ebiten.KeyArrowRight, ebiten.KeyD), Btn: noBtn, Axis: AxisLX, Dir: 1},
 		Fire:         {Keys: k(ebiten.KeySpace), Btn: PadA, Axis: noAxis},
-		Accel:        {Keys: k(ebiten.KeyX, ebiten.KeyEqual), Btn: noBtn, Axis: AxisTR, Dir: 1},
-		Decel:        {Keys: k(ebiten.KeyZ, ebiten.KeyMinus), Btn: noBtn, Axis: AxisTL, Dir: 1},
+		Accel:        {Keys: k(ebiten.KeyX, ebiten.KeyEqual), Btn: PadRT, Axis: noAxis},
+		Decel:        {Keys: k(ebiten.KeyZ, ebiten.KeyMinus), Btn: PadLT, Axis: noAxis},
 		Missile:      {Keys: k(ebiten.KeyM), Btn: PadB, Axis: noAxis},
 		ECM:          {Keys: k(ebiten.KeyE), Btn: PadX, Axis: noAxis},
 		Bomb:         {Keys: k(ebiten.KeyTab), Btn: PadLB, Axis: noAxis},
@@ -311,14 +313,14 @@ func firstPad() ebiten.GamepadID {
 // 0..1 — this is what keeps stick steering analogue.
 func AxisValue(a Action) float64 {
 	axis, dir := AxisDir(a)
-	if axis < 0 || dir == 0 {
+	if axis < 0 || axis > AxisMax || dir == 0 {
 		return 0
 	}
 	id := firstPad()
 	if id < 0 {
 		return 0
 	}
-	v := ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(axis)) * float64(dir)
+	v := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(axis)) * float64(dir)
 	if v <= axisDeadzone {
 		return 0
 	}
@@ -370,7 +372,7 @@ func PadDesc(a Action) string {
 	switch {
 	case b.Btn >= 0:
 		return PadName(b.Btn)
-	case b.Axis >= 0:
+	case b.Axis >= 0 && b.Axis <= AxisMax:
 		return AxisName(b.Axis, b.Dir)
 	}
 	return "-"
@@ -422,8 +424,8 @@ func Capture() (kind string, code, dir int32, ok bool) {
 	// an axis counts once it crosses the threshold: the baseline is the
 	// position at the moment the prompt opened, so a stick already held does
 	// not bind itself
-	for ax := int32(0); ax <= AxisTR; ax++ {
-		v := ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
+	for ax := int32(0); ax <= AxisMax; ax++ {
+		v := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
 		if d, ok := axisCrossed(baseline[ax], v); ok {
 			return "axis", ax, d, true
 		}
@@ -445,18 +447,18 @@ func axisCrossed(prev, cur float64) (int32, bool) {
 }
 
 // baseline holds the axis positions from when the prompt opened.
-var baseline [6]float64
+var baseline [4]float64
 
 // BeginCapture snapshots the current axis positions, so the next push is what
 // gets bound and not a stick that was already held.
 func BeginCapture() {
-	baseline = [6]float64{}
+	baseline = [4]float64{}
 	id := firstPad()
 	if id < 0 {
 		return
 	}
-	for ax := int32(0); ax <= AxisTR; ax++ {
-		baseline[ax] = ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
+	for ax := int32(0); ax <= AxisMax; ax++ {
+		baseline[ax] = ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
 	}
 }
 
@@ -490,14 +492,8 @@ func PeekAxis() string {
 	if id < 0 {
 		return ""
 	}
-	for ax := int32(0); ax <= AxisTR; ax++ {
-		v := ebiten.GamepadAxisValue(id, ebiten.GamepadAxisType(ax))
-		if ax >= AxisTL {
-			if v >= 0.3 {
-				return AxisName(ax, 1)
-			}
-			continue
-		}
+	for ax := int32(0); ax <= AxisMax; ax++ {
+		v := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
 		if v <= -0.35 {
 			return AxisName(ax, -1)
 		}
@@ -587,6 +583,11 @@ func Load() bool {
 		b, ok := f.Binds[Name(a)]
 		if !ok {
 			continue
+		}
+		if b.Axis > AxisMax {
+			// a raw axis index from an older build: not comparable to the
+			// standard axes, so fall back to the default binding
+			b.Axis, b.Dir = noAxis, 0
 		}
 		if f.Version < keysVersion {
 			// old files carry keys we still trust and raw pad numbers we do

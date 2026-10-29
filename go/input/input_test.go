@@ -295,3 +295,16 @@ func TestAxisCrossing(t *testing.T) {
 		}
 	}
 }
+
+// An axis index outside the standard four is ignored rather than read.
+func TestOutOfRangeAxisIsIgnored(t *testing.T) {
+	Reset()
+	Cur[Accel] = Binding{Keys: nil, Btn: noBtn, Axis: 5, Dir: 1}
+	if v := AxisValue(Accel); v != 0 {
+		t.Fatalf("axis 5 returned %v", v)
+	}
+	if got := PadDesc(Accel); got != "-" {
+		t.Fatalf("pad desc = %q", got)
+	}
+	Reset()
+}
