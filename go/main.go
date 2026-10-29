@@ -625,7 +625,9 @@ func runShots() {
 	g.State = "title"
 	g.Screen = "launch"
 	g.Time = 3.5
+	ui.S.HasSession = true // show the CONTINUE entry in one shot
 	shot("g38-title")
+	ui.S.HasSession = false
 }
 
 // runSim exercises the simulation without any window.

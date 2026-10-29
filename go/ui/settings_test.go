@@ -308,3 +308,25 @@ func TestPauseQuitGoesToTitle(t *testing.T) {
 		t.Fatalf("overlay = %q, want cleared", g.Overlay)
 	}
 }
+
+// Leaving to the menu must not throw the flight away: CONTINUE returns to it.
+func TestContinueFlight(t *testing.T) {
+	newTitle()
+	g := game.G
+	g.State = "flight"
+	g.Screen = "launch"
+	QuitToTitle()
+	if !S.HasSession {
+		t.Fatal("session not remembered")
+	}
+	items := TitleItems()
+	if len(items) != 5 || items[1] != "CONTINUE FLIGHT" {
+		t.Fatalf("items = %v", items)
+	}
+	S.Title = 1
+	Key("Enter")
+	if g.State != "flight" {
+		t.Fatalf("state = %q, want flight", g.State)
+	}
+	DropSession()
+}

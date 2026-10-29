@@ -39,6 +39,9 @@ type Sel struct {
 	PrevState           string
 	PrevScreen          string
 	PadTestFrom         string
+	HasSession          bool
+	SessionState        string
+	SessionScreen       string
 }
 
 var S = Sel{ChartCursor: -1}
@@ -824,42 +827,25 @@ func Title(fb *render.FB) {
 	fb.TextC(game.ProductSub, 161, 54, render.Color("steel", 2), 3)
 	fb.TextC(game.ProductSub, 160, 53, render.Color("steel", 4), 3)
 	fb.TextC("THE GALAXY IS YOURS, COMMANDER", 160, 84, ColDim, 1)
-	// one left-aligned column, no digits: mixed widths read as a ragged block
-	newCol, loadCol2, setCol := ColText, ColText, ColText
-	switch S.Title {
-	case 0:
-		newCol = ColYellow
-	case 1:
-		loadCol2 = ColYellow
-	case 2:
-		setCol = ColYellow
-	}
-	if !game.SaveExists() {
-		loadCol2 = ColDim
-	}
-	if S.Title == 1 && loadCol2 == ColDim {
-		loadCol2 = ColDim
-	}
+	// one left-aligned column, no digits: mixed widths read as a ragged block.
+	// CONTINUE appears only when a flight is still in progress.
 	const menuX = 116
 	const markX = 102
-	quitCol := ColText
-	switch S.Title {
-	case 3:
-		quitCol = ColYellow
+	items := TitleItems()
+	if S.Title >= len(items) {
+		S.Title = len(items) - 1
 	}
-	fb.Text("NEW GAME", menuX, 138, newCol, 1)
-	fb.Text("LOAD COMMANDER", menuX, 152, loadCol2, 1)
-	fb.Text("SETTINGS", menuX, 166, setCol, 1)
-	fb.Text("QUIT", menuX, 180, quitCol, 1)
-	switch S.Title {
-	case 0:
-		fb.Text(">", markX, 138, ColYellow, 1)
-	case 1:
-		fb.Text(">", markX, 152, ColYellow, 1)
-	case 2:
-		fb.Text(">", markX, 166, ColYellow, 1)
-	case 3:
-		fb.Text(">", markX, 180, ColYellow, 1)
+	for i, name := range items {
+		y := 140 + i*11
+		col := ColText
+		if name == "LOAD COMMANDER" && !game.SaveExists() {
+			col = ColDim
+		}
+		if i == S.Title {
+			col = ColYellow
+			fb.Text(">", markX, y, ColYellow, 1)
+		}
+		fb.Text(name, menuX, y, col, 1)
 	}
 	fb.TextC("ARROWS / MOUSE STEER   SPACE FIRE   X/Z SPEED", 160, 196, ColDim, 1)
 	fb.TextC("C CHART   J JUMP   ESC CONTROLS", 160, 207, render.RGB(0x2d5f7a), 1)
@@ -868,6 +854,16 @@ func Title(fb *render.FB) {
 	if game.Version != "" {
 		fb.TextR(game.Version, 316, 216, render.RGB(0x2b4a5e), 1)
 	}
+}
+
+// TitleItems is the main menu, in order. Continue is offered only while a
+// session exists, so leaving to the menu no longer throws the flight away.
+func TitleItems() []string {
+	out := []string{"NEW GAME"}
+	if S.HasSession {
+		out = append(out, "CONTINUE FLIGHT")
+	}
+	return append(out, "LOAD COMMANDER", "SETTINGS", "QUIT")
 }
 
 func gameOver(fb *render.FB) {

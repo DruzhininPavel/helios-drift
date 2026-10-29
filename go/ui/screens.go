@@ -568,50 +568,46 @@ func Key(k string) bool {
 	}
 	switch g.State {
 	case "title":
+		items := TitleItems()
+		if S.Title >= len(items) {
+			S.Title = 0
+		}
 		switch k {
 		case "ArrowUp":
-			S.Title = (S.Title + 3) % 4
+			S.Title = (S.Title + len(items) - 1) % len(items)
 			return true
 		case "ArrowDown":
-			S.Title = (S.Title + 1) % 4
-			return true
-		case "1":
-			openMode()
-			return true
-		case "2":
-			if !game.SaveExists() {
-				g.Message("NO SAVED COMMANDER", "bad")
-				return true
-			}
-			openSlots(false)
-			return true
-		case "3":
-			OpenSettings()
-			return true
-		case "4":
-			quitRequested = true
+			S.Title = (S.Title + 1) % len(items)
 			return true
 		case "Enter":
-			switch S.Title {
-			case 0:
+			switch items[S.Title] {
+			case "NEW GAME":
 				openMode()
-			case 1:
-				if !game.SaveExists() {
-					g.Message("NO SAVED COMMANDER", "bad")
-				} else {
+			case "CONTINUE FLIGHT":
+				ContinueFlight()
+			case "LOAD COMMANDER":
+				if game.SaveExists() {
 					openSlots(false)
+				} else {
+					g.Message("NO SAVED COMMANDER", "bad")
 				}
-			case 2:
+			case "SETTINGS":
 				OpenSettings()
-			case 3:
+			case "QUIT":
 				quitRequested = true
 			}
 			return true
 		}
+		// digits pick an entry, matching the number shown in the hint
+		if n, err := strconv.Atoi(k); err == nil && n >= 1 && n <= len(items) {
+			S.Title = n - 1
+		}
 		return true
 	case "dead":
 		if k == "Enter" {
+			DropSession()
 			g.State = "title"
+			g.Screen = "launch"
 		}
 		return true
 	case "docked":
@@ -1261,6 +1257,8 @@ func slotsKey(k string) bool {
 		}
 		if !g.LoadSlot(S.Slot) {
 			g.Message("LOAD FAILED", "bad")
+		} else {
+			DropSession()
 		}
 		return true
 	}
@@ -1630,11 +1628,35 @@ func axisBar(fb *render.FB, x, y int, v float64) {
 // Leaving the application is a separate choice, made from the main menu.
 func QuitToTitle() {
 	g := game.G
+	// remember where the pilot was, so CONTINUE FLIGHT can pick it up
+	S.HasSession = g.State != "title"
+	S.SessionState = g.State
+	S.SessionScreen = g.Screen
 	g.Overlay = ""
 	g.Screen = "launch"
 	g.In = game.InputState{}
 	g.State = "title"
 	S.Title = 0
+}
+
+// ContinueFlight returns to the flight that was left from the pause menu.
+func ContinueFlight() {
+	if !S.HasSession {
+		return
+	}
+	g := game.G
+	g.State = S.SessionState
+	g.Screen = S.SessionScreen
+	g.Overlay = ""
+	S.Title = 0
+}
+
+// DropSession forgets the interrupted flight: a new commander or a loaded save
+// replaces it.
+func DropSession() {
+	S.HasSession = false
+	S.SessionState = ""
+	S.SessionScreen = ""
 }
 
 // ----------------------------------------------------------------- game mode
@@ -1685,6 +1707,7 @@ func modeKey(k string) bool {
 			mode = game.ModeClassic
 		}
 		g.NewGameMode(mode, "")
+		DropSession()
 		return true
 	}
 	return true
