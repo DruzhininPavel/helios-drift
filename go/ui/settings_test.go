@@ -264,3 +264,19 @@ func TestCampaignScreen(t *testing.T) {
 		t.Fatalf("stage = %d", game.G.Cmd.Campaign.Stage)
 	}
 }
+
+// The pad test has to be reachable from the settings screen, and Enter on it
+// must actually open it — otherwise it is invisible in the app.
+func TestPadTestReachable(t *testing.T) {
+	newTitle()
+	OpenSettings()
+	S.Settings = 4
+	Key("Enter")
+	if game.G.Screen != "padtest" {
+		t.Fatalf("screen = %q, want padtest", game.G.Screen)
+	}
+	Key("Escape")
+	if game.G.Screen != "settings" {
+		t.Fatalf("after escape screen = %q", game.G.Screen)
+	}
+}
