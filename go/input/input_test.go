@@ -111,3 +111,18 @@ func TestLoadRepairsSoundClash(t *testing.T) {
 	}
 	Reset()
 }
+
+// Enter starts the rebinding prompt, so it must never be captured by its own
+// keypress; modifiers and unnamed platform keys are not bindable either.
+func TestBindableKeys(t *testing.T) {
+	for _, k := range []ebiten.Key{ebiten.KeyEnter, ebiten.KeyEscape, ebiten.KeyShift, ebiten.KeyAltLeft} {
+		if Bindable(k) {
+			t.Fatalf("%v should not be bindable", k)
+		}
+	}
+	for _, k := range []ebiten.Key{ebiten.KeyA, ebiten.KeyW, ebiten.KeyS, ebiten.KeyD, ebiten.KeySpace, ebiten.KeyF10} {
+		if !Bindable(k) {
+			t.Fatalf("%v should be bindable", k)
+		}
+	}
+}

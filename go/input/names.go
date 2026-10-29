@@ -8,6 +8,9 @@ func init() {
 	for c := ebiten.KeyA; c <= ebiten.KeyZ; c++ {
 		keyNames[int32(c)] = string(rune('A' + int(c-ebiten.KeyA)))
 	}
+	for c := ebiten.KeyF1; c <= ebiten.KeyF12; c++ {
+		keyNames[int32(c)] = "F" + string(rune('1'+int(c-ebiten.KeyF1)))
+	}
 	for c := ebiten.Key0; c <= ebiten.Key9; c++ {
 		keyNames[int32(c)] = string(rune('0' + int(c-ebiten.Key0)))
 	}

@@ -230,7 +230,7 @@ func firstPad() ebiten.GamepadID {
 // whatever the player was aiming for.
 func Capture() (kind string, code int32, ok bool) {
 	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
-		if isModifier(k) {
+		if !Bindable(k) {
 			continue
 		}
 		if inpututil.IsKeyJustPressed(k) {
@@ -247,19 +247,22 @@ func Capture() (kind string, code int32, ok bool) {
 	return "", 0, false
 }
 
-// isModifier reports whether the key is a bare modifier, which should not be
-// bound on its own: people press Shift while rebinding more often than they
-// mean to bind it.
-func isModifier(k ebiten.Key) bool {
+// Bindable reports whether a key may be assigned to an action. Modifiers are
+// excluded because people hold Shift while rebinding; Enter and Escape are
+// excluded because Enter starts the prompt and would be captured by its own
+// keypress, and Escape cancels it. Everything else must have a display name,
+// which also filters out platform keys we know nothing about.
+func Bindable(k ebiten.Key) bool {
 	switch k {
 	case ebiten.KeyShift, ebiten.KeyShiftLeft, ebiten.KeyShiftRight,
 		ebiten.KeyControl, ebiten.KeyControlLeft, ebiten.KeyControlRight,
 		ebiten.KeyAlt, ebiten.KeyAltLeft, ebiten.KeyAltRight,
 		ebiten.KeyMeta, ebiten.KeyMetaLeft, ebiten.KeyMetaRight,
-		ebiten.KeyCapsLock:
-		return true
+		ebiten.KeyEnter, ebiten.KeyEscape, ebiten.KeyCapsLock:
+		return false
 	}
-	return false
+	_, named := keyNames[int32(k)]
+	return named
 }
 
 // repair fixes bindings files written by older builds: SOUND used to sit on
