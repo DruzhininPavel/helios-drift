@@ -86,9 +86,6 @@ func (a *App) Update() error {
 			ebiten.KeyBackspace,
 		} {
 			if inpututil.IsKeyJustPressed(k) {
-				if k == ebiten.KeyQ && game.G.Overlay == "pause" {
-					return ebiten.Termination
-				}
 				name := keyName(k)
 				if name != "" {
 					ui.Key(name)

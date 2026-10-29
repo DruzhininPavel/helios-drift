@@ -292,3 +292,19 @@ func TestPadTestReachable(t *testing.T) {
 		t.Fatalf("after escape screen = %q, want controls", game.G.Screen)
 	}
 }
+
+// Quitting from the pause overlay goes back to the title screen; leaving the
+// application is a separate decision made from the main menu.
+func TestPauseQuitGoesToTitle(t *testing.T) {
+	newTitle()
+	g := game.G
+	g.State = "flight"
+	g.Overlay = "pause"
+	Key("q")
+	if g.State != "title" {
+		t.Fatalf("state = %q, want title", g.State)
+	}
+	if g.Overlay != "" {
+		t.Fatalf("overlay = %q, want cleared", g.Overlay)
+	}
+}

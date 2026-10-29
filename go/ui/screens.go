@@ -535,7 +535,7 @@ func pauseScreen(fb *render.FB) {
 		{"C", "GALACTIC CHART"},
 		{"V", "COMMANDER STATUS"},
 		{"ESC", "RESUME"},
-		{"Q", "QUIT"},
+		{"Q", "MAIN MENU"},
 	}
 	for i, r := range rows {
 		fb.Text(r[0], 52, 40+i*12, ColYellow, 1)
@@ -843,6 +843,10 @@ func overlayKey(k string) bool {
 	g := game.G
 	if k == "Escape" {
 		g.Overlay = ""
+		return true
+	}
+	if k == "q" && g.Overlay == "pause" {
+		QuitToTitle()
 		return true
 	}
 	if g.Overlay == "chart" {
@@ -1620,6 +1624,17 @@ func axisBar(fb *render.FB, x, y int, v float64) {
 		c = w - 2
 	}
 	fb.FillRect(x+c, y, x+c+2, y+7, ColGreen)
+}
+
+// QuitToTitle abandons the current flight and returns to the title screen.
+// Leaving the application is a separate choice, made from the main menu.
+func QuitToTitle() {
+	g := game.G
+	g.Overlay = ""
+	g.Screen = "launch"
+	g.In = game.InputState{}
+	g.State = "title"
+	S.Title = 0
 }
 
 // ----------------------------------------------------------------- game mode
