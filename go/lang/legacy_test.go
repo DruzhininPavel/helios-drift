@@ -9,7 +9,9 @@ import (
 // Preferences written before the rename are picked up by the new build.
 func TestLegacyConfigFallback(t *testing.T) {
 	dir := t.TempDir()
+	// os.UserHomeDir reads USERPROFILE on Windows and HOME everywhere else
 	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir)
 	raw := []byte(`{"lang":"ru","muted":true,"volume":0.4}`)
 	if err := os.WriteFile(filepath.Join(dir, ".elite16-config.json"), raw, 0o644); err != nil {
 		t.Fatal(err)
