@@ -230,6 +230,18 @@ var ru = map[string]string{
 	" IN ": " В ",
 	" TO ": " В ",
 
+	// ---- action names that were still English
+	"YAW LEFT":    "РЫСКАНЬЕ ВЛЕВО",
+	"YAW RIGHT":   "РЫСКАНЬЕ ВПРАВО",
+	"MISSILE":     "РАКЕТА",
+	"ENERGY BOMB": "ЭНЕРГОБОМБА",
+	// ---- pad test screen
+	"RAW AXES":     "СЫРЫЕ ОСИ",
+	"STD AXES":     "СТАНДАРТНЫЕ",
+	"BUTTONS 0-15": "КНОПКИ 0-15",
+	"ACTIVE: ":     "АКТИВНО: ",
+	"NO GAMEPAD":   "НЕТ ГЕЙМПАДА",
+
 	// ---- controls screen legend and row prompts
 	"PAD TEST":                                   "ТЕСТ ГЕЙМПАДА",
 	"NO GAMEPAD CONNECTED":                       "ГЕЙМПАД НЕ ПОДКЛЮЧЁН",

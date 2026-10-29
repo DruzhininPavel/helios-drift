@@ -1339,9 +1339,9 @@ func PollCapture(dt float64) {
 	input.Save()
 	capturing = false
 	if captureSlot == 1 {
-		game.G.Message("SECOND KEY: "+name+" FOR "+input.Name(acts[S.Control]), "good")
+		game.G.Message("SECOND KEY: "+name+" FOR "+lang.T(input.Name(acts[S.Control])), "good")
 	} else {
-		game.G.Message("BOUND: "+name+" FOR "+input.Name(acts[S.Control]), "good")
+		game.G.Message("BOUND: "+name+" FOR "+lang.T(input.Name(acts[S.Control])), "good")
 	}
 }
 
@@ -1530,7 +1530,7 @@ func readPadState() padState {
 	}
 	for _, a := range input.Actions() {
 		if input.Held(a) {
-			p.active = append(p.active, input.Name(a))
+			p.active = append(p.active, lang.T(input.Name(a)))
 		}
 	}
 	return p
@@ -1545,7 +1545,7 @@ func samplePad() padState {
 	p.btn[input.PadA] = true
 	p.btn[input.PadUp] = true
 	p.btn[input.PadRT] = true
-	p.active = []string{"ACCELERATE", "FIRE"}
+	p.active = []string{lang.T("ACCELERATE"), lang.T("FIRE")}
 	return p
 }
 
@@ -1562,7 +1562,7 @@ func drawPadTest(fb *render.FB, p padState) {
 		Hint = "ESC BACK"
 		return
 	}
-	fb.Text(strconv.Itoa(p.count)+" PAD  "+p.name, 12, 24, ColDim, 1)
+	fb.Text(strconv.Itoa(p.count)+" "+lang.T("PAD")+"  "+p.name, 12, 24, ColDim, 1)
 
 	fb.Text("RAW AXES", 12, 40, ColYellow, 1)
 	for ax, v := range p.raw {
