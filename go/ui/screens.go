@@ -1321,9 +1321,9 @@ func PollCapture(dt float64) {
 	input.Save()
 	capturing = false
 	if captureSlot == 1 {
-		game.G.Message("SECOND KEY: "+name, "good")
+		game.G.Message("SECOND KEY: "+name+" FOR "+input.Name(acts[S.Control]), "good")
 	} else {
-		game.G.Message("BOUND: "+name, "good")
+		game.G.Message("BOUND: "+name+" FOR "+input.Name(acts[S.Control]), "good")
 	}
 }
 
@@ -1363,8 +1363,8 @@ func controlsScreen(fb *render.FB) {
 		if sel && capturing {
 			if seen := input.PeekDown(); seen != "" {
 				fb.TextR(seen, 234, y, ColGreen, 1)
-			} else if ax := input.PeekAxis(); ax != "" {
-				fb.TextR(ax, 234, y, ColGreen, 1)
+			} else if ax, dir, ok := input.AxisPick(); ok {
+				fb.TextR(input.AxisName(ax, dir), 234, y, ColGreen, 1)
 			} else if captureSlot == 1 {
 				fb.TextR("PRESS 2ND", 234, y, ColYellow, 1)
 			} else {

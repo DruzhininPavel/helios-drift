@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -400,10 +401,13 @@ func KeyDesc(a Action) string {
 	return out
 }
 
-// Capture looks for an input pressed in this frame: a key, a standard gamepad
-// button, or an axis pushed past the threshold. It watches for a fresh press,
-// so a key held from before the prompt does not bind itself.
+// Capture looks for an input to bind. Keys and buttons must be pressed in this
+// frame; an axis only has to be held past the threshold. There is no "crossing"
+// logic: a stick that is already pushed binds immediately after a short settle
+// delay, which is what a player expects and what keeps the binding from firing
+// later, behind their back.
 func Capture() (kind string, code, dir int32, ok bool) {
+	settle := captureSettling()
 	for k := ebiten.Key(0); k <= ebiten.KeyMax; k++ {
 		if !Bindable(k) {
 			continue
@@ -421,46 +425,49 @@ func Capture() (kind string, code, dir int32, ok bool) {
 			return "pad", int32(b), 0, true
 		}
 	}
-	// an axis counts once it crosses the threshold: the baseline is the
-	// position at the moment the prompt opened, so a stick already held does
-	// not bind itself
+	if settle {
+		return "", 0, 0, false
+	}
 	for ax := int32(0); ax <= AxisMax; ax++ {
 		v := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
-		if d, ok := axisCrossed(baseline[ax], v); ok {
-			return "axis", ax, d, true
+		if v <= -AxisThreshold {
+			return "axis", ax, -1, true
+		}
+		if v >= AxisThreshold {
+			return "axis", ax, 1, true
 		}
 	}
 	return "", 0, 0, false
 }
 
-// axisCrossed reports a fresh push past the threshold.
-func axisCrossed(prev, cur float64) (int32, bool) {
-	if prev > -AxisThreshold && prev < AxisThreshold {
-		switch {
-		case cur <= -AxisThreshold:
-			return -1, true
-		case cur >= AxisThreshold:
-			return 1, true
-		}
-	}
-	return 0, false
-}
-
-// baseline holds the axis positions from when the prompt opened.
-var baseline [4]float64
-
-// BeginCapture snapshots the current axis positions, so the next push is what
-// gets bound and not a stick that was already held.
-func BeginCapture() {
-	baseline = [4]float64{}
+// AxisPick reports an axis held past the threshold, for the prompt read-out.
+func AxisPick() (int32, int32, bool) {
 	id := firstPad()
 	if id < 0 {
-		return
+		return 0, 0, false
 	}
 	for ax := int32(0); ax <= AxisMax; ax++ {
-		baseline[ax] = ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
+		v := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxis(ax))
+		if v <= -AxisThreshold {
+			return ax, -1, true
+		}
+		if v >= AxisThreshold {
+			return ax, 1, true
+		}
 	}
+	return 0, 0, false
 }
+
+// captureOpened records when the prompt appeared, so the Enter that opens it
+// cannot also land as the bound key.
+var captureOpened time.Time
+
+// BeginCapture resets the prompt state.
+func BeginCapture() { captureOpened = time.Now() }
+
+// captureSettling reports whether the prompt is still too fresh to accept an
+// axis that was already deflected when it opened.
+func captureSettling() bool { return time.Since(captureOpened) < 180*time.Millisecond }
 
 // CaptureDown reports a bindable key that is simply held: the fallback for
 // keys the platform never reports as a fresh press.

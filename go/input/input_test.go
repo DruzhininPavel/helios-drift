@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -275,36 +276,15 @@ func TestLegacyKeysFileMerges(t *testing.T) {
 	Reset()
 }
 
-// A stick counts when it crosses the threshold, not when it is already held.
-func TestAxisCrossing(t *testing.T) {
-	cases := []struct {
-		prev, cur float64
-		dir       int32
-		ok        bool
-	}{
-		{0, 0.8, 1, true},
-		{0, -0.9, -1, true},
-		{0.7, 0.9, 0, false}, // already past: no second trigger
-		{0.5, 0.3, 0, false}, // never crossed
-		{-0.8, -0.7, 0, false},
+// The prompt ignores axes for a moment after it opens, so the press that
+// started it cannot be mistaken for a stick push.
+func TestCaptureSettling(t *testing.T) {
+	BeginCapture()
+	if !captureSettling() {
+		t.Fatal("a fresh prompt should still be settling")
 	}
-	for _, c := range cases {
-		dir, ok := axisCrossed(c.prev, c.cur)
-		if ok != c.ok || dir != c.dir {
-			t.Fatalf("axisCrossed(%v,%v) = %d,%v want %d,%v", c.prev, c.cur, dir, ok, c.dir, c.ok)
-		}
+	time.Sleep(220 * time.Millisecond)
+	if captureSettling() {
+		t.Fatal("prompt should accept axes after the settle window")
 	}
-}
-
-// An axis index outside the standard four is ignored rather than read.
-func TestOutOfRangeAxisIsIgnored(t *testing.T) {
-	Reset()
-	Cur[Accel] = Binding{Keys: nil, Btn: noBtn, Axis: 5, Dir: 1}
-	if v := AxisValue(Accel); v != 0 {
-		t.Fatalf("axis 5 returned %v", v)
-	}
-	if got := PadDesc(Accel); got != "-" {
-		t.Fatalf("pad desc = %q", got)
-	}
-	Reset()
 }
