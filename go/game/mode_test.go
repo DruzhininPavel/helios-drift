@@ -216,3 +216,25 @@ func TestCampaignSurvivesSave(t *testing.T) {
 		t.Fatalf("campaign after load = %+v", other.Cmd.Campaign)
 	}
 }
+
+// Yaw is an Advanced-mode addition: it turns the ship there and is ignored in
+// Classic, where the 1984 flight model had only pitch and roll.
+func TestYawAdvancedOnly(t *testing.T) {
+	turn := func(mode string) float64 {
+		g := newGameMode(mode)
+		g.Launch()
+		before := g.Player.Mat.Col(2)
+		g.In.Yaw = 1
+		for i := 0; i < 30; i++ {
+			g.Update(1.0 / 60.0)
+		}
+		after := g.Player.Mat.Col(2)
+		return before.Sub(after).Len()
+	}
+	if d := turn(ModeAdvanced); d < 0.01 {
+		t.Fatalf("advanced did not yaw (moved %.4f)", d)
+	}
+	if d := turn(ModeClassic); d > 0.001 {
+		t.Fatalf("classic yawed by %.4f", d)
+	}
+}

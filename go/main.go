@@ -139,6 +139,14 @@ func (a *App) Update() error {
 		if input.Digital(input.RollRight) {
 			roll += 1
 		}
+		yaw := 0.0
+		if input.Digital(input.YawLeft) {
+			yaw -= 1
+		}
+		if input.Digital(input.YawRight) {
+			yaw += 1
+		}
+		yaw += input.AxisValue(input.YawRight) - input.AxisValue(input.YawLeft)
 		pitch += input.AxisValue(input.PitchUp) - input.AxisValue(input.PitchDown)
 		roll += input.AxisValue(input.RollRight) - input.AxisValue(input.RollLeft)
 		if pitch == 0 && roll == 0 && a.mouse {
@@ -166,10 +174,11 @@ func (a *App) Update() error {
 		dispatchFlightActions()
 		g.In.Pitch = pitch
 		g.In.Roll = roll
+		g.In.Yaw = yaw
 		g.In.Accel = accel
 		g.In.Fire = fire
 	} else {
-		g.In.Pitch, g.In.Roll, g.In.Accel, g.In.Fire = 0, 0, 0, false
+		g.In.Pitch, g.In.Roll, g.In.Yaw, g.In.Accel, g.In.Fire = 0, 0, 0, 0, false
 	}
 
 	if g.Overlay == "" {

@@ -519,8 +519,12 @@ func statusScreen(fb *render.FB) {
 func pauseScreen(fb *render.FB) {
 	chrome(fb, "PAUSED")
 	plate(fb, 40, 26, 240, 170, "FLIGHT CONTROLS")
+	steer := "PITCH AND ROLL"
+	if !game.G.Classic() {
+		steer = "PITCH / ROLL / YAW"
+	}
 	rows := [][2]string{
-		{"ARROWS / MOUSE", "PITCH AND ROLL"},
+		{"ARROWS / MOUSE", steer},
 		{"X / Z", "ACCELERATE / BRAKE"},
 		{"SPACE or LMB", "FIRE LASERS"},
 		{"M", "LAUNCH MISSILE"},

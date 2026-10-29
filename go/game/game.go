@@ -15,9 +15,12 @@ const (
 	ViewW = 320
 	ViewH = 150
 
-	MaxSpeed    = 420
-	PitchRate   = 1.55
-	RollRate    = 2.35
+	MaxSpeed  = 420
+	PitchRate = 1.55
+	RollRate  = 2.35
+	// YawRate is deliberately slower than pitch: yaw is a steering aid added
+	// for Advanced mode, not the main way to turn the ship.
+	YawRate     = 0.95
 	MaxEnergy   = 100
 	MaxShield   = 100
 	CargoBase   = 20
@@ -215,8 +218,8 @@ type DeadInfo struct {
 }
 
 type InputState struct {
-	Pitch, Roll, Accel float64
-	Fire               bool
+	Pitch, Roll, Yaw, Accel float64
+	Fire                    bool
 }
 
 type Game struct {
@@ -246,6 +249,7 @@ type Game struct {
 
 	LastDamageReason string
 	EscapeUsed       bool
+	YawWarned        bool
 	DockT            float64
 
 	// contract targets rolled when the station is entered, so the briefing and

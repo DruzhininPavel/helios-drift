@@ -20,6 +20,8 @@ const (
 	PitchDown
 	RollLeft
 	RollRight
+	YawLeft
+	YawRight
 	Fire
 	Accel
 	Decel
@@ -38,7 +40,7 @@ const (
 )
 
 var actionNames = [NumActions]string{
-	"PITCH UP", "PITCH DOWN", "ROLL LEFT", "ROLL RIGHT", "FIRE",
+	"PITCH UP", "PITCH DOWN", "ROLL LEFT", "ROLL RIGHT", "YAW LEFT", "YAW RIGHT", "FIRE",
 	"ACCELERATE", "DECELERATE", "MISSILE", "E.C.M.", "ENERGY BOMB",
 	"DOCKING COMPUTER", "JUMP IN SYSTEM", "GALACTIC JUMP", "JETTISON",
 	"CHART", "STATUS", "PAUSE", "SOUND",
@@ -147,10 +149,14 @@ func Defaults() Map {
 		return out
 	}
 	return Map{
-		PitchUp:      {Keys: k(ebiten.KeyArrowUp, ebiten.KeyW), Btn: noBtn, Axis: AxisLY, Dir: -1},
-		PitchDown:    {Keys: k(ebiten.KeyArrowDown, ebiten.KeyS), Btn: noBtn, Axis: AxisLY, Dir: 1},
-		RollLeft:     {Keys: k(ebiten.KeyArrowLeft, ebiten.KeyA), Btn: noBtn, Axis: AxisLX, Dir: -1},
-		RollRight:    {Keys: k(ebiten.KeyArrowRight, ebiten.KeyD), Btn: noBtn, Axis: AxisLX, Dir: 1},
+		PitchUp:   {Keys: k(ebiten.KeyArrowUp, ebiten.KeyW), Btn: noBtn, Axis: AxisLY, Dir: -1},
+		PitchDown: {Keys: k(ebiten.KeyArrowDown, ebiten.KeyS), Btn: noBtn, Axis: AxisLY, Dir: 1},
+		RollLeft:  {Keys: k(ebiten.KeyArrowLeft, ebiten.KeyA), Btn: noBtn, Axis: AxisLX, Dir: -1},
+		RollRight: {Keys: k(ebiten.KeyArrowRight, ebiten.KeyD), Btn: noBtn, Axis: AxisLX, Dir: 1},
+		// yaw is an Advanced-mode control; Classic ignores it, so it starts
+		// unbound and the player decides what to put on it
+		YawLeft:      {Keys: k(ebiten.KeyQ), Btn: noBtn, Axis: noAxis},
+		YawRight:     {Keys: k(ebiten.KeyR), Btn: noBtn, Axis: noAxis},
 		Fire:         {Keys: k(ebiten.KeySpace), Btn: PadA, Axis: noAxis},
 		Accel:        {Keys: k(ebiten.KeyX, ebiten.KeyEqual), Btn: PadRT, Axis: noAxis},
 		Decel:        {Keys: k(ebiten.KeyZ, ebiten.KeyMinus), Btn: PadLT, Axis: noAxis},

@@ -9,6 +9,15 @@ import (
 )
 
 // Update advances the simulation by dt seconds.
+// warnYaw tells a Classic pilot once per session why the new axis does nothing.
+func (g *Game) warnYaw() {
+	if g.YawWarned {
+		return
+	}
+	g.YawWarned = true
+	g.Message("NO YAW IN CLASSIC FLIGHT", "info")
+}
+
 func (g *Game) Update(dt float64) {
 	switch g.State {
 	case "dead":
@@ -45,7 +54,15 @@ func (g *Game) Update(dt float64) {
 		if g.In.Roll != 0 {
 			p.Mat = p.Mat.Mul(render.RotZ(-g.In.Roll * RollRate * dt))
 		}
-		if g.In.Pitch != 0 || g.In.Roll != 0 {
+		// yaw did not exist in the 1984 flight model, so Classic ignores it
+		if g.In.Yaw != 0 {
+			if g.Classic() {
+				g.warnYaw()
+			} else {
+				p.Mat = p.Mat.Mul(render.RotY(g.In.Yaw * YawRate * dt))
+			}
+		}
+		if g.In.Pitch != 0 || g.In.Roll != 0 || (!g.Classic() && g.In.Yaw != 0) {
 			p.Mat = p.Mat.Orthonormalize()
 		}
 		if g.In.Accel > 0 {
