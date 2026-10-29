@@ -229,7 +229,13 @@ Competent → Dangerous → Deadly → Elite.
 | `dist/HeliosDrift-linux-x86_64.tar.gz` | Steam Deck, SteamOS, любой дистрибутив с glibc |
 | `dist/HeliosDrift-linux-arm64` | Linux на ARM |
 | `dist/HeliosDrift-windows-x86_64.zip` | Windows 10/11 |
-| `dist/heliosdrift-darwin-arm64` | macOS на Apple Silicon |
+| `dist/HeliosDrift-macos-arm64.zip` | macOS на Apple Silicon — распаковать и запустить `HeliosDrift.app` |
+| `dist/heliosdrift-darwin-arm64` | голый бинарник macOS (только для `-sim` и отладки) |
+
+Версия вшивается при сборке (`git describe` или имя тега) и видна в углу
+титульного экрана, а также печатается по `-version`. На macOS игра идёт
+только из бандла `HeliosDrift.app`: голый Mach-O не может открыть окно, и
+двойной клик по нему открывает терминал с сообщением.
 
 Бинарники самодостаточные: ассетов рядом не нужно, все модели и звуки
 генерируются при старте. Сохранения и настройки — в домашнем каталоге,

@@ -239,6 +239,7 @@ var ru = map[string]string{
 	"UP/DOWN   ENTER REBIND   ESC BACK":               "ВВЕРХ/ВНИЗ   ENTER ИЗМЕНИТЬ   ESC",
 	"UP/DOWN  LEFT/RIGHT  ENTER  ESC":                 "ВВЕРХ/ВНИЗ  ВЛЕВО/ВПРАВО  ENTER  ESC",
 	"SHIFT+M - SOUND ON/OFF":                          "SHIFT+M - ЗВУК ВКЛ/ВЫКЛ",
+	"BOUND: ":                                         "ПРИВЯЗАНО: ",
 	"FINAL APPROACH - ":                               "ЗАХОД НА ПОСАДКУ - ",
 	"DEGREES":                                         "ГРАД",
 	"1-8 SELECT   UP/DOWN   F REFUEL   ENTER CONFIRM": "1-8 ВЫБОР   ВВЕРХ/ВНИЗ   F ЗАПРАВКА   ENTER",

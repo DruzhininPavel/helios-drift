@@ -1290,7 +1290,11 @@ func PollCapture(dt float64) {
 	}
 	input.Save()
 	capturing = false
-	game.G.Message("BOUND", "good")
+	name := input.KeyName(code)
+	if kind != "key" {
+		name = "PAD " + input.PadName(code)
+	}
+	game.G.Message("BOUND: "+name, "good")
 }
 
 // galSystems is a short alias used by the chart markers.
@@ -1371,7 +1375,7 @@ func controlsKey(k string) bool {
 			return true
 		}
 		capturing = true
-		captureWait = 0.2
+		captureWait = 0.05
 		return true
 	}
 	return true

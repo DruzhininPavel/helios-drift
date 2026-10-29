@@ -11,6 +11,11 @@ const (
 	ProductFull = "HELIOS DRIFT"
 )
 
+// Version is stamped at build time: -X heliosdrift/game.Version=<git describe>.
+var Version = "dev"
+
+const ()
+
 const (
 	ModeClassic  = "classic"
 	ModeAdvanced = "advanced"

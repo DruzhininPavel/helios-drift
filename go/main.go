@@ -701,8 +701,14 @@ func main() {
 	plain := flag.Bool("plain", false, "disable the extra shading detail (for A/B comparison)")
 	langFlag := flag.String("lang", "", "UI language for shots: ru or en")
 	sim := flag.Bool("sim", false, "run a headless simulation and exit")
+	ver := flag.Bool("version", false, "print the build version and exit")
 	probe := flag.Bool("probe", false, "combat probe")
 	flag.Parse()
+
+	if *ver {
+		fmt.Println(game.ProductFull, game.Version)
+		return
+	}
 
 	lang.Load()
 	input.Load()
@@ -743,11 +749,11 @@ func main() {
 		exe, _ := os.Executable()
 		if !strings.Contains(exe, ".app/Contents/MacOS/") {
 			fmt.Println(game.ProductFull + " нужно запускать из бандла:")
-			fmt.Println("    open \"Elite.app\"     (или двойной клик по Elite.app / run.command)")
+			fmt.Println("    open HeliosDrift.app     (или двойной клик по HeliosDrift.app)")
 			fmt.Println()
 			fmt.Println("macOS не даёт голому бинарю открыть окно и роняет его в AppKit.")
 			fmt.Println("Симуляция без окна работает и так:  ./heliosdrift -sim")
-			fmt.Println("Переопределить: HELIOS_ALLOW_BARE=1 ./heliosdrift")
+			fmt.Println("Если окно всё равно нужно: HELIOS_ALLOW_BARE=1 ./heliosdrift")
 			os.Exit(2)
 		}
 	}

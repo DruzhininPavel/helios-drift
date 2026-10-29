@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type Action int
@@ -223,18 +224,22 @@ func firstPad() ebiten.GamepadID {
 
 // Capture returns the first key or pad button pressed this frame, for the
 // rebinding prompt. ok is false when nothing is down.
+// Capture looks for a key or pad button pressed in this frame. It deliberately
+// watches for a fresh press, not for a held key: the Enter that starts the
+// prompt is often still down, and a held-key check bound Enter instead of
+// whatever the player was aiming for.
 func Capture() (kind string, code int32, ok bool) {
 	for k := ebiten.Key(1); k <= ebiten.KeyMax; k++ {
 		if isModifier(k) {
 			continue
 		}
-		if ebiten.IsKeyPressed(k) {
+		if inpututil.IsKeyJustPressed(k) {
 			return "key", int32(k), true
 		}
 	}
 	if id := firstPad(); id >= 0 {
 		for b := ebiten.GamepadButton(0); b <= ebiten.GamepadButtonMax; b++ {
-			if ebiten.IsGamepadButtonPressed(id, b) {
+			if inpututil.IsGamepadButtonJustPressed(id, b) {
 				return "pad", int32(b), true
 			}
 		}

@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -25,6 +27,8 @@ jobs:
         run: go test ./...
 
       - name: build all targets
+        env:
+          VERSION: ${{ github.ref_name }}
         run: ./build.sh
 
       - uses: softprops/action-gh-release@v2
@@ -32,6 +36,7 @@ jobs:
           files: |
             dist/HeliosDrift-linux-x86_64.tar.gz
             dist/HeliosDrift-windows-x86_64.zip
+            dist/HeliosDrift-macos-arm64.zip
             dist/heliosdrift-linux-arm64
             dist/heliosdrift-darwin-arm64
           generate_release_notes: true
