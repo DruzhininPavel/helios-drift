@@ -1,0 +1,23 @@
+'use strict';
+const vm=require('vm'),fs=require('fs'),path=require('path');
+const sandbox={console,Math,Date,JSON,isNaN,isFinite,parseInt,parseFloat};
+sandbox.window=sandbox;sandbox.globalThis=sandbox;vm.createContext(sandbox);
+for(const f of ['render.js','models.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'..','js',f),'utf8'),sandbox,{filename:f});
+const E=sandbox.E;
+const mesh=E.models.meshes.cobra3;
+console.log('faces',mesh.faces.length,'radius',mesh.radius);
+console.log('face0 pts',mesh.faces[0].p.length,'n',mesh.faces[0].n);
+const fb=new E.FB(64,48);fb.clear(0xff000000);
+const cam=new E.Camera(64,48,60);
+const mat=E.M3.mul(E.M3.rotX(0.34),E.M3.rotY(Math.PI*0.78));
+const p=E.V.add(E.M3.apply(mat,[0,0,0]),[0,0,-120]);
+console.log('viewpos',cam.toView([0,0,-120]));
+E.drawMesh(fb,cam,mesh,[0,0,-120],mat,{});
+let non=0; for(const c of fb.buf) if(c!==0xff000000) non++;
+console.log('nonblack',non,'of',fb.buf.length);
+// manual face project
+const f=mesh.faces[0];
+const pv=f.p.map(lp=>cam.toView(E.V.add(E.M3.apply(mat,lp),[0,0,-120])));
+console.log('pv',pv.map(v=>v.map(x=>+x.toFixed(1))));
+console.log('proj',pv.map(v=>cam.projectView(v)));
+console.log('clip',E.clipNear(pv,cam.near));

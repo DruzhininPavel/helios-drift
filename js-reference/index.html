@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helios Drift</title>
+<style>
+  :root {
+    --ink: #7fe3ff;
+    --dim: #3f6f8c;
+    --gold: #ffd45e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #03050a radial-gradient(circle at 50% 45%, #0b1a2c 0%, #05080f 55%, #020307 100%);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    overflow: hidden;
+  }
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+  }
+  .cabinet {
+    position: relative;
+    padding: 10px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #0d1c2c, #060b13);
+    box-shadow:
+      0 0 0 1px #1b3348,
+      0 0 0 3px #05080e,
+      0 0 40px rgba(63, 188, 216, 0.12),
+      inset 0 0 30px rgba(0, 0, 0, 0.8);
+  }
+  .cabinet::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 6px;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(121, 201, 230, 0.08);
+  }
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #05070f;
+    border-radius: 2px;
+    cursor: crosshair;
+    box-shadow: 0 0 24px rgba(63, 188, 216, 0.16);
+  }
+  .legend {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.7;
+    max-width: 900px;
+  }
+  .legend b { color: var(--gold); font-weight: 600; }
+  .legend span { color: var(--ink); }
+  .brand {
+    font-size: 12px;
+    letter-spacing: 0.35em;
+    color: #24506b;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="brand">helios drift</div>
+  <div class="cabinet">
+    <canvas id="screen" width="320" height="224"></canvas>
+  </div>
+  <div class="legend">
+    <span>FLY</span> <b>&larr;&uarr;&darr;&rarr;</b> / <b>WASD</b> / <b>mouse</b>
+    &nbsp;·&nbsp; <span>FIRE</span> <b>SPACE</b> / <b>LMB</b>
+    &nbsp;·&nbsp; <span>SPEED</span> <b>X</b> / <b>Z</b>
+    &nbsp;·&nbsp; <span>MISSILE</span> <b>M</b>
+    &nbsp;·&nbsp; <span>ECM</span> <b>E</b>
+    &nbsp;·&nbsp; <span>BOMB</span> <b>TAB</b>
+    <br>
+    <span>DOCKING COMPUTER</span> <b>L</b>
+    &nbsp;·&nbsp; <span>IN-SYSTEM JUMP</span> <b>J</b>
+    &nbsp;·&nbsp; <span>CHART</span> <b>C</b>
+    &nbsp;·&nbsp; <span>STATUS</span> <b>V</b>
+    &nbsp;·&nbsp; <span>PAUSE</span> <b>ESC</b>
+    &nbsp;·&nbsp; <span>MUTE</span> <b>SHIFT+M</b>
+  </div>
+</div>
+<script src="js/render.js"></script>
+<script src="js/models.js"></script>
+<script src="js/galaxy.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

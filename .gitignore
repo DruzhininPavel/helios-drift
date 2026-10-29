@@ -1,0 +1,16 @@
+# build artefacts
+go/build/
+go/heliosdrift
+go/elite16
+dist/
+*.app/
+*.icns
+*.zip
+*.tar.gz
+
+# macOS
+.DS_Store
+
+# editor
+.idea/
+.vscode/
