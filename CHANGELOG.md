@@ -1,3 +1,14 @@
+## v1.13.2 — 2026-10-30
+
+### Changed
+- README rewritten as one page: what the game is, which file to download, how
+  to fly, the two modes. The JavaScript reference build is gone.
+- The pre-rename save and config fallbacks are removed: nothing ever shipped
+  under the old name.
+
+### Fixed
+- `PACKAGE-README.txt` inside the archives said `Shift+M` mutes; it is `F10`.
+
 ## v1.13.1 — 2026-10-30
 
 ### Added
