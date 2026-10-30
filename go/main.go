@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"heliosdrift/bot"
 	"image"
 	"image/color"
 	"image/png"
@@ -10,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -711,7 +714,18 @@ func main() {
 	sim := flag.Bool("sim", false, "run a headless simulation and exit")
 	ver := flag.Bool("version", false, "print the build version and exit")
 	probe := flag.Bool("probe", false, "combat probe")
+	botRun := flag.Bool("bot", false, "let the bot play headless and exit")
+	seed := flag.Int64("seed", 1, "world seed; the same seed and inputs give the same run")
+	frames := flag.Int("frames", 60*60*10, "how many frames the bot plays")
+	record := flag.String("record", "", "write the bot run to this file")
+	replay := flag.String("replay", "", "replay a recorded run and compare the result")
+	report := flag.String("report", "", "write the run report to this JSON file")
+	modeFlag := flag.String("mode", "classic", "game mode for the bot: classic or advanced")
+	gearFlag := flag.Bool("gear", true, "fit the test pilot's gear (docking computer, scoop)")
+	manualDock := flag.Bool("manual-dock", false, "fly the docking approach by hand instead of using the computer")
 	flag.Parse()
+
+	game.SetSeed(*seed)
 
 	if *ver {
 		fmt.Println(game.ProductFull, game.Version)
@@ -735,6 +749,14 @@ func main() {
 			lang.Set(*langFlag)
 		}
 		runShots()
+		return
+	}
+	if *replay != "" {
+		runReplay(*replay)
+		return
+	}
+	if *botRun {
+		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock)
 		return
 	}
 	if *sim {
@@ -905,4 +927,104 @@ func toggleMute() {
 	} else {
 		game.G.Message("SOUND ON", "info")
 	}
+}
+
+// runBot lets the bot play and reports what happened.
+func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock bool) {
+	g := game.New()
+	if mode == "classic" {
+		g.NewGameMode(game.ModeClassic, "BOT")
+	} else {
+		g.NewGameMode(game.ModeAdvanced, "BOT")
+	}
+	if gear {
+		g.Cmd.Equip["dockcomp"] = true
+		g.Cmd.Equip["fuelscoop"] = true
+	}
+	pol := bot.NewTrader(game.Seed())
+	pol.ManualDock = manualDock
+	sc := bot.Run(g, frames, pol)
+	sc.Mode = mode
+
+	rep := sc.Report
+	fmt.Printf("bot %s: %d frames, ended in %s\n", rep.Policy, rep.Frames, rep.Ended)
+	fmt.Printf("cash %.0f -> %.0f, docks %d, hash %016x\n", rep.CashStart, rep.CashEnd, rep.Docks, rep.Hash)
+	for _, k := range sortedKeys(rep.Steps) {
+		fmt.Printf("  %-10s %d\n", k, rep.Steps[k])
+	}
+	if len(rep.Violations) > 0 {
+		fmt.Println("VIOLATIONS:")
+		for _, v := range rep.Violations {
+			fmt.Printf("  frame %d: %s (%s)\n", v.Frame, v.What, v.Value)
+		}
+	}
+	if len(rep.Distances) > 0 {
+		fmt.Println("distance to station / speed:")
+		for i := 0; i < len(rep.Distances); i += 4 {
+			fmt.Printf("  %5.0fs", float64(i)*5)
+			for j := i; j < i+4 && j < len(rep.Distances); j++ {
+				fmt.Printf("  %6.0f/%.0f", rep.Distances[j], rep.Speeds[j])
+			}
+			fmt.Println()
+		}
+	}
+	if len(rep.Phases) > 0 {
+		fmt.Println("phases:", rep.Phases)
+	}
+	if rep.Death != "" {
+		fmt.Printf("DIED at frame %d (%.1fs): %s\n", rep.DeathFrame, float64(rep.DeathFrame)/60, rep.Death)
+	}
+	if rep.Stuck != "" {
+		fmt.Println("STUCK:", rep.Stuck)
+	}
+	if recordPath != "" {
+		if err := sc.Save(recordPath); err != nil {
+			fmt.Fprintln(os.Stderr, "record:", err)
+		} else {
+			fmt.Println("recorded to", recordPath)
+		}
+	}
+	if reportPath != "" {
+		raw, _ := json.MarshalIndent(rep, "", " ")
+		if err := os.WriteFile(reportPath, raw, 0o644); err != nil {
+			fmt.Fprintln(os.Stderr, "report:", err)
+		}
+	}
+}
+
+// runReplay re-runs a recorded script and checks that the outcome matches.
+func runReplay(path string) {
+	sc, err := bot.Load(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "replay:", err)
+		os.Exit(1)
+	}
+	game.SetSeed(sc.Seed)
+	g := game.New()
+	if sc.Mode == "classic" {
+		g.NewGameMode(game.ModeClassic, "BOT")
+	} else {
+		g.NewGameMode(game.ModeAdvanced, "BOT")
+	}
+	got, div := bot.Replay(g, sc)
+	fmt.Printf("replay %s: seed %d, %d frames\n", path, sc.Seed, sc.Frames)
+	fmt.Printf("recorded %016x\nreplayed %016x\n", sc.Hash, got)
+	if div >= 0 {
+		fmt.Printf("first divergence at frame %d (%.1fs)\n", div, float64(div)/60)
+	}
+	if got == sc.Hash {
+		fmt.Println("MATCH")
+		return
+	}
+	fmt.Println("MISMATCH")
+	os.Exit(2)
+}
+
+func sortedKeys(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

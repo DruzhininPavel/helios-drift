@@ -163,3 +163,22 @@ func TestSmuggleOnlyInRoughSpace(t *testing.T) {
 		t.Fatalf("%d smuggling jobs in lawful space", got)
 	}
 }
+
+// TestContractFineCannotGoNegative keeps a missed deadline from bankrupting a
+// commander into a negative balance, which the game cannot recover from.
+func TestContractFineCannotGoNegative(t *testing.T) {
+	g := New()
+	g.NewGameMode(ModeAdvanced, "BOT")
+	g.Cmd.Cash = 10
+	g.Cmd.Contracts = []Contract{{
+		Kind: ContractCourier, Pay: 2000, Due: 0, System: 5, Galaxy: 0,
+	}}
+	g.Cmd.Day = 5 // well past the deadline
+	g.expireContracts()
+	if g.Cmd.Cash < 0 {
+		t.Fatalf("fine drove cash to %.0f", g.Cmd.Cash)
+	}
+	if len(g.Cmd.Contracts) != 0 {
+		t.Fatal("expired contract stayed in the list")
+	}
+}

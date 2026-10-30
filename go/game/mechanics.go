@@ -1,8 +1,6 @@
 package game
 
 import (
-	"math/rand"
-
 	"heliosdrift/galaxy"
 	"heliosdrift/models"
 	"heliosdrift/render"
@@ -26,14 +24,14 @@ func (g *Game) spawnDeparture() {
 		return
 	}
 	types := []string{"adder", "python", "cobra3", "shuttle", "moray", "worm", "boa", "anaconda", "transporter"}
-	t := types[rand.Intn(len(types))]
+	t := types[randInt(len(types))]
 	normal := st.Mat.Col(2)
 	pos := st.Pos.Add(normal.Mul(StationSize + 70))
 	e := g.baseShip(t, pos, "depart")
 	e.Mat = render.LookMatrix(normal)
 	e.Speed = e.MaxSpeed * 0.65
 	e.Age = 0
-	e.CargoType = 1 + rand.Intn(6)
+	e.CargoType = 1 + randInt(6)
 	g.World.Entities = append(g.World.Entities, e)
 }
 

@@ -4,7 +4,6 @@ package game
 
 import (
 	"math"
-	"math/rand"
 
 	"heliosdrift/galaxy"
 	"heliosdrift/models"
@@ -284,8 +283,6 @@ func (g *Game) Message(text, kind string) {
 	}
 }
 
-func randRange(a, b float64) float64 { return a + rand.Float64()*(b-a) }
-
 func randDir() render.Vec3 {
 	z := randRange(-1, 1)
 	t := randRange(0, 2*math.Pi)
@@ -304,12 +301,12 @@ func dangerLevel(sys *galaxy.System) float64 {
 func makeStars() []Star {
 	stars := make([]Star, 90)
 	for i := range stars {
-		b := rand.Float64()
+		b := randFloat()
 		size := 1
 		if b < 0.12 {
 			size = 2
 		}
-		stars[i] = Star{Dir: randDir(), Bright: rand.Float64(), Size: size}
+		stars[i] = Star{Dir: randDir(), Bright: randFloat(), Size: size}
 	}
 	return stars
 }
@@ -408,11 +405,11 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 			g.spawnThargoids()
 			g.spawnThargoids()
 		} else {
-			if rand.Float64() < 0.55 {
-				g.SpawnTraffic(1 + rand.Intn(2))
+			if randFloat() < 0.55 {
+				g.SpawnTraffic(1 + randInt(2))
 			}
-			if rand.Float64() < dangerLevel(sys)*0.6 {
-				g.SpawnPirates(1 + rand.Intn(2))
+			if randFloat() < dangerLevel(sys)*0.6 {
+				g.SpawnPirates(1 + randInt(2))
 			}
 		}
 	}
@@ -470,8 +467,8 @@ func (g *Game) spawnAtDistance(typeKey string, dist float64, behaviour string) *
 func (g *Game) SpawnPirates(n int) {
 	types := []string{"sidewinder", "krait", "mamba", "adder", "cobra3", "moray", "ferdelance", "asp", "gecko", "cobra1"}
 	for i := 0; i < n; i++ {
-		t := types[rand.Intn(len(types))]
-		if g.World.Sys.Government <= 1 && rand.Float64() < 0.3 {
+		t := types[randInt(len(types))]
+		if g.World.Sys.Government <= 1 && randFloat() < 0.3 {
 			t = "ferdelance"
 		}
 		g.World.Entities = append(g.World.Entities, g.spawnAtDistance(t, randRange(2500, 5000), "pirate"))
@@ -482,7 +479,7 @@ func (g *Game) SpawnPirates(n int) {
 func (g *Game) SpawnTraffic(n int) {
 	types := []string{"adder", "python", "cobra3", "shuttle", "moray", "worm", "boa", "anaconda", "transporter"}
 	for i := 0; i < n; i++ {
-		t := types[rand.Intn(len(types))]
+		t := types[randInt(len(types))]
 		e := g.spawnAtDistance(t, randRange(2200, 6500), "trader")
 		e.Hostile = false
 		g.World.Entities = append(g.World.Entities, e)
@@ -530,7 +527,7 @@ func (g *Game) SpawnAsteroid(dist float64) {
 	d[2] = -math.Abs(d[2]) - 0.1
 	pos := g.Player.Pos.Add(d.Norm().Mul(dist))
 	name := "asteroid"
-	if rand.Float64() < 0.5 {
+	if randFloat() < 0.5 {
 		name = "asteroid2"
 	}
 	g.World.Entities = append(g.World.Entities, &Entity{
@@ -639,10 +636,10 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 	switch e.Kind {
 	case "ship":
 		def := Ships[e.Type]
-		if e.CargoType > 0 && rand.Float64() < 0.6 {
-			n := 1 + rand.Intn(maxInt(1, minInt(3, e.CargoType)))
+		if e.CargoType > 0 && randFloat() < 0.6 {
+			n := 1 + randInt(maxInt(1, minInt(3, e.CargoType)))
 			for k := 0; k < n; k++ {
-				g.SpawnCargo(e.Pos.Add(randDir().Mul(20)), rand.Intn(12))
+				g.SpawnCargo(e.Pos.Add(randDir().Mul(20)), randInt(12))
 			}
 		}
 		if e.Behaviour == "pirate" || e.Behaviour == "thargoid" {
@@ -665,12 +662,12 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 		}
 		g.missionKill(e)
 		g.campaignKill(e.CampaignTag)
-		if (e.Behaviour == "trader" || e.Behaviour == "pirate") && rand.Float64() < 0.25 {
+		if (e.Behaviour == "trader" || e.Behaviour == "pirate") && randFloat() < 0.25 {
 			g.SpawnEscapePod(e.Pos)
 		}
 		// wreckage: alloy plates are worth scooping
-		for i := 0; i < 1+rand.Intn(2); i++ {
-			if rand.Float64() < 0.6 {
+		for i := 0; i < 1+randInt(2); i++ {
+			if randFloat() < 0.6 {
 				g.SpawnPlate(e.Pos)
 			}
 		}
@@ -682,7 +679,7 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 		if cmd.Equip["mining"] || e.Mission {
 			// a mining laser cuts the rock into pieces you can scoop
 			g.breakRock(e, "boulder", 3)
-		} else if rand.Float64() < 0.4 {
+		} else if randFloat() < 0.4 {
 			g.SpawnCargo(e.Pos.Add(randDir().Mul(30)), 12)
 		}
 	case "boulder":
@@ -695,7 +692,7 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 		g.addExplosion(e.Pos, 400)
 		g.Emit("explode")
 		for i := 0; i < 6; i++ {
-			g.SpawnCargo(e.Pos.Add(randDir().Mul(200)), rand.Intn(12))
+			g.SpawnCargo(e.Pos.Add(randDir().Mul(200)), randInt(12))
 		}
 	}
 	g.removeEntity(e)
@@ -1027,7 +1024,7 @@ func (g *Game) Hyperspace(target int) bool {
 	cmd.Day++
 	cmd.TargetSystem = to.ID
 	g.State = "hyper"
-	g.Hyper = &Hyper{Target: to.ID, Misjump: rand.Float64() < 0.03, Dist: d}
+	g.Hyper = &Hyper{Target: to.ID, Misjump: randFloat() < 0.03, Dist: d}
 	g.Message("HYPERSPACE TO "+to.Name, "info")
 	g.Emit("hyper")
 	return true
@@ -1046,6 +1043,10 @@ func (g *Game) JumpInSystem() {
 		return
 	}
 	st := g.World.Station
+	if st == nil {
+		g.Message("NO STATION IN THIS SYSTEM", "bad")
+		return
+	}
 	dist := st.Pos.Sub(g.Player.Pos).Len()
 	if dist < 2500 {
 		g.Message("ALREADY AT THE STATION", "bad")
@@ -1057,14 +1058,18 @@ func (g *Game) JumpInSystem() {
 	g.Player.Mat = render.LookMatrix(dir)
 	g.Player.Speed = 200
 	g.Message("IN-SYSTEM JUMP", "info")
-	if rand.Float64() < dangerLevel(g.World.Sys)*0.5 {
-		g.SpawnPirates(1 + rand.Intn(2))
+	if randFloat() < dangerLevel(g.World.Sys)*0.5 {
+		g.SpawnPirates(1 + randInt(2))
 	}
 }
 
 // -------------------------------------------------------------- docking aid
 
 func (g *Game) autopilotState() (aim render.Vec3, inLine bool, dist float64, local render.Vec3, normal render.Vec3, gate render.Vec3) {
+	if g.World == nil || g.World.Station == nil {
+		// witchspace and the void have no station to fly to
+		return render.Vec3{}, false, 1e9, render.Vec3{}, render.Vec3{0, 1, 0}, render.Vec3{}
+	}
 	st := g.World.Station
 	p := &g.Player
 	normal = st.Mat.Col(2)
@@ -1085,6 +1090,10 @@ func (g *Game) autopilotState() (aim render.Vec3, inLine bool, dist float64, loc
 func (g *Game) ToggleAutopilot() {
 	if !g.Cmd.Equip["dockcomp"] {
 		g.Message("DOCKING COMPUTER NOT FITTED", "bad")
+		return
+	}
+	if g.World == nil || g.World.Station == nil {
+		g.Message("NO STATION TO DOCK WITH", "bad")
 		return
 	}
 	if g.Autopilot {

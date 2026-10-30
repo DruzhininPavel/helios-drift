@@ -2,7 +2,6 @@ package game
 
 import (
 	"math"
-	"math/rand"
 
 	"heliosdrift/galaxy"
 	"heliosdrift/render"
@@ -114,7 +113,7 @@ func (g *Game) Update(dt float64) {
 	}
 	if cmd.Equip["fuelscoop"] && dSun < w.Sun.Radius*2.2 && cmd.Fuel < FuelMax {
 		cmd.Fuel = math.Min(FuelMax, math.Round((cmd.Fuel+0.35*dt)*100)/100)
-		if rand.Float64() < dt*0.8 {
+		if randFloat() < dt*0.8 {
 			g.Message("FUEL SCOOPING", "good")
 		}
 	}
@@ -132,7 +131,7 @@ func (g *Game) Update(dt float64) {
 		}
 		if p.Cabin > 0.8 {
 			g.DamagePlayer(9*dt*(p.Cabin-0.8)/0.2, true)
-			if rand.Float64() < dt*1.5 {
+			if randFloat() < dt*1.5 {
 				g.Message("CABIN TEMPERATURE CRITICAL", "bad")
 			}
 		}
@@ -169,7 +168,7 @@ func (g *Game) Update(dt float64) {
 		g.TrafficTimer -= dt
 		if g.TrafficTimer <= 0 {
 			g.TrafficTimer = randRange(9, 22)
-			if rand.Float64() < 0.55 && g.countBehaviour("depart") < 3 {
+			if randFloat() < 0.55 && g.countBehaviour("depart") < 3 {
 				g.spawnDeparture()
 			}
 		}
@@ -181,17 +180,17 @@ func (g *Game) Update(dt float64) {
 		g.EncounterTimer = randRange(25, 55)
 		danger := dangerLevel(w.Sys)
 		switch {
-		case g.CarryingContraband() && g.countBehaviour("police") < 2 && rand.Float64() < 0.55:
+		case g.CarryingContraband() && g.countBehaviour("police") < 2 && randFloat() < 0.55:
 			// contraband in the hold makes the police much more interested
 			g.spawnPolice(1)
-		case rand.Float64() < danger*0.7 && g.countBehaviour("pirate") < 4:
-			g.SpawnPirates(1 + rand.Intn(2))
-		case cmd.Legal >= 100 && g.countBehaviour("police") < 3 && rand.Float64() < 0.5:
+		case randFloat() < danger*0.7 && g.countBehaviour("pirate") < 4:
+			g.SpawnPirates(1 + randInt(2))
+		case cmd.Legal >= 100 && g.countBehaviour("police") < 3 && randFloat() < 0.5:
 			g.spawnPolice(1)
-		case rand.Float64() < 0.25:
+		case randFloat() < 0.25:
 			g.SpawnTraffic(1)
-		case rand.Float64() < 0.12 && g.countBehaviour("asteroid") < 6:
-			for a := 0; a < 2+rand.Intn(3); a++ {
+		case randFloat() < 0.12 && g.countBehaviour("asteroid") < 6:
+			for a := 0; a < 2+randInt(3); a++ {
 				g.SpawnAsteroid(randRange(2000, 6000))
 			}
 		}
@@ -382,7 +381,7 @@ func (g *Game) updateEntities(dt float64) {
 			e.Cooldown -= dt
 			if e.Cooldown <= 0 && distP < 3500 && math.Abs(ax) < 0.2 && math.Abs(ay) < 0.2 {
 				e.Cooldown = e.FireRate * randRange(0.8, 1.5)
-				if rand.Float64() < math.Max(0.25, 1.05-distP/5200) {
+				if randFloat() < math.Max(0.25, 1.05-distP/5200) {
 					g.DamagePlayer(randRange(2, 4.5), true)
 					g.Emit("hit")
 					g.Shake = 0.35
@@ -402,14 +401,14 @@ func (g *Game) updateEntities(dt float64) {
 			e.Speed += (desired - e.Speed) * math.Min(1, dt*2.2)
 			e.Cooldown -= dt
 			if e.CanMissile && e.Cooldown <= 0 && distP > 900 && distP < 5000 &&
-				math.Abs(ax) < 0.3 && math.Abs(ay) < 0.3 && rand.Float64() < 0.25 {
+				math.Abs(ax) < 0.3 && math.Abs(ay) < 0.3 && randFloat() < 0.25 {
 				e.CanMissile = false
 				g.EnemyMissile(e)
 				e.Cooldown = 2.5
 			}
 			if e.Cooldown <= 0 && distP < 4000 && math.Abs(ax) < 0.22 && math.Abs(ay) < 0.22 {
 				e.Cooldown = e.FireRate * randRange(1.0, 2.0)
-				if rand.Float64() < math.Max(0.18, 0.9-distP/6000) {
+				if randFloat() < math.Max(0.18, 0.9-distP/6000) {
 					dmg := randRange(1.5, 4.0)
 					if e.Type == "thargoid" {
 						dmg = randRange(6, 11)

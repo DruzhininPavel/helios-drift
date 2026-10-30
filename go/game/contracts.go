@@ -4,7 +4,6 @@ package game
 
 import (
 	"math"
-	"math/rand"
 
 	"heliosdrift/galaxy"
 )
@@ -39,16 +38,16 @@ func (g *Game) rollContracts() {
 	}
 	gal := galaxy.Get(g.Cmd.Galaxy)
 	cur := gal.Systems[g.Cmd.System]
-	n := 1 + rand.Intn(3)
+	n := 1 + randInt(3)
 	for i := 0; i < n; i++ {
 		tgt := g.missionTarget()
 		d := galaxy.Distance(cur, gal.Systems[tgt])
-		due := g.Cmd.Day + 3 + rand.Intn(5)
-		switch r := rand.Float64(); {
+		due := g.Cmd.Day + 3 + randInt(5)
+		switch r := randFloat(); {
 		case r < 0.42:
-			good := rand.Intn(12)
-			qty := 1 + rand.Intn(6)
-			pay := int(math.Round(float64(qty)*galaxy.Commodities[good].Base*0.55 + d*55 + rand.Float64()*40))
+			good := randInt(12)
+			qty := 1 + randInt(6)
+			pay := int(math.Round(float64(qty)*galaxy.Commodities[good].Base*0.55 + d*55 + randFloat()*40))
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractCourier, Good: good, Qty: qty,
 				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: pay, Due: due,
@@ -56,32 +55,32 @@ func (g *Game) rollContracts() {
 		case r < 0.55 && g.World != nil && g.World.Sys.Government <= 1:
 			// contraband only moves through anarchy and feudal space
 			good := 3
-			if rand.Float64() < 0.5 {
+			if randFloat() < 0.5 {
 				good = 6
 			}
-			qty := 2 + rand.Intn(4)
-			pay := qty * (240 + rand.Intn(160))
+			qty := 2 + randInt(4)
+			pay := qty * (240 + randInt(160))
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractSmuggle, Good: good, Qty: qty,
 				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: pay, Due: due,
 			})
 		case r < 0.70:
-			qty := 1 + rand.Intn(4)
+			qty := 1 + randInt(4)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractPassenger, Qty: qty,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (90 + rand.Intn(70)), Due: due + 1,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (90 + randInt(70)), Due: due + 1,
 			})
 		case r < 0.78:
-			qty := 1 + rand.Intn(5)
+			qty := 1 + randInt(5)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractMail, Qty: qty,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (45 + rand.Intn(35)), Due: due,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (45 + randInt(35)), Due: due,
 			})
 		default:
-			qty := 2 + rand.Intn(4)
+			qty := 2 + randInt(4)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractBounty, Qty: qty, Done: 0,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (110 + rand.Intn(60)), Due: due + 2,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (110 + randInt(60)), Due: due + 2,
 			})
 		}
 	}
@@ -194,6 +193,12 @@ func (g *Game) expireContracts() {
 	for _, c := range cmd.Contracts {
 		if cmd.Day > c.Due {
 			fine := c.Pay / 5
+			// a commander cannot pay more than they hold: without this clamp a
+			// missed deadline leaves the balance negative and the game with no
+			// way back
+			if float64(fine) > cmd.Cash {
+				fine = int(cmd.Cash)
+			}
 			cmd.Cash -= float64(fine)
 			if cmd.Pax > 0 && c.Kind == ContractPassenger {
 				cmd.Pax -= c.Qty

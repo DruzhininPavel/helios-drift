@@ -172,3 +172,22 @@ func TestSaveSlots(t *testing.T) {
 	}
 	_ = os.Remove(dir)
 }
+
+// TestNoStationDoesNotPanic covers witchspace, where the world has no station:
+// the docking computer and the in-system jump must refuse, not crash.
+func TestNoStationDoesNotPanic(t *testing.T) {
+	g := New()
+	g.NewGameMode(ModeAdvanced, "BOT")
+	g.Cmd.Equip["dockcomp"] = true
+	g.Launch()
+	g.World = &World{Sys: g.World.Sys, Witchspace: true}
+	if g.World.Station != nil {
+		t.Fatal("witchspace world should have no station")
+	}
+	g.ToggleAutopilot()
+	g.JumpInSystem()
+	g.Update(1.0 / 60)
+	if g.Autopilot {
+		t.Fatal("autopilot engaged with nothing to dock with")
+	}
+}

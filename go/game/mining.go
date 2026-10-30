@@ -2,7 +2,6 @@ package game
 
 import (
 	"math"
-	"math/rand"
 
 	"heliosdrift/models"
 	"heliosdrift/render"
@@ -23,8 +22,8 @@ func (g *Game) breakRock(e *Entity, kind string, n int) {
 		pos := e.Pos.Add(randDir().Mul(e.Radius * 0.45))
 		// ore chips carry minerals, with the occasional precious find
 		ct := 12
-		if kind == "splinter" && rand.Float64() < 0.12 {
-			ct = 13 + rand.Intn(3)
+		if kind == "splinter" && randFloat() < 0.12 {
+			ct = 13 + randInt(3)
 		}
 		meshFor := mesh
 		if kind == "splinter" {

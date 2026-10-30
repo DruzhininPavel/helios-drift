@@ -4,8 +4,6 @@
 package game
 
 import (
-	"math/rand"
-
 	"heliosdrift/galaxy"
 	"heliosdrift/lang"
 	"heliosdrift/models"
@@ -53,7 +51,7 @@ func (g *Game) MissionOffer() string {
 func (g *Game) rollOffers() {
 	g.OfferTarget = g.missionTarget()
 	g.OfferDocGalaxy = (g.Cmd.Galaxy + 1) % galaxy.Galaxies
-	g.OfferDocSystem = rand.Intn(256)
+	g.OfferDocSystem = randInt(256)
 }
 
 // missionTarget picks a reachable system for the Constrictor contract.
@@ -69,7 +67,7 @@ func (g *Game) missionTarget() int {
 	if len(cand) == 0 {
 		return (g.Cmd.System + 37) % 256
 	}
-	return cand[rand.Intn(len(cand))]
+	return cand[randInt(len(cand))]
 }
 
 // AcceptMission starts a contract. It fails (with a message) when the player
@@ -199,7 +197,7 @@ func (g *Game) missionArrive() {
 		g.Emit("warning")
 		return
 	}
-	if m.Kind == MissionDocuments && rand.Float64() < 0.35 {
+	if m.Kind == MissionDocuments && randFloat() < 0.35 {
 		g.spawnThargoids()
 	}
 	if m.Kind == MissionThargoid && m.Galaxy == g.Cmd.Galaxy && m.System == g.Cmd.System {
@@ -270,7 +268,7 @@ func (g *Game) GalacticJump() bool {
 	}
 	delete(g.Cmd.Equip, "galdrive")
 	g.Cmd.Galaxy = (g.Cmd.Galaxy + 1) % galaxy.Galaxies
-	tgt := rand.Intn(256)
+	tgt := randInt(256)
 	g.Cmd.TargetSystem = tgt
 	g.State = "hyper"
 	g.Hyper = &Hyper{Target: tgt}
