@@ -1,7 +1,6 @@
 # build artefacts
 go/build/
 go/heliosdrift
-go/elite16
 dist/
 *.app/
 *.zip

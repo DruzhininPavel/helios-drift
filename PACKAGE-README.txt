@@ -2,7 +2,8 @@ HELIOS DRIFT
 ============
 
 Space trading game. Two modes: Classic (the 1984 rules) and Advanced
-(campaign, contracts, shipyard, mining).
+(campaign, contracts, shipyard, mining). Every launch gets its own world;
+the seed is printed on the title screen and can be replayed with -seed.
 
 RUN
 ---
@@ -24,7 +25,7 @@ G                       galactic hyperspace
 J                       jump
 K                       jettison cargo
 H                       hyperspace
-Shift+M                 mute
+F10                     mute
 
 In the station, digits pick menu entries, arrows move, Enter selects,
 Escape backs out. A gamepad works everywhere: sticks fly, A/B/D-pad drive
