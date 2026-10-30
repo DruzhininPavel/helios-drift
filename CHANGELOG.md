@@ -1,3 +1,22 @@
+## Unreleased
+
+### Added
+- Bot player that flies, trades, fights, jumps and docks headless, records its
+  input and replays it exactly (`-bot`, `-record`, `-replay`, `-report`).
+- Seeded world generator, `StateHash`, per-frame progress hash: a seed plus an
+  input stream always produces the same run.
+- Invariant checks each frame, stuck detection, stranded check.
+- `-god` and `-ace` harness switches for measuring story completion and combat.
+- `docs/bot-testing.md`: how to run it and what it checks.
+
+### Fixed
+- Crash when toggling the docking computer or jumping in-system with no station
+  (witchspace): `autopilotState` and `JumpInSystem` dereferenced a nil station.
+- A missed contract deadline could push cash below zero, leaving the commander
+  unable to buy fuel.
+- Replays drifted because recorded input was float32 against a float64 game.
+- `-mode classic` had no effect: the game always started in Advanced.
+
 # Изменения
 
 Релиз выпускается не после каждой правки, а когда набралась связная порция

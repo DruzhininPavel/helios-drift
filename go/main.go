@@ -723,6 +723,8 @@ func main() {
 	modeFlag := flag.String("mode", "classic", "game mode for the bot: classic or advanced")
 	gearFlag := flag.Bool("gear", true, "fit the test pilot's gear (docking computer, scoop)")
 	manualDock := flag.Bool("manual-dock", false, "fly the docking approach by hand instead of using the computer")
+	god := flag.Bool("god", false, "keep the bot alive: deaths are rolled back, for walking the story")
+	ace := flag.Bool("ace", false, "make the bot a dead shot in a fight")
 	flag.Parse()
 
 	game.SetSeed(*seed)
@@ -756,7 +758,7 @@ func main() {
 		return
 	}
 	if *botRun {
-		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock)
+		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock, *god, *ace)
 		return
 	}
 	if *sim {
@@ -930,7 +932,7 @@ func toggleMute() {
 }
 
 // runBot lets the bot play and reports what happened.
-func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock bool) {
+func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, god, ace bool) {
 	g := game.New()
 	if mode == "classic" {
 		g.NewGameMode(game.ModeClassic, "BOT")
@@ -943,12 +945,13 @@ func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock bo
 	}
 	pol := bot.NewTrader(game.Seed())
 	pol.ManualDock = manualDock
-	sc := bot.Run(g, frames, pol)
+	pol.Ace = ace
+	sc := bot.RunWith(g, frames, pol, bot.Options{God: god})
 	sc.Mode = mode
 
 	rep := sc.Report
 	fmt.Printf("bot %s: %d frames, ended in %s\n", rep.Policy, rep.Frames, rep.Ended)
-	fmt.Printf("cash %.0f -> %.0f, docks %d, hash %016x\n", rep.CashStart, rep.CashEnd, rep.Docks, rep.Hash)
+	fmt.Printf("cash %.0f -> %.0f, docks %d, kills %d, hash %016x\n", rep.CashStart, rep.CashEnd, rep.Docks, rep.Kills, rep.Hash)
 	for _, k := range sortedKeys(rep.Steps) {
 		fmt.Printf("  %-10s %d\n", k, rep.Steps[k])
 	}
@@ -970,6 +973,22 @@ func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock bo
 	}
 	if len(rep.Phases) > 0 {
 		fmt.Println("phases:", rep.Phases)
+	}
+	if len(rep.StageFrames) > 0 {
+		fmt.Print("campaign: ")
+		for _, m := range rep.StageFrames {
+			fmt.Printf("stage %d at %.0fs  ", m.Stage, float64(m.Frame)/60)
+		}
+		fmt.Println()
+	}
+	if rep.Mission != "" || rep.MissionFlags != 0 {
+		fmt.Printf("1984 mission: %q flags %d done %v\n", rep.Mission, rep.MissionFlags, rep.MissionDone)
+	}
+	if rep.CampaignDone {
+		fmt.Println("campaign: COMPLETE")
+	}
+	if rep.Revives > 0 {
+		fmt.Printf("deaths rolled back (god mode): %d\n", rep.Revives)
 	}
 	if rep.Death != "" {
 		fmt.Printf("DIED at frame %d (%.1fs): %s\n", rep.DeathFrame, float64(rep.DeathFrame)/60, rep.Death)

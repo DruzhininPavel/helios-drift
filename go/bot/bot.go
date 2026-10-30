@@ -51,6 +51,12 @@ type Policy interface {
 	Name() string
 }
 
+// StageMark records the frame at which the campaign moved to a new stage.
+type StageMark struct {
+	Frame int `json:"frame"`
+	Stage int `json:"stage"`
+}
+
 // Violation is one impossible state caught by the checker.
 type Violation struct {
 	Frame int    `json:"frame"`
@@ -60,22 +66,30 @@ type Violation struct {
 
 // Report summarises a run.
 type Report struct {
-	Policy     string         `json:"policy"`
-	Frames     int            `json:"frames"`
-	Hash       uint64         `json:"hash"`
-	Steps      map[string]int `json:"steps"`
-	States     map[string]int `json:"states"`
-	Violations []Violation    `json:"violations"`
-	Stuck      string         `json:"stuck,omitempty"`
-	Death      string         `json:"death,omitempty"`
-	DeathFrame int            `json:"death_frame,omitempty"`
-	CashStart  float64        `json:"cash_start"`
-	CashEnd    float64        `json:"cash_end"`
-	Docks      int            `json:"docks"`
-	Ended      string         `json:"ended"`
-	Phases     map[string]int `json:"phases,omitempty"`
-	Distances  []float64      `json:"distances,omitempty"`
-	Speeds     []float64      `json:"speeds,omitempty"`
+	Policy       string         `json:"policy"`
+	Frames       int            `json:"frames"`
+	Hash         uint64         `json:"hash"`
+	Steps        map[string]int `json:"steps"`
+	States       map[string]int `json:"states"`
+	Violations   []Violation    `json:"violations"`
+	Stuck        string         `json:"stuck,omitempty"`
+	Death        string         `json:"death,omitempty"`
+	DeathFrame   int            `json:"death_frame,omitempty"`
+	Revives      int            `json:"revives,omitempty"`
+	Stage        int            `json:"stage"`
+	StageFrames  []StageMark    `json:"stage_frames,omitempty"`
+	CampaignDone bool           `json:"campaign_done"`
+	Mission      string         `json:"mission,omitempty"`
+	MissionFlags int            `json:"mission_flags"`
+	MissionDone  bool           `json:"mission_done"`
+	Kills        int            `json:"kills"`
+	CashStart    float64        `json:"cash_start"`
+	CashEnd      float64        `json:"cash_end"`
+	Docks        int            `json:"docks"`
+	Ended        string         `json:"ended"`
+	Phases       map[string]int `json:"phases,omitempty"`
+	Distances    []float64      `json:"distances,omitempty"`
+	Speeds       []float64      `json:"speeds,omitempty"`
 }
 
 const DT = 1.0 / 60.0
@@ -97,9 +111,22 @@ func quantize(in game.InputState) game.InputState {
 	}
 }
 
+// Options are the harness switches that are not part of the policy.
+type Options struct {
+	// God keeps the commander alive: damage is undone and a death is rolled
+	// back. It exists to walk the story from the first stage to the last
+	// without the run ending at the first pirate.
+	God bool
+}
+
 // Run plays the game for the given number of frames with the policy, recording
 // every input change and event.
 func Run(g *game.Game, frames int, pol Policy) *Script {
+	return RunWith(g, frames, pol, Options{})
+}
+
+// RunWith is Run with options.
+func RunWith(g *game.Game, frames int, pol Policy, opt Options) *Script {
 	sc := &Script{Seed: game.Seed(), Mode: g.Cmd.Mode, Frames: frames}
 	sc.Report = Report{Policy: pol.Name(), Steps: map[string]int{}, States: map[string]int{},
 		Phases: map[string]int{}, CashStart: g.Cmd.Cash}
@@ -136,9 +163,22 @@ func Run(g *game.Game, frames int, pol Policy) *Script {
 			sc.Report.Docks++
 		}
 		prevState = g.State
-		if g.State == "dead" && sc.Report.Death == "" {
-			sc.Report.Death = g.Dead.Reason
-			sc.Report.DeathFrame = f
+		if g.State == "dead" {
+			if sc.Report.Death == "" {
+				sc.Report.Death = g.Dead.Reason
+				sc.Report.DeathFrame = f
+			}
+			if opt.God {
+				revive(g)
+				sc.Report.Revives++
+			}
+		}
+		if opt.God {
+			g.Player.Invulnerable = 1e6
+		}
+		if stage := g.Cmd.Campaign.Stage; stage != sc.Report.Stage {
+			sc.Report.Stage = stage
+			sc.Report.StageFrames = append(sc.Report.StageFrames, StageMark{Frame: f, Stage: stage})
 		}
 		if f%300 == 0 {
 			if st := g.World.Station; st != nil {
@@ -169,6 +209,12 @@ func Run(g *game.Game, frames int, pol Policy) *Script {
 	sc.Report.Hash = sc.Hash
 	sc.Report.CashEnd = g.Cmd.Cash
 	sc.Report.Ended = g.State
+	sc.Report.Stage = g.Cmd.Campaign.Stage
+	sc.Report.CampaignDone = g.Cmd.Campaign.Stage >= game.CampaignTotal()
+	sc.Report.Mission = g.Cmd.Mission.Kind
+	sc.Report.MissionFlags = g.Cmd.MissionFlags
+	sc.Report.MissionDone = g.Cmd.MissionFlags&3 == 3
+	sc.Report.Kills = g.Cmd.Kills
 	return sc
 }
 
@@ -236,6 +282,12 @@ func applyEvent(g *game.Game, e Event) {
 		g.Sell(e.A, n)
 	case "campaign":
 		g.AcceptCampaign()
+	case "mission":
+		if e.A == 0 {
+			g.AcceptMission(game.MissionConstrictor)
+		} else {
+			g.AcceptMission(game.MissionDocuments)
+		}
 	case "contract":
 		g.AcceptOffer(e.A)
 	case "equip":
@@ -271,4 +323,20 @@ func Load(path string) (*Script, error) {
 		return nil, err
 	}
 	return &sc, nil
+}
+
+// revive puts a dead commander back in flight. Only the god-mode harness uses
+// it: it is not a game rule, it is a way to keep walking the story.
+func revive(g *game.Game) {
+	g.State = "flight"
+	g.Screen = "flight"
+	g.Dead = nil
+	g.Player.Energy = g.Ship().Energy
+	g.Player.ShieldF = game.MaxShield
+	g.Player.ShieldA = game.MaxShield
+	g.Player.Cabin = 0
+	g.Player.Speed = 0
+	g.Player.Invulnerable = 3
+	g.Autopilot = false
+	g.AutopilotPath = nil
 }

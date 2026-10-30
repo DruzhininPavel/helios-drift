@@ -31,6 +31,12 @@ type Trader struct {
 	stuckFor int
 	// ManualDock forces the hand-flown approach even with a computer fitted.
 	ManualDock bool
+	// Ace makes the pilot a dead shot: the bot still has to fly the attack,
+	// but it fires the instant the nose is on the hull. Used to answer "could
+	// a player win this fight at all".
+	Ace bool
+	// questGood is cargo the campaign stage needs, which must not be sold.
+	questGood int
 	// cost is the average price paid for each good in the hold, so the bot
 	// does not sell at a loss just to be rid of cargo.
 	cost map[int]float64
@@ -41,7 +47,7 @@ type Trader struct {
 // NewTrader builds the policy for a seed.
 func NewTrader(seed int64) *Trader {
 	return &Trader{rng: rand.New(rand.NewSource(seed ^ 0x5EED)), pilot: DefaultPilot(),
-		cost: map[int]float64{}, dest: -1}
+		cost: map[int]float64{}, dest: -1, questGood: -1}
 }
 
 // Name is used in reports.
@@ -91,6 +97,9 @@ func (t *Trader) docked(g *game.Game) []Event {
 		if qty <= 0 {
 			continue
 		}
+		if good == t.questGood && c.Campaign.Active {
+			continue // the stage needs this cargo delivered, not sold
+		}
 		// sell only if the station pays more than was paid for it
 		if good < len(g.Market) && float64(g.Market[good].Sell) > t.cost[good]*1.02 {
 			ev = append(ev, Event{Kind: "sell", A: good, B: qty})
@@ -100,8 +109,22 @@ func (t *Trader) docked(g *game.Game) []Event {
 	if c.Fuel < 3.5 && c.Cash >= 20 {
 		ev = append(ev, Event{Kind: "refuel"})
 	}
+	// the 1984 contracts only exist in Classic mode
+	if kind := g.MissionOffer(); kind != "" {
+		switch kind {
+		case "constrictor":
+			ev = append(ev, Event{Kind: "mission", A: 0})
+		case "documents":
+			if c.Equip["galdrive"] {
+				ev = append(ev, Event{Kind: "mission", A: 1})
+			}
+		}
+	}
 	if g.CampaignOffer() {
 		ev = append(ev, Event{Kind: "campaign"})
+		if q := g.CampaignQuest(); q.Kind == "deliver" {
+			t.questGood = q.Good
+		}
 	}
 	if len(g.Offers) > 0 && len(c.Contracts) < 3 && t.rng.Intn(2) == 0 {
 		ev = append(ev, Event{Kind: "contract", A: t.rng.Intn(len(g.Offers))})
@@ -135,9 +158,14 @@ func (t *Trader) docked(g *game.Game) []Event {
 	// spend spare cash on a sturdier ship, keeping a trading float
 	ev = append(ev, t.upgrade(g)...)
 
-	// pick the next port before taking off, so the trip has a purpose
+	// the story comes first: fly the stage target, trade on the way
 	t.dest = -1
-	if id, ok := t.reachable(g); ok {
+	if g.Cmd.Campaign.Active {
+		t.dest = g.Cmd.Campaign.Target
+	} else if g.Cmd.Mission.Kind != "" {
+		t.dest = g.Cmd.Mission.System
+	} else if id, ok := t.reachable(g); ok {
+		t.questGood = -1 // no stage in progress: nothing is reserved
 		t.dest = id
 	}
 	t.phase = phaseTravel
@@ -150,12 +178,29 @@ func (t *Trader) docked(g *game.Game) []Event {
 func (t *Trader) flying(g *game.Game, frame int) ([]Event, game.InputState) {
 	var ev []Event
 
+	// a hostile on the scope comes first: nothing else matters while it is
+	// shooting, and the docking computer has to be switched off to fight
+	if foe := t.nearestFoe(g); foe != nil {
+		if g.Autopilot {
+			ev = append(ev, Event{Kind: "autopilot"})
+		}
+		in, fire := t.dogfight(g, foe)
+		if fire {
+			in.Fire = true
+		}
+		return ev, t.safety(g, in)
+	}
+
 	// with a docking computer the pilot lets the machine do the work, but first
 	// the trip: jump to the chosen system, then dock
 	if g.Cmd.Equip["dockcomp"] && !t.ManualDock {
 		if t.dest >= 0 && g.Cmd.System != t.dest {
-			if g.Hyperspace(t.dest) {
-				ev = append(ev, Event{Kind: "hyper", A: t.dest})
+			if hop, ok := t.nextHop(g, t.dest); ok {
+				if g.Hyperspace(hop) {
+					ev = append(ev, Event{Kind: "hyper", A: hop})
+				}
+			} else {
+				t.dest = -1 // out of fuel for the trip: dock and refuel
 			}
 			return ev, game.InputState{}
 		}
@@ -163,16 +208,6 @@ func (t *Trader) flying(g *game.Game, frame int) ([]Event, game.InputState) {
 			ev = append(ev, Event{Kind: "autopilot"})
 		}
 		return ev, game.InputState{}
-	}
-
-	// a hostile on the scope comes first: nothing else matters while it is
-	// shooting
-	if foe := t.nearestFoe(g); foe != nil {
-		in, fire := t.dogfight(g, foe)
-		if fire {
-			in.Fire = true
-		}
-		return ev, t.safety(g, in)
 	}
 
 	st := g.World.Station
@@ -307,9 +342,17 @@ func (t *Trader) PhaseName() string {
 func (t *Trader) nearestFoe(g *game.Game) *game.Entity {
 	var best *game.Entity
 	bestD := 3500.0
+	// near the station the bot has business to finish: only fight what is
+	// actually in the way, otherwise it never docks
+	if st := g.World.Station; st != nil && g.Player.Pos.Sub(st.Pos).Len() < 2500 {
+		bestD = 1500
+	}
 	for _, e := range g.World.Entities {
 		if e.Energy <= 0 || e.Kind == "station" || e.Kind == "planet" {
 			continue
+		}
+		if e.CampaignTag != "" {
+			return e // the stage target outranks everything else
 		}
 		if !e.Hostile && e.Behaviour != "pirate" && e.Behaviour != "thargoid" && e.Behaviour != "police" {
 			continue
@@ -347,17 +390,24 @@ func (t *Trader) dogfight(g *game.Game, foe *game.Entity) (game.InputState, bool
 	fwd := g.Player.Mat.Col(2).Mul(-1)
 	align := fwd.Dot(want)
 
-	// keep a firing distance instead of ramming the target
+	// hold a firing distance: close fast, then match speed so the nose stays
+	// on the hull long enough to shoot. Jousting is what loses the fight.
 	max := g.Ship().Speed
 	switch {
-	case dist > 1500:
+	case dist > 1200:
 		in.Accel = 1
-	case dist < 250:
-		in.Accel = -1
-	case g.Player.Speed > max*0.35:
+	case dist > 500:
+		if g.Player.Speed > max*0.55 {
+			in.Accel = -1
+		}
+	case dist < 220:
 		in.Accel = -1
 	default:
-		in.Accel = 0
+		if g.Player.Speed > max*0.22 {
+			in.Accel = -1
+		} else {
+			in.Accel = 0
+		}
 	}
 	if align < 0.9 {
 		in.Accel = -1
@@ -367,6 +417,12 @@ func (t *Trader) dogfight(g *game.Game, foe *game.Entity) (game.InputState, bool
 		if d := p2(g.Player.Pos.Sub(st.Pos)); d < 1200 && g.Player.Speed > max*0.25 {
 			in.Accel = -1
 		}
+	}
+	if t.Ace {
+		// fire whenever the shot would land on the hull, and hold the trigger
+		angle := math.Acos(clamp(align, -1, 1))
+		onTarget := angle*dist < foe.Radius*1.6 || align > 0.995
+		return in, onTarget && dist < 4000
 	}
 	return in, align > 0.99 && dist < 3200
 }
@@ -434,6 +490,7 @@ func (t *Trader) upgrade(g *game.Game) []Event {
 			ev = append(ev, Event{Kind: "equip", A: equipIndex("missile")})
 		}
 	}
+	buy("galdrive", 5000)
 	buy("extraenergy", 1500)
 	buy("escape", 1000)
 	buy("ecm", 600)
@@ -450,4 +507,27 @@ func equipIndex(id string) int {
 		}
 	}
 	return -1
+}
+
+// nextHop picks the jump that gets the ship closest to the destination, so a
+// target several jumps away is reached hop by hop.
+func (t *Trader) nextHop(g *game.Game, dest int) (int, bool) {
+	gal := galaxy.Get(g.Cmd.Galaxy)
+	from := gal.Systems[g.Cmd.System]
+	want := gal.Systems[((dest%256)+256)%256]
+	best, bestScore := -1, math.MaxFloat64
+	for _, s := range gal.Systems {
+		d := galaxy.Distance(from, s)
+		if d <= 0.1 || d > g.Cmd.Fuel || s.ID == g.Cmd.System {
+			continue
+		}
+		score := galaxy.Distance(s, want) + d*0.05
+		if score < bestScore {
+			best, bestScore = s.ID, score
+		}
+	}
+	if best < 0 {
+		return 0, false
+	}
+	return best, true
 }
