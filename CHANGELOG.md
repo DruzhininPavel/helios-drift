@@ -1,3 +1,9 @@
+## Unreleased
+
+### Added
+- The world seed is picked at random per launch and printed in the corner of
+  the title screen; `-seed N` plays that exact world again.
+
 ## v1.13 — 2026-10-30
 
 ### Added

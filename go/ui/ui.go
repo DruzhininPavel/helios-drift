@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 
@@ -853,6 +854,11 @@ func Title(fb *render.FB) {
 	// glance — a local build is stamped with its time
 	if game.Version != "" {
 		fb.TextR(game.Version, 316, 216, render.RGB(0x2b4a5e), 1)
+	}
+	// the seed is shown so a run can be repeated exactly, and a bug report can
+	// say which world it came from
+	if seed := game.Seed(); seed > 0 {
+		fb.Text(fmt.Sprintf("SEED %d", seed), 4, 216, render.RGB(0x2b4a5e), 1)
 	}
 }
 

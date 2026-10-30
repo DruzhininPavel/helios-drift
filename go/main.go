@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/png"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -715,7 +716,7 @@ func main() {
 	ver := flag.Bool("version", false, "print the build version and exit")
 	probe := flag.Bool("probe", false, "combat probe")
 	botRun := flag.Bool("bot", false, "let the bot play headless and exit")
-	seed := flag.Int64("seed", 1, "world seed; the same seed and inputs give the same run")
+	seed := flag.Int64("seed", -1, "world seed; the same seed and the same inputs give the same run (default: random per launch)")
 	frames := flag.Int("frames", 60*60*10, "how many frames the bot plays")
 	record := flag.String("record", "", "write the bot run to this file")
 	replay := flag.String("replay", "", "replay a recorded run and compare the result")
@@ -727,6 +728,17 @@ func main() {
 	ace := flag.Bool("ace", false, "make the bot a dead shot in a fight")
 	flag.Parse()
 
+	if *seed < 0 && (*shots || *sheet || *probe) {
+		// reference screenshots and probes must be reproducible
+		*seed = 1
+	}
+	if *seed < 0 {
+		// a normal launch gets its own world: the seed is only pinned when the
+		// player or a test asks for it, so two games do not play out the same.
+		// Eight digits keep the number readable on the title screen, and the
+		// player can type it back with -seed to play that exact world again.
+		*seed = 1 + rand.Int63n(99999999)
+	}
 	game.SetSeed(*seed)
 
 	if *ver {
