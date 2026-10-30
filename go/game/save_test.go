@@ -6,29 +6,52 @@ import (
 	"testing"
 )
 
-// A commander saved by a build from before the rename must still load.
-func TestLegacySaveFileLoads(t *testing.T) {
+// TestThreeSlots checks the save slots: a commander written to one slot loads
+// back from that slot only, and the slot describes itself on the load screen.
+func TestThreeSlots(t *testing.T) {
 	dir := t.TempDir()
 	SaveDirOverride = dir
 	defer func() { SaveDirOverride = "" }()
 
 	g := newGameMode(ModeAdvanced)
-	g.Cmd.Name = "OLD TIMER"
-	g.Cmd.Cash = 4321
-	if !g.SaveSlot(1) {
-		t.Fatal("save failed")
+	g.Cmd.Name = "FIRST"
+	g.Cmd.Cash = 111
+	if !g.SaveSlot(0) {
+		t.Fatal("save to slot 1 failed")
 	}
-	newName := savePath(1)
-	oldName := filepath.Join(dir, ".elite16-save2.json")
-	if err := os.Rename(newName, oldName); err != nil {
-		t.Fatal(err)
+	g.Cmd.Name = "SECOND"
+	g.Cmd.Cash = 222
+	if !g.SaveSlot(1) {
+		t.Fatal("save to slot 2 failed")
+	}
+	if SlotExists(2) {
+		t.Fatal("empty slot reports a commander")
 	}
 
 	other := New()
 	if !other.LoadSlot(1) {
-		t.Fatal("legacy save did not load")
+		t.Fatal("slot 2 did not load")
 	}
-	if other.Cmd.Name != "OLD TIMER" || other.Cmd.Cash != 4321 {
-		t.Fatalf("loaded %q %v", other.Cmd.Name, other.Cmd.Cash)
+	if other.Cmd.Name != "SECOND" || other.Cmd.Cash != 222 {
+		t.Fatalf("loaded %q %.0f from slot 2", other.Cmd.Name, other.Cmd.Cash)
+	}
+
+	name, cash, where, ok := SlotInfo(0)
+	if !ok || name != "FIRST" || cash != 111 || where == "" {
+		t.Fatalf("slot 1 info: %q %.0f %q %v", name, cash, where, ok)
+	}
+
+	// the files live under the current name only
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) != ".json" {
+			t.Errorf("unexpected file in the save directory: %s", e.Name())
+		}
+	}
+	if !SaveExists() {
+		t.Fatal("SaveExists is false with two slots written")
 	}
 }

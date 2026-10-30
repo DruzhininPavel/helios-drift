@@ -36,12 +36,7 @@ func configPath() string {
 func Load() {
 	raw, err := os.ReadFile(configPath())
 	if err != nil {
-		// keep preferences written before the rename
-		if old, e1 := os.ReadFile(filepath.Join(filepath.Dir(configPath()), ".elite16-config.json")); e1 == nil {
-			raw = old
-		} else {
-			return
-		}
+		return
 	}
 	var c Config
 	if json.Unmarshal(raw, &c) == nil {

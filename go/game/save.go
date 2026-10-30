@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"heliosdrift/galaxy"
 )
@@ -43,39 +42,6 @@ func savePath(slot int) string {
 	return filepath.Join(dir, fmt.Sprintf(".heliosdrift-save%d.json", slot+1))
 }
 
-// legacyPath is the single-slot file used by earlier builds.
-func legacyPath() string {
-	dir := home()
-	if SaveDirOverride != "" {
-		dir = SaveDirOverride
-	}
-	return filepath.Join(dir, ".heliosdrift-save.json")
-}
-
-// oldPath maps a new save file back to the name used before the rename, so a
-// commander saved by an older build still loads.
-func oldPath(p string) string {
-	dir, base := filepath.Split(p)
-	switch {
-	case strings.HasPrefix(base, ".heliosdrift-save"):
-		return filepath.Join(dir, strings.Replace(base, ".heliosdrift-", ".elite16-", 1))
-	}
-	return ""
-}
-
-// readSave loads p, falling back to the pre-rename file name.
-func readSave(p string) ([]byte, error) {
-	raw, err := os.ReadFile(p)
-	if err == nil {
-		return raw, nil
-	}
-	if old := oldPath(p); old != "" {
-		return os.ReadFile(old)
-	}
-	return nil, err
-}
-
-// SaveSlot writes the commander into a slot.
 func (g *Game) SaveSlot(slot int) bool {
 	data := saveData{Version: 2, Cmd: g.Cmd}
 	raw, err := json.MarshalIndent(data, "", "  ")
@@ -87,10 +53,7 @@ func (g *Game) SaveSlot(slot int) bool {
 
 // LoadSlot restores a commander and docks at their last station.
 func (g *Game) LoadSlot(slot int) bool {
-	raw, err := readSave(savePath(slot))
-	if err != nil && slot == 0 {
-		raw, err = readSave(legacyPath())
-	}
+	raw, err := os.ReadFile(savePath(slot))
 	if err != nil {
 		return false
 	}
@@ -119,22 +82,13 @@ func (g *Game) LoadSlot(slot int) bool {
 
 // SlotExists reports whether a slot holds a commander.
 func SlotExists(slot int) bool {
-	if _, err := os.Stat(savePath(slot)); err == nil {
-		return true
-	}
-	if slot == 0 {
-		_, err := os.Stat(legacyPath())
-		return err == nil
-	}
-	return false
+	_, err := os.Stat(savePath(slot))
+	return err == nil
 }
 
 // SlotInfo describes a slot for the save/load screen.
 func SlotInfo(slot int) (name string, cash float64, where string, ok bool) {
-	raw, err := readSave(savePath(slot))
-	if err != nil && slot == 0 {
-		raw, err = readSave(legacyPath())
-	}
+	raw, err := os.ReadFile(savePath(slot))
 	if err != nil {
 		return "", 0, "", false
 	}
@@ -163,8 +117,8 @@ func SaveExists() bool {
 	return false
 }
 
-// Save keeps the old single-slot call sites working.
+// Save writes the first slot.
 func (g *Game) Save() bool { return g.SaveSlot(0) }
 
-// Load keeps the old single-slot call sites working.
+// Load reads the first slot.
 func (g *Game) Load() bool { return g.LoadSlot(0) }
