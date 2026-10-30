@@ -1,8 +1,14 @@
-## Unreleased
+## v1.13.1 — 2026-10-30
 
 ### Added
 - The world seed is picked at random per launch and printed in the corner of
   the title screen; `-seed N` plays that exact world again.
+
+### Fixed
+- Every launch played the same world: the seed defaulted to 1 after the
+  generator became seeded. Reference screenshots and probes now pin seed 1 so
+  they stay stable.
+- README named the pre-rename save files.
 
 ## v1.13 — 2026-10-30
 

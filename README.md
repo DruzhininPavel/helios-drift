@@ -315,7 +315,7 @@ Competent → Dangerous → Deadly → Elite.
 Выпустить версию:
 
 ```bash
-git tag v1.13 && git push origin v1.13
+git tag v1.13.1 && git push origin v1.13.1
 ```
 
 GitHub Actions соберёт все платформы и приложит их к релизу.
