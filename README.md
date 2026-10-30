@@ -287,6 +287,10 @@ Competent → Dangerous → Deadly → Elite.
 локально, набирается связная порция, и только потом выпускается версия.
 Что изменилось между версиями — в [CHANGELOG.md](CHANGELOG.md).
 
+В бинарнике есть режим бота: он сам играет без окна, проходит кампанию и
+проверяет игру на невозможные состояния. Подробности — в
+[docs/bot-testing.md](docs/bot-testing.md).
+
 Собрать всё локально, не выпуская релиз:
 
 ```bash
@@ -296,7 +300,7 @@ Competent → Dangerous → Deadly → Elite.
 Выпустить версию:
 
 ```bash
-git tag v1.12 && git push origin v1.12
+git tag v1.13 && git push origin v1.13
 ```
 
 GitHub Actions соберёт все платформы и приложит их к релизу.

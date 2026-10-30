@@ -1,4 +1,4 @@
-## Unreleased
+## v1.13 — 2026-10-30
 
 ### Added
 - Bot player that flies, trades, fights, jumps and docks headless, records its
