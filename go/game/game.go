@@ -4,6 +4,7 @@ package game
 
 import (
 	"math"
+	"strings"
 
 	"heliosdrift/galaxy"
 	"heliosdrift/models"
@@ -105,6 +106,7 @@ type Commander struct {
 	Contracts    []Contract    `json:"contracts"`
 	Day          int           `json:"day"`
 	Pax          int           `json:"pax"`
+	Log          []LogEntry    `json:"log,omitempty"`
 	Mail         int           `json:"mail"`
 	Ship         string        `json:"ship"`
 	Mode         string        `json:"mode"`
@@ -396,6 +398,9 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 	} else {
 		g.Player.Invulnerable = 1.5
 	}
+	if mode == "arrive" && !misjump {
+		g.Note(LogJump, sys.Name, 0, 0)
+	}
 	g.State = "flight"
 	g.Screen = "flight"
 	g.Autopilot = false
@@ -655,6 +660,7 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 			// worth scooping: one canister of whatever the ship had aboard
 			g.SpawnCargo(e.Pos.Add(randDir().Mul(20)), 7+randInt(10))
 		}
+		g.Note(LogKill, strings.ToUpper(e.Type), 0, float64(def.Bounty))
 		if e.Behaviour == "pirate" || e.Behaviour == "thargoid" {
 			bounty := def.Bounty
 			if e.Mission {
@@ -917,6 +923,7 @@ func (g *Game) PlayerDeath() {
 		g.dockedAt()
 		return
 	}
+	g.Note(LogDeath, g.LastDamageReason, 0, 0)
 	g.State = "dead"
 	g.Dead = &DeadInfo{Reason: g.LastDamageReason}
 	g.Emit("explode")

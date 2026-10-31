@@ -39,6 +39,8 @@ type Sel struct {
 	Title               int
 	Settings            int
 	Help                int
+	Log                 int
+	LogFilter           int
 	PrevState           string
 	PrevScreen          string
 	PadTestFrom         string

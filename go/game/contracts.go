@@ -148,6 +148,7 @@ func (g *Game) AcceptOffer(i int) bool {
 	}
 	g.Cmd.Contracts = append(g.Cmd.Contracts, c)
 	g.Offers = append(g.Offers[:i], g.Offers[i+1:]...)
+	g.Note(LogJob, g.ContractLabel(c), c.Qty, float64(c.Pay))
 	g.Message("CONTRACT ACCEPTED", "good")
 	return true
 }
@@ -164,6 +165,7 @@ func (g *Game) deliverContracts() {
 				if cmd.Cargo[c.Good] >= c.Qty {
 					cmd.Cargo[c.Good] -= c.Qty
 					cmd.Cash += float64(c.Pay)
+					g.Note(LogDone, g.ContractLabel(c), c.Qty, float64(c.Pay))
 					g.Message("DELIVERED  +"+itoa(c.Pay)+" CR", "good")
 					continue
 				}
@@ -172,11 +174,13 @@ func (g *Game) deliverContracts() {
 			case ContractPassenger:
 				cmd.Pax -= c.Qty
 				cmd.Cash += float64(c.Pay)
+				g.Note(LogDone, g.ContractLabel(c), c.Qty, float64(c.Pay))
 				g.Message("PASSENGERS DELIVERED  +"+itoa(c.Pay)+" CR", "good")
 				continue
 			case ContractMail:
 				cmd.Mail -= c.Qty
 				cmd.Cash += float64(c.Pay)
+				g.Note(LogDone, g.ContractLabel(c), c.Qty, float64(c.Pay))
 				g.Message("MAIL DELIVERED  +"+itoa(c.Pay)+" CR", "good")
 				continue
 			}
@@ -206,6 +210,7 @@ func (g *Game) expireContracts() {
 			if c.Kind == ContractMail {
 				cmd.Mail -= c.Qty
 			}
+			g.Note(LogFail, g.ContractLabel(c), c.Qty, -float64(fine))
 			g.Message("CONTRACT EXPIRED  -"+itoa(fine)+" CR", "bad")
 			continue
 		}

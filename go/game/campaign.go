@@ -268,6 +268,7 @@ func (g *Game) campaignKill(tag string) {
 	c.Stage++
 	if q.Pay > 0 {
 		g.Cmd.Cash += float64(q.Pay)
+		g.Note(LogDone, q.Title, c.Stage, float64(q.Pay))
 		g.Message("STAGE COMPLETE  +"+itoa(q.Pay)+" CR", "good")
 	} else {
 		g.Message("STAGE COMPLETE", "good")

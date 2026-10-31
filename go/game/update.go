@@ -525,6 +525,7 @@ func (g *Game) scoopCargo(e *Entity) {
 	if e.CargoType >= 0 && e.CargoType < len(galaxy.Commodities) {
 		name = galaxy.Commodities[e.CargoType].Name
 	}
+	g.Note(LogMine, name, 1, 0)
 	g.Message("SCOOPED: "+name, "good")
 }
 
@@ -563,6 +564,7 @@ func (g *Game) Buy(idx, qty int) {
 	cmd.Cash -= float64(qty * m.Price)
 	cmd.Cargo[idx] += qty
 	m.Qty -= qty
+	g.Note(LogBuy, m.Name, qty, -float64(qty*m.Price))
 	g.Message("BOUGHT "+itoa(qty)+"T "+m.Name, "good")
 }
 
@@ -583,6 +585,7 @@ func (g *Game) Sell(idx, qty int) {
 	cmd.Cash += float64(qty * m.Sell)
 	cmd.Cargo[idx] = have - qty
 	m.Qty += qty
+	g.Note(LogSell, m.Name, qty, float64(qty*m.Sell))
 	g.Message("SOLD "+itoa(qty)+"T "+m.Name+" FOR "+itoa(qty*m.Sell)+" CR", "good")
 }
 
@@ -601,12 +604,14 @@ func (g *Game) Refuel() {
 			return
 		}
 		cmd.Fuel = math.Round((cmd.Fuel+canBuy)*10) / 10
+		g.Note(LogFuel, "", int(math.Round(need*10))/10, -cmd.Cash)
 		cmd.Cash = 0
 		g.Message("PARTIAL REFUEL", "info")
 		return
 	}
 	cmd.Cash -= float64(cost)
 	cmd.Fuel = FuelMax
+	g.Note(LogFuel, "", int(need), -float64(cost))
 	g.Message("REFUELLED FOR "+itoa(cost)+" CR", "good")
 }
 
@@ -702,6 +707,7 @@ func (g *Game) BuyEquipment(id string) {
 		cmd.Equip[id] = true
 	}
 	cmd.Cash -= float64(item.Price)
+	g.Note(LogEquip, item.Name, 1, -float64(item.Price))
 	g.Message("PURCHASED: "+item.Name, "good")
 }
 

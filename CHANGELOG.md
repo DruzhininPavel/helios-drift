@@ -1,5 +1,12 @@
 ## Unreleased
 
+### Added
+- A log. The commander's own record: every trade with the station and the
+  price, every ship destroyed, fuel, equipment, hulls, contracts taken, paid
+  and failed, jumps, ore scooped, and the loss of a ship. Opens from the
+  station menu, scrolls with up/down and page keys, filters into everything,
+  trade, fights, jobs and travel. Three hundred entries, kept in the save.
+
 ### Fixed
 - Station mouths now meet the docking plane. The rock hermit's collar ran thirty
   units past the hull, so a pilot could fly into the opening and nothing

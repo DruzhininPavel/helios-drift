@@ -96,6 +96,7 @@ func (g *Game) BuyShip(id string) bool {
 	g.Player.Energy = want.Energy
 	g.Player.ShieldF = g.ShieldMax()
 	g.Player.ShieldA = g.ShieldMax()
+	g.Note(LogShip, want.Name, 0, -float64(net))
 	g.Message("NOW FLYING "+want.Name, "good")
 	return true
 }

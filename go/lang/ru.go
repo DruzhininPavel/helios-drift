@@ -5,6 +5,25 @@ package lang
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
 
+	// ---- the commander's log
+	"LOG":                     "ЖУРНАЛ",
+	"ALL":                     "ВСЁ",
+	"TRADE":                   "ТОРГОВЛЯ",
+	"FIGHT":                   "БОИ",
+	"JOBS":                    "ЗАДАНИЯ",
+	"KILLED":                  "СБИТ",
+	"BOUGHT":                  "КУПЛЕНО",
+	"SOLD":                    "ПРОДАНО",
+	"REFUELLED":               "ЗАПРАВКА",
+	"NEW SHIP":                "НОВЫЙ КОРАБЛЬ",
+	"PAID":                    "ОПЛАЧЕНО",
+	"FAILED":                  "ПРОВАЛЕНО",
+	"JUMPED TO":               "ПРЫЖОК В",
+	"MINED":                   "ДОБЫТО",
+	"LOST SHIP":               "ПОТЕРЯН КОРАБЛЬ",
+	"NOTHING IN THIS LOG YET": "ЗАПИСЕЙ ПОКА НЕТ",
+	"UP/DOWN SCROLL   LEFT/RIGHT FILTER   ESC BACK": "ВВЕРХ/ВНИЗ ПРОКРУТКА  ВЛЕВО/ВПРАВО ФИЛЬТР  ESC НАЗАД",
+
 	// ---- messages that came up in the translation slice as still English
 	"COLLISION":                       "СТОЛКНОВЕНИЕ",
 	"RAMMED ANOTHER SHIP":             "ТАРАН КОРАБЛЯ",

@@ -64,6 +64,8 @@ func docked(fb *render.FB) {
 		contractsScreen(fb)
 	case "journal":
 		journalScreen(fb)
+	case "log":
+		logScreen(fb)
 	case "shipyard":
 		shipyardScreen(fb)
 	case "slots":
@@ -154,7 +156,7 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD")
 	}
-	items = append(items, "GALACTIC CHART",
+	items = append(items, "LOG", "GALACTIC CHART",
 		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER", "SETTINGS")
 	if game.G.MissionOffer() != "" || game.G.Cmd.Mission.Kind != "" ||
 		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active {
@@ -722,6 +724,9 @@ func dockedKey(k string) bool {
 				openContracts()
 			case "JOURNAL":
 				openJournal()
+			case "LOG":
+				g.Screen = "log"
+				S.Log = 0
 			}
 			return true
 		}
@@ -732,6 +737,9 @@ func dockedKey(k string) bool {
 			g.Screen = "launch"
 		}
 		return true
+	}
+	if g.Screen == "log" {
+		return logKey(k)
 	}
 	if g.Screen == "contracts" {
 		return contractsKey(k)
@@ -1938,6 +1946,166 @@ func helpKey(k string) bool {
 	case "ArrowRight":
 		S.Help = (S.Help + 1) % len(helpPages)
 		return true
+	}
+	return true
+}
+
+// ---------------------------------------------------------------- log
+
+// logFilters are the tabs of the log screen, in order.
+var logFilters = []string{"ALL", "TRADE", "FIGHT", "JOBS", "TRAVEL"}
+
+// logLine turns an entry into the sentence the player reads. The words are
+// translated one by one and the data (names, numbers) is left alone, so the
+// log reads in the player's language without a second copy of every line.
+func logLine(e game.LogEntry) string {
+	what := lang.T(e.A)
+	switch e.Kind {
+	case game.LogKill:
+		return lang.T("KILLED") + " " + e.A
+	case game.LogBuy:
+		return lang.T("BOUGHT") + " " + what + " X" + itoa(e.N)
+	case game.LogSell:
+		return lang.T("SOLD") + " " + what + " X" + itoa(e.N)
+	case game.LogFuel:
+		return lang.T("REFUELLED") + " " + itoa(e.N) + " LY"
+	case game.LogEquip:
+		return lang.T("FITTED") + " " + what
+	case game.LogShip:
+		return lang.T("NEW SHIP") + " " + e.A
+	case game.LogJob:
+		return lang.T("CONTRACT") + " " + e.A
+	case game.LogDone:
+		return lang.T("PAID") + " " + e.A
+	case game.LogFail:
+		return lang.T("FAILED") + " " + e.A
+	case game.LogJump:
+		return lang.T("JUMPED TO") + " " + e.A
+	case game.LogMine:
+		return lang.T("MINED") + " " + what
+	case game.LogDeath:
+		return lang.T("LOST SHIP") + " " + lang.T(e.A)
+	}
+	return e.A
+}
+
+// logVisible returns the entries that match the current filter, newest first.
+func logVisible() []game.LogEntry {
+	g := game.G
+	out := make([]game.LogEntry, 0, len(g.Cmd.Log))
+	for i := len(g.Cmd.Log) - 1; i >= 0; i-- {
+		e := g.Cmd.Log[i]
+		if S.LogFilter > 0 && game.LogGroup(e.Kind) != logFilters[S.LogFilter] {
+			continue
+		}
+		out = append(out, e)
+	}
+	return out
+}
+
+func logScreen(fb *render.FB) {
+	plate(fb, 6, 14, 310, 190, "LOG")
+	// filter tabs
+	x := 12
+	for i, name := range logFilters {
+		col := ColDim
+		if i == S.LogFilter {
+			col = ColYellow
+			fb.FillRect(x-2, 24, x+render.TextWidth(name, 1)+2, 31, render.RGB(0x12384f))
+		}
+		fb.Text(name, x, 25, col, 1)
+		x += render.TextWidth(name, 1) + 8
+	}
+	ents := logVisible()
+	if len(ents) == 0 {
+		fb.Text("NOTHING IN THIS LOG YET", 14, 44, ColDim, 1)
+		Hint = "LEFT/RIGHT FILTER   ESC BACK"
+		return
+	}
+	if S.Log < 0 {
+		S.Log = 0
+	}
+	if S.Log > len(ents)-1 {
+		S.Log = len(ents) - 1
+	}
+	const perPage = 13
+	if S.Log > len(ents)-1 {
+		S.Log = len(ents) - 1
+	}
+	// keep the cursor on screen: the list scrolls under a fixed window
+	top := S.Log - perPage/2
+	if top < 0 {
+		top = 0
+	}
+	if top > len(ents)-perPage {
+		top = len(ents) - perPage
+	}
+	if top < 0 {
+		top = 0
+	}
+	y := 40
+	for i := top; i < len(ents) && i < top+perPage; i++ {
+		e := ents[i]
+		sel := i == S.Log
+		if sel {
+			fb.FillRect(10, y-1, 306, y+7, render.RGB(0x12384f))
+		}
+		day := "D" + itoa(e.Day)
+		fb.Text(day, 10, y, ColDim, 1)
+		line := clip(logLine(e), 33)
+		col := ColText
+		if sel {
+			col = ColYellow
+		}
+		fb.TextRaw(line, 34, y, col, 1)
+		if e.CR != 0 {
+			money := "+" + itoa(int(e.CR))
+			c := ColGreen
+			if e.CR < 0 {
+				money = itoa(int(e.CR))
+				c = ColRed
+			}
+			fb.TextR(money, 306, y, c, 1)
+		}
+		y += 11
+	}
+	Hint = "UP/DOWN SCROLL   LEFT/RIGHT FILTER   ESC BACK"
+}
+
+func logKey(k string) bool {
+	g := game.G
+	n := len(logVisible())
+	switch k {
+	case "Escape":
+		g.Screen = "launch"
+	case "ArrowUp":
+		S.Log--
+		if S.Log < 0 {
+			S.Log = 0
+		}
+	case "ArrowDown":
+		S.Log++
+		if n > 0 && S.Log > n-1 {
+			S.Log = n - 1
+		}
+	case "PageUp", "PageDown":
+		if k == "PageUp" {
+			S.Log -= 13
+		} else {
+			S.Log += 13
+		}
+		if S.Log < 0 {
+			S.Log = 0
+		}
+		if n > 0 && S.Log > n-1 {
+			S.Log = n - 1
+		}
+	case "ArrowLeft", "ArrowRight":
+		S.LogFilter = (S.LogFilter + len(logFilters) + 1) % len(logFilters)
+		if k == "ArrowLeft" {
+			S.LogFilter = (S.LogFilter + len(logFilters) - 2) % len(logFilters)
+		}
+		S.Log = 0
 	}
 	return true
 }

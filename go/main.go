@@ -468,6 +468,23 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// the log, with a handful of entries so the layout is visible
+	g.State = "docked"
+	g.Cmd.Log = nil
+	g.Note(game.LogJump, "THILQU", 0, 0)
+	g.Note(game.LogBuy, "FOOD", 4, -120)
+	g.Note(game.LogKill, "KRAIT", 0, 100)
+	g.Note(game.LogSell, "TEXTILES", 6, 402)
+	g.Note(game.LogJob, "COURIER TEXTILES X1 TO ITILIL", 1, 578)
+	g.Note(game.LogFuel, "", 7, -140)
+	g.Note(game.LogEquip, "FUEL SCOOP", 1, -525)
+	g.Note(game.LogDone, "STAGE ONE", 1, 1200)
+	g.Screen = "log"
+	ui.S.Log = 0
+	ui.S.LogFilter = 0
+	shot("g75-log")
+	g.Screen = "launch"
+
 	// the last stretch of a docking approach, with the guide on
 	if st := g.World.Station; st != nil {
 		nrm := st.Mat.Col(2)
