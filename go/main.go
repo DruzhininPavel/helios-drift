@@ -456,6 +456,12 @@ func runShots() {
 	shot("g39-equip")
 	g.Screen = "status"
 	shot("g40-status")
+	prevState := g.State
+	g.State = "flight"
+	g.Overlay = "pause"
+	shot("g68-pause")
+	g.Overlay = ""
+	g.State = prevState
 	g.Screen = "help"
 	ui.S.Help = 0
 	shot("g66-help-docking")

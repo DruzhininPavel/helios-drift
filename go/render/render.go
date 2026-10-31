@@ -4,6 +4,7 @@ package render
 
 import (
 	"math"
+	"unicode"
 )
 
 // ---------------------------------------------------------------- vectors
@@ -707,6 +708,11 @@ func (fb *FB) textRaw(s string, x, y int, c uint32, scale int) {
 			continue
 		}
 		gl, ok := glyphs[ch]
+		if !ok {
+			// the font is capitals only: render lower case as capitals rather
+			// than dumping a row of question marks into the panel
+			gl, ok = glyphs[unicode.ToUpper(ch)]
+		}
 		if !ok {
 			gl = glyphs['?']
 		}

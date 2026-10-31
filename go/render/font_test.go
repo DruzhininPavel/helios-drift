@@ -42,3 +42,24 @@ func TestCyrillicTextWidth(t *testing.T) {
 		t.Errorf("width of ПРИВЕТ = %d, want %d", w, 6*6-1)
 	}
 }
+
+// TestLowerCaseRendersAsCapitals checks the fallback: the font has no lower
+// case, and a stray lower-case word must not turn into question marks.
+func TestLowerCaseRendersAsCapitals(t *testing.T) {
+	lower := NewFB(320, 224)
+	lower.TextRaw("SPACE or LMB", 0, 0, 0xffffff, 1)
+	upper := NewFB(320, 224)
+	upper.TextRaw("SPACE OR LMB", 0, 0, 0xffffff, 1)
+	diff := 0
+	for i := range lower.Buf {
+		if lower.Buf[i] != upper.Buf[i] {
+			diff++
+		}
+	}
+	if diff != 0 {
+		t.Fatalf("lower case did not fall back to capitals (%d pixels differ)", diff)
+	}
+	if TextWidthRaw("or", 1) != TextWidthRaw("OR", 1) {
+		t.Fatal("width differs for lower case")
+	}
+}

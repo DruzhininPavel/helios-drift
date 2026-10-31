@@ -529,7 +529,7 @@ func statusScreen(fb *render.FB) {
 
 func pauseScreen(fb *render.FB) {
 	chrome(fb, "PAUSED")
-	plate(fb, 40, 26, 240, 170, "FLIGHT CONTROLS")
+	plate(fb, 8, 18, 312, 190, "FLIGHT CONTROLS X")
 	steer := "PITCH AND ROLL"
 	if !game.G.Classic() {
 		steer = "PITCH / ROLL / YAW"
@@ -538,7 +538,7 @@ func pauseScreen(fb *render.FB) {
 		{"ARROWS / MOUSE", steer},
 		{"Q / R", "YAW LEFT / RIGHT"},
 		{"X / Z", "ACCELERATE / BRAKE"},
-		{"SPACE or LMB", "FIRE LASERS"},
+		{"SPACE / LMB", "FIRE LASERS"},
 		{"M", "LAUNCH MISSILE"},
 		{"E", "E.C.M."},
 		{"TAB", "ENERGY BOMB"},
@@ -550,9 +550,11 @@ func pauseScreen(fb *render.FB) {
 		{"H", "HANDBOOK"},
 		{"Q", "MAIN MENU"},
 	}
+	// one column, tight rows: fourteen lines have to fit the plate
 	for i, r := range rows {
-		fb.Text(r[0], 52, 40+i*12, ColYellow, 1)
-		fb.TextR(r[1], 268, 40+i*12, ColText, 1)
+		y := 30 + i*12
+		fb.Text(r[0], 16, y, ColYellow, 1)
+		fb.TextR(r[1], 300, y, ColText, 1)
 	}
 }
 
