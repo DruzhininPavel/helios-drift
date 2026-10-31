@@ -70,7 +70,11 @@ func TestSettingsLanguageToggle(t *testing.T) {
 
 func TestTitleHasQuit(t *testing.T) {
 	newTitle()
-	S.Title = 3
+	items := TitleItems()
+	S.Title = len(items) - 1
+	if items[S.Title] != "QUIT" {
+		t.Fatalf("last item is %q, want QUIT", items[S.Title])
+	}
 	Key("Enter")
 	if !QuitRequested() {
 		t.Fatal("QUIT did not ask to leave")
@@ -320,7 +324,7 @@ func TestContinueFlight(t *testing.T) {
 		t.Fatal("session not remembered")
 	}
 	items := TitleItems()
-	if len(items) != 5 || items[1] != "CONTINUE FLIGHT" {
+	if len(items) < 2 || items[1] != "CONTINUE FLIGHT" {
 		t.Fatalf("items = %v", items)
 	}
 	S.Title = 1

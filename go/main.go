@@ -456,6 +456,12 @@ func runShots() {
 	shot("g39-equip")
 	g.Screen = "status"
 	shot("g40-status")
+	g.Screen = "help"
+	ui.S.Help = 0
+	shot("g66-help-docking")
+	ui.S.Help = 1
+	shot("g67-help-fighting")
+	ui.S.Help = 0
 
 	// mining: break a rock and show the debris
 	g.World.Entities = nil

@@ -263,7 +263,8 @@ func marketScreen(fb *render.FB) {
 		if sel {
 			col = ColYellow
 		}
-		fb.Text(m.Name, 12, y, col, 1)
+		drawIcon(fb, 10, y, i, sel)
+		fb.Text(m.Name, 20, y, col, 1)
 		if m.Unit == "KG" {
 			fb.Text("KG", 104, y, ColDim, 1)
 		}
@@ -535,6 +536,7 @@ func pauseScreen(fb *render.FB) {
 	}
 	rows := [][2]string{
 		{"ARROWS / MOUSE", steer},
+		{"Q / R", "YAW LEFT / RIGHT"},
 		{"X / Z", "ACCELERATE / BRAKE"},
 		{"SPACE or LMB", "FIRE LASERS"},
 		{"M", "LAUNCH MISSILE"},
@@ -545,6 +547,7 @@ func pauseScreen(fb *render.FB) {
 		{"C", "GALACTIC CHART"},
 		{"V", "COMMANDER STATUS"},
 		{"ESC", "RESUME"},
+		{"H", "HANDBOOK"},
 		{"Q", "MAIN MENU"},
 	}
 	for i, r := range rows {
@@ -563,6 +566,9 @@ func Key(k string) bool {
 	}
 	if g.Screen == "controls" {
 		return controlsKey(k)
+	}
+	if g.Screen == "help" {
+		return helpKey(k)
 	}
 	if g.Screen == "padtest" {
 		if k == "Escape" || k == "Enter" {
@@ -595,6 +601,9 @@ func Key(k string) bool {
 				openMode()
 			case "CONTINUE FLIGHT":
 				ContinueFlight()
+			case "HOW TO PLAY":
+				S.Help = 0
+				game.G.Screen = "help"
 			case "LOAD COMMANDER":
 				if game.SaveExists() {
 					openSlots(false)
@@ -853,6 +862,12 @@ func overlayKey(k string) bool {
 	}
 	if k == "q" && g.Overlay == "pause" {
 		QuitToTitle()
+		return true
+	}
+	if k == "h" && g.Overlay == "pause" {
+		// the handbook from inside a flight: leave the overlay open behind it
+		S.PrevScreen = g.Screen
+		g.Screen = "help"
 		return true
 	}
 	if g.Overlay == "chart" {
@@ -1806,4 +1821,105 @@ func journalScreen(fb *render.FB) {
 		fb.Text("PAX "+itoa(g.Cmd.Pax)+"   MAIL "+itoa(g.Cmd.Mail)+" T", 16, y, ColDim, 1)
 	}
 	Hint = "ESC BACK"
+}
+
+// ------------------------------------------------------------------- help
+
+// helpPages is the handbook: four topics, one screen each. Everything a first
+// flight needs and nothing else.
+var helpPages = []struct {
+	Title string
+	Lines []string
+}{
+	{"DOCKING", []string{
+		"THE STATION HAS A SLOT IN ONE FACE.",
+		"FLY AT IT WITH THE NOSE POINTED IN.",
+		"SPEED MUST BE UNDER 85% OR YOU HIT",
+		"THE HULL INSTEAD OF THE MOUTH.",
+		"",
+		"FIT A DOCKING COMPUTER (L) AND THE",
+		"SHIP FLIES THE LAST STRETCH ITSELF.",
+		"",
+		"THE STATION TURNS: THE SLOT MOVES.",
+	}},
+	{"FIGHTING", []string{
+		"SPACE FIRES THE LASERS.",
+		"M LAUNCHES A MISSILE AT THE CROSSHAIR.",
+		"E IS E.C.M. AND KILLS INCOMING MISSILES.",
+		"TAB IS THE ENERGY BOMB: EVERYTHING",
+		"CLOSE TO YOU DIES, INCLUDING YOUR SHIELDS.",
+		"",
+		"WATCH THE CABIN TEMPERATURE NEAR THE STAR.",
+		"SHIELDS RECHARGE, THE HULL DOES NOT.",
+	}},
+	{"TRAVEL", []string{
+		"C OPENS THE GALACTIC CHART.",
+		"PICK A SYSTEM WITHIN 7 LIGHT YEARS",
+		"AND PRESS H. FUEL BURNS WITH THE JUMP.",
+		"",
+		"J IS A SHORT JUMP INSIDE THE SYSTEM.",
+		"G CROSSES TO THE NEXT GALAXY: ONE WAY,",
+		"AND YOU NEED A GALACTIC HYPERDRIVE.",
+		"",
+		"F BUYS FUEL AT ANY STATION.",
+	}},
+	{"TRADING", []string{
+		"BUY WHERE IT IS CHEAP, SELL WHERE IT IS DEAR.",
+		"B BUYS A TONNE, SHIFT+B BUYS TEN.",
+		"S SELLS A TONNE, SHIFT+S SELLS TEN.",
+		"",
+		"THE BOARD PAYS FOR COURIER RUNS,",
+		"PASSENGERS, MAIL AND BOUNTIES.",
+		"JOBS HAVE DEADLINES: A MISSED ONE COSTS.",
+		"",
+		"TO WIN A FIGHT, BUY A BIGGER GUN FIRST.",
+	}},
+}
+
+func helpScreen(fb *render.FB) {
+	page := S.Help
+	if page < 0 || page >= len(helpPages) {
+		page = 0
+	}
+	p := helpPages[page]
+	plate(fb, 12, 20, 296, 180, p.Title)
+	for i, line := range p.Lines {
+		col := ColText
+		if line == "" {
+			continue
+		}
+		fb.Text(line, 24, 42+i*13, col, 1)
+	}
+	// page marks
+	for i := range helpPages {
+		x := 140 + i*12
+		c := render.RGB(0x25405a)
+		if i == page {
+			c = ColYellow
+		}
+		fb.FillRect(x, 186, x+6, 191, c)
+	}
+	Hint = "LEFT/RIGHT PAGE   ESC BACK"
+}
+
+func helpKey(k string) bool {
+	switch k {
+	case "Escape":
+		if game.G.State == "title" {
+			game.G.Screen = ""
+		} else if S.PrevScreen != "" {
+			game.G.Screen = S.PrevScreen
+			S.PrevScreen = ""
+		} else {
+			game.G.Screen = "launch"
+		}
+		return true
+	case "ArrowLeft":
+		S.Help = (S.Help + len(helpPages) - 1) % len(helpPages)
+		return true
+	case "ArrowRight":
+		S.Help = (S.Help + 1) % len(helpPages)
+		return true
+	}
+	return true
 }

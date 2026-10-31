@@ -85,6 +85,7 @@ func (g *Game) Update(dt float64) {
 	p.ShieldF = math.Min(g.ShieldMax(), p.ShieldF+1.9*dt)
 	p.ShieldA = math.Min(g.ShieldMax(), p.ShieldA+1.9*dt)
 	p.LaserTemp = math.Max(0, p.LaserTemp-0.35*dt)
+	g.LaserFlash = math.Max(0, g.LaserFlash-7*dt)
 	if p.Invulnerable > 0 {
 		p.Invulnerable -= dt
 	}
@@ -338,12 +339,36 @@ func (g *Game) updateEntities(dt float64) {
 			continue
 		}
 
+		// the generation ship is solid: it is a hull hundreds of metres long
+		// and flying through it looked exactly like flying through a texture
+		if e.Kind == "genship" {
+			if p.Pos.Sub(e.Pos).Len() < e.Radius*0.9 {
+				g.LastDamageReason = "COLLIDED WITH A GENERATION SHIP"
+				g.PlayerDeath()
+				return
+			}
+			continue
+		}
+
 		if e.Kind != "ship" {
 			continue
 		}
 
 		toPlayer := p.Pos.Sub(e.Pos)
 		distP := toPlayer.Len()
+
+		// flying into another hull hurts both ships, but a trader pulling out
+		// of the slot is not a reason to die: that traffic is expected there
+		if distP < e.Radius*0.85 && e.Behaviour != "depart" {
+			g.DamagePlayer(45, true)
+			g.HitEntity(e, 1e6, "ram")
+			g.Message("COLLISION", "bad")
+			if g.State == "dead" {
+				g.LastDamageReason = "RAMMED ANOTHER SHIP"
+				return
+			}
+			continue
+		}
 
 		switch e.Behaviour {
 		case "depart":

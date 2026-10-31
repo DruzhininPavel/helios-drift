@@ -249,6 +249,9 @@ type Game struct {
 	OnEvent func(string)
 
 	LastDamageReason string
+	// LaserFlash fades right after a shot; the cockpit draws the beam while it
+	// lasts. Purely cosmetic.
+	LaserFlash float64
 	// DamageTaken is the shot damage the commander has absorbed in this life.
 	// The ship benchmark reads it to compare hulls.
 	DamageTaken float64
@@ -573,6 +576,7 @@ func (g *Game) FireLaser() {
 	dmg := LaserDamage[cmd.Laser]
 	rng := LaserRange[cmd.Laser]
 	p.LaserTemp = math.Min(1, p.LaserTemp+LaserHeat[cmd.Laser])
+	g.LaserFlash = 1
 	fwd := p.Mat.Col(2).Mul(-1)
 	var best *Entity
 	bestDepth := math.Inf(1)

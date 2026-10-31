@@ -37,6 +37,7 @@ type Sel struct {
 	ChartCursor         int
 	Title               int
 	Settings            int
+	Help                int
 	PrevState           string
 	PrevScreen          string
 	PadTestFrom         string
@@ -248,6 +249,12 @@ func Draw(fb *render.FB, dt float64) {
 	if g.Screen == "padtest" {
 		chrome(fb, "PAD TEST")
 		padTestScreen(fb)
+		footer(fb)
+		return
+	}
+	if g.Screen == "help" {
+		chrome(fb, "HANDBOOK")
+		helpScreen(fb)
 		footer(fb)
 		return
 	}
@@ -554,6 +561,9 @@ func flight(fb *render.FB, dt float64) {
 	}
 
 	fb.ResetClip()
+	if g.LaserFlash > 0 {
+		laserBeam(fb, 160, 75, g.LaserFlash, game.G.Cmd.Laser)
+	}
 	cockpit(fb)
 	crosshair(fb, 160, 75)
 
@@ -690,6 +700,39 @@ func cockpit(fb *render.FB) {
 				fb.Px(xx, yy, dark)
 			}
 		}
+	}
+}
+
+// laserBeam draws the shot itself: two converging lines from the gun mounts to
+// the sight, fading with the flash. Without it a hit was a sound and a number.
+func laserBeam(fb *render.FB, cx, cy int, flash float64, level int) {
+	if level < 0 || level > 3 {
+		level = 0
+	}
+	bright := []string{"green", "teal", "yellow", "red"}[level]
+	tier := 4 + int(math.Min(3, flash*3))
+	col := render.Color(bright, tier)
+	// the two barrels, converging on the sight
+	for i := 0; i < 34; i++ {
+		t := float64(i) / 33
+		x := int(float64(cx-46) + t*46)
+		y := int(float64(160) + t*(float64(cy-160)))
+		fb.Px(x, y, col)
+		fb.Px(x, y-1, col)
+		x2 := int(float64(cx+46) - t*46)
+		fb.Px(x2, y, col)
+		fb.Px(x2, y-1, col)
+	}
+	// a hot spot where the shot leaves the barrel
+	glow := render.Color(bright, 5)
+	fb.Px(cx-46, 160, glow)
+	fb.Px(cx+46, 160, glow)
+	fb.Px(cx-47, 161, col)
+	fb.Px(cx+47, 161, col)
+	if flash > 0.35 {
+		fb.Px(cx, cy, glow)
+		fb.Px(cx-1, cy, glow)
+		fb.Px(cx+1, cy, glow)
 	}
 }
 
@@ -873,7 +916,7 @@ func TitleItems() []string {
 	if S.HasSession {
 		out = append(out, "CONTINUE FLIGHT")
 	}
-	return append(out, "LOAD COMMANDER", "SETTINGS", "QUIT")
+	return append(out, "LOAD COMMANDER", "HOW TO PLAY", "SETTINGS", "QUIT")
 }
 
 func gameOver(fb *render.FB) {
