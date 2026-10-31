@@ -72,6 +72,21 @@ func (a *App) Update() error {
 		return nil
 	}
 
+	// Testing cheats, deliberately awkward to hit by accident: control plus
+	// M adds credits, control plus G turns off damage from guns, missiles and
+	// debris. Ramming a station still kills. The frame ends here so the same
+	// key press cannot also fire a missile or open the chart.
+	if ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+			g.CheatMoney(10000)
+			return nil
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyG) {
+			g.ToggleCheatShield()
+			return nil
+		}
+	}
+
 	// F11 goes fullscreen: handy on a TV or a handheld
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
 		ebiten.SetFullscreen(!ebiten.IsFullscreen())

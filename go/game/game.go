@@ -259,6 +259,8 @@ type Game struct {
 	OnEvent func(string)
 
 	LastDamageReason string
+	// CheatShield ignores fire and debris for testing; collisions still kill.
+	CheatShield bool
 	// LaserFlash fades right after a shot; the cockpit draws the beam while it
 	// lasts. Purely cosmetic.
 	LaserFlash float64
@@ -903,9 +905,15 @@ func (g *Game) FireBomb() {
 	g.Emit("bomb")
 }
 
-func (g *Game) DamagePlayer(dmg float64, fromFront bool) {
+// DamagePlayer hurts the ship. The source decides whether the tester's shield
+// applies: guns, missiles and flying debris bounce off it, but a hull you flew
+// into is a hull you flew into.
+func (g *Game) DamagePlayer(dmg float64, fromFront bool, source string) {
 	p := &g.Player
 	if p.Invulnerable > 0 {
+		return
+	}
+	if g.CheatShield && (source == "laser" || source == "missile" || source == "debris") {
 		return
 	}
 	g.DamageTaken += dmg

@@ -106,7 +106,7 @@ func (g *Game) Update(dt float64) {
 		return
 	} else if dPlanet < w.Planet.Radius*1.18 {
 		g.Message("WARNING: ATMOSPHERE", "bad")
-		g.DamagePlayer(14*dt, true)
+		g.DamagePlayer(14*dt, true, "laser")
 	}
 	dSun := p.Pos.Sub(w.Sun.Pos).Len()
 	if dSun < w.Sun.Radius*1.05 {
@@ -133,7 +133,7 @@ func (g *Game) Update(dt float64) {
 			p.Cabin = 0
 		}
 		if p.Cabin > 0.8 {
-			g.DamagePlayer(9*dt*(p.Cabin-0.8)/0.2, true)
+			g.DamagePlayer(9*dt*(p.Cabin-0.8)/0.2, true, "heat")
 			if randFloat() < dt*1.5 {
 				g.Message("CABIN TEMPERATURE CRITICAL", "bad")
 			}
@@ -291,7 +291,7 @@ func (g *Game) updateEntities(dt float64) {
 					ents = append(ents[:i], ents[i+1:]...)
 					continue
 				} else if dc < 22 {
-					g.DamagePlayer(2, true)
+					g.DamagePlayer(2, true, "debris")
 					ents = append(ents[:i], ents[i+1:]...)
 					g.Message("NO SCOOP FITTED - CANISTER HIT HULL", "bad")
 					continue
@@ -317,7 +317,7 @@ func (g *Game) updateEntities(dt float64) {
 						continue
 					}
 					if p.Pos.Sub(e.Pos).Len() < 24 {
-						g.DamagePlayer(1, true)
+						g.DamagePlayer(1, true, "debris")
 						ents = append(ents[:i], ents[i+1:]...)
 						continue
 					}
@@ -360,7 +360,7 @@ func (g *Game) updateEntities(dt float64) {
 		// flying into another hull hurts both ships, but a trader pulling out
 		// of the slot is not a reason to die: that traffic is expected there
 		if distP < e.Radius*0.85 && e.Behaviour != "depart" {
-			g.DamagePlayer(45, true)
+			g.DamagePlayer(45, true, "ram")
 			g.HitEntity(e, 1e6, "ram")
 			g.Message("COLLISION", "bad")
 			if g.State == "dead" {
@@ -409,7 +409,7 @@ func (g *Game) updateEntities(dt float64) {
 			if e.Cooldown <= 0 && distP < 3500 && math.Abs(ax) < 0.2 && math.Abs(ay) < 0.2 {
 				e.Cooldown = e.FireRate * randRange(0.8, 1.5)
 				if randFloat() < math.Max(0.25, 1.05-distP/5200) {
-					g.DamagePlayer(randRange(2, 4.5), true)
+					g.DamagePlayer(randRange(2, 4.5), true, "laser")
 					g.Emit("hit")
 					g.Shake = 0.35
 				}
@@ -440,7 +440,7 @@ func (g *Game) updateEntities(dt float64) {
 					if e.Type == "thargoid" {
 						dmg = randRange(6, 11)
 					}
-					g.DamagePlayer(dmg, true)
+					g.DamagePlayer(dmg, true, "laser")
 					if e.Type == "thargoid" {
 						g.LastDamageReason = "DESTROYED BY THE SWARM"
 					} else {
@@ -483,7 +483,7 @@ func (g *Game) updateMissile(m *Entity, dt float64) {
 
 	if m.TargetPlayer {
 		if m.Pos.Sub(g.Player.Pos).Len() < 70 {
-			g.DamagePlayer(70, false)
+			g.DamagePlayer(70, false, "missile")
 			g.addExplosion(m.Pos, 18)
 			g.LastDamageReason = "DESTROYED BY A MISSILE"
 			g.Emit("explode")

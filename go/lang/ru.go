@@ -4,6 +4,9 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"CHEAT":                          "ЧИТ",
+	"CHEAT SHIELD ON":                "ЧИТ-ЩИТ ВКЛЮЧЁН",
+	"CHEAT SHIELD OFF":               "ЧИТ-ЩИТ ВЫКЛЮЧЕН",
 	"DIPLOMAT":                       "ДИПЛОМАТ",
 	"PARDON":                         "АМНИСТИЯ",
 	"CLEAR RECORD FOR":               "ОЧИСТИТЬ РЕПУТАЦИЮ ЗА",
