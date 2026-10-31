@@ -141,5 +141,5 @@
 
 ```bash
 ./build.sh                          # собрать всё локально
-git tag v1.13.3 && git push origin v1.13.3   # выпустить версию
+git tag v1.14 && git push origin v1.14   # выпустить версию
 ```

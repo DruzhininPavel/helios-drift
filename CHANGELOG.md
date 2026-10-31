@@ -1,4 +1,4 @@
-## Unreleased
+## v1.14 — 2026-10-31
 
 ### Added
 - Plasma accelerator, shield booster and heavy shielding, a second cargo bay and
