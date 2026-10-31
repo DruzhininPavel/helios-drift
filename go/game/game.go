@@ -16,11 +16,11 @@ const (
 	ViewH = 150
 
 	MaxSpeed  = 420
-	PitchRate = 1.55
-	RollRate  = 2.35
+	PitchRate = 1.65
+	RollRate  = 2.55
 	// YawRate is deliberately slower than pitch: yaw is a steering aid added
 	// for Advanced mode, not the main way to turn the ship.
-	YawRate     = 0.95
+	YawRate     = 1.35
 	MaxEnergy   = 100
 	MaxShield   = 100
 	CargoBase   = 20
@@ -645,7 +645,9 @@ func (g *Game) FireLaser() {
 		}
 		lateral := rel.Sub(fwd.Mul(depth)).Len()
 		angRad := e.Radius / depth
-		spread := math.Max(angRad*1.25, 0.012)
+		// a forgiving cone: on a keyboard the ship is a pin at range, and the
+		// fight used to be unwinnable because the shot had to be perfect
+		spread := math.Max(angRad*1.6, 0.022)
 		if lateral < depth*spread && depth < bestDepth {
 			best = e
 			bestDepth = depth

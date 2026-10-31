@@ -35,6 +35,11 @@ func (g *Game) Update(dt float64) {
 		g.updateDocking(dt)
 		return
 	case "flight":
+		if g.Screen == "talk" {
+			// a conversation is not a real-time event: nothing moves, nothing
+			// spawns and nothing shoots until the answer is given
+			return
+		}
 	default:
 		return
 	}
@@ -269,8 +274,15 @@ func (g *Game) turnTowards(e *Entity, target render.Vec3, dt float64) (ax, ay fl
 	if math.Abs(ax) > 0.55 {
 		pitch *= 0.25
 	}
-	e.Mat = e.Mat.Mul(render.RotZ(roll * 1.9 * dt))
-	e.Mat = e.Mat.Mul(render.RotX(pitch * 1.7 * dt))
+	// up close they swing lazier: at range a ship has to close in, and in a
+	// knife fight a keyboard pilot has to be able to break away from a hull
+	// that would otherwise sit on his six forever
+	rate := 1.0
+	if d := e.Pos.Sub(target).Len(); d < 1200 {
+		rate = 0.55 + 0.45*d/1200
+	}
+	e.Mat = e.Mat.Mul(render.RotZ(roll * 1.9 * rate * dt))
+	e.Mat = e.Mat.Mul(render.RotX(pitch * 1.7 * rate * dt))
 	e.Mat = e.Mat.Orthonormalize()
 	return
 }
@@ -452,9 +464,9 @@ func (g *Game) updateEntities(dt float64) {
 				g.EnemyMissile(e)
 				e.Cooldown = 2.5
 			}
-			if e.Cooldown <= 0 && distP < 4000 && math.Abs(ax) < 0.22 && math.Abs(ay) < 0.22 {
-				e.Cooldown = e.FireRate * randRange(1.0, 2.0)
-				if randFloat() < math.Max(0.18, 0.9-distP/6000) {
+			if e.Cooldown <= 0 && distP < 4000 && math.Abs(ax) < 0.15 && math.Abs(ay) < 0.15 {
+				e.Cooldown = e.FireRate * randRange(1.2, 2.2)
+				if randFloat() < math.Max(0.12, 0.62-distP/7000) {
 					dmg := randRange(1.5, 4.0)
 					if e.Type == "thargoid" {
 						dmg = randRange(6, 11)

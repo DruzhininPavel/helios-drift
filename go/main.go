@@ -93,7 +93,9 @@ func (a *App) Update() error {
 	}
 
 	// menus are fixed; only flying uses the rebindable layout
-	freeFlight := g.State == "flight" && g.Overlay == ""
+	// a conversation in flight is a menu, not a cockpit: its keys have to reach
+	// the dialogue instead of the ship
+	freeFlight := g.State == "flight" && g.Overlay == "" && g.Screen != "talk"
 	if !freeFlight {
 		for _, k := range []ebiten.Key{
 			ebiten.KeyEnter, ebiten.KeyEscape, ebiten.KeyTab,
