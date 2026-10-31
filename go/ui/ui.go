@@ -981,8 +981,8 @@ func Title(fb *render.FB) {
 		}
 		fb.Text(name, menuX, y, col, 1)
 	}
-	fb.TextC("ARROWS / MOUSE STEER   SPACE FIRE   X/Z SPEED", 160, 196, ColDim, 1)
-	fb.TextC("C CHART   J JUMP   ESC CONTROLS", 160, 207, render.RGB(0x2d5f7a), 1)
+	// no key legend here: the pause screen lists every binding and the
+	// handbook explains the rest, so the title stays quiet
 	// build stamp, so a stale app or a downloaded binary is identifiable at a
 	// glance — a local build is stamped with its time
 	if game.Version != "" {

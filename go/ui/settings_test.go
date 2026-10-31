@@ -349,8 +349,8 @@ func TestTitleMenuIsTranslatedAndFits(t *testing.T) {
 		}
 	}
 	top := 186 - (len(items)-1)*11
-	if last := top + (len(items)-1)*11; last+7 > 196 {
-		t.Errorf("%d entries end at %d, the key hints start at 196", len(items), last+7)
+	if last := top + (len(items)-1)*11; last+7 > 210 {
+		t.Errorf("%d entries end at %d, the seed line starts at 216", len(items), last+7)
 	}
 	if top < 100 {
 		t.Errorf("menu starts at %d, it would sit on the ship", top)
