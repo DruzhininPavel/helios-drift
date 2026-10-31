@@ -164,8 +164,10 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD")
 	}
+	// settings live on the title screen: on the station board they read as one
+	// more thing to buy
 	items = append(items, "GALACTIC CHART",
-		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER", "SETTINGS")
+		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER")
 	if game.G.MissionOffer() != "" || game.G.Cmd.Mission.Kind != "" ||
 		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active {
 		items = append(items, "MISSION")
