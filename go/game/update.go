@@ -663,18 +663,34 @@ func (g *Game) BuyEquipment(id string) {
 	case "mininglaser":
 		// the mining laser is a tool, not a gun: it no longer takes the
 		// weapon slot, so a miner keeps his lasers
+		if cmd.Equip["mining"] {
+			g.Message("ALREADY FITTED", "bad")
+			return
+		}
 		cmd.Equip["mining"] = true
 	case "miningrig":
+		if cmd.Equip["miningrig"] {
+			g.Message("ALREADY FITTED", "bad")
+			return
+		}
 		if !cmd.Equip["mining"] {
 			g.Message("FIT A MINING LASER FIRST", "bad")
 			return
 		}
 		cmd.Equip["miningrig"] = true
 	case "shieldboost1":
+		if cmd.Equip["shieldboost1"] {
+			g.Message("ALREADY FITTED", "bad")
+			return
+		}
 		cmd.Equip["shieldboost1"] = true
 		g.Player.ShieldF = g.ShieldMax()
 		g.Player.ShieldA = g.ShieldMax()
 	case "shieldboost2":
+		if cmd.Equip["shieldboost2"] {
+			g.Message("ALREADY FITTED", "bad")
+			return
+		}
 		if !cmd.Equip["shieldboost1"] {
 			g.Message("NEEDS A SHIELD BOOSTER FIRST", "bad")
 			return
@@ -683,6 +699,10 @@ func (g *Game) BuyEquipment(id string) {
 		g.Player.ShieldF = g.ShieldMax()
 		g.Player.ShieldA = g.ShieldMax()
 	case "cargobay2":
+		if cmd.Equip["cargobay2"] {
+			g.Message("ALREADY FITTED", "bad")
+			return
+		}
 		if !cmd.Equip["largebay"] {
 			g.Message("NEEDS A LARGE CARGO BAY FIRST", "bad")
 			return
@@ -727,4 +747,84 @@ func (g *Game) NewGameMode(mode, name string) {
 	g.EnterSystem(0, "start", 9000, false)
 	g.State = "docked"
 	g.dockedAt()
+}
+
+// laserLevel is the slot a laser model occupies: 0 pulse, 1 beam, 2 military,
+// 3 plasma. -1 for anything that is not a gun.
+func laserLevel(id string) int {
+	switch id {
+	case "laserpulse":
+		return 0
+	case "laserbeam":
+		return 1
+	case "lasermilitary":
+		return 2
+	case "laserplasma":
+		return 3
+	}
+	return -1
+}
+
+// EquipBlocked says why an item cannot be fitted, or "" when it can. The shop
+// screen asks before it charges: pressing Enter twice on a mining laser used
+// to take the money again for a tool you already owned, and the rig looked
+// broken because nothing said it needed the laser first.
+func (g *Game) EquipBlocked(id string) string {
+	cmd := &g.Cmd
+	if lvl := laserLevel(id); lvl >= 0 {
+		if cmd.Laser >= lvl {
+			return "ALREADY FITTED"
+		}
+		if lvl > g.Ship().MaxLaser {
+			return "THIS HULL CANNOT MOUNT IT"
+		}
+		return ""
+	}
+	switch id {
+	case "missile":
+		if cmd.Missiles >= MissilesMax {
+			return "MISSILE RACKS FULL"
+		}
+		return ""
+	case "bomb":
+		return "" // ammunition, always buyable
+	case "mininglaser":
+		if cmd.Equip["mining"] {
+			return "ALREADY FITTED"
+		}
+		return ""
+	case "miningrig":
+		if cmd.Equip["miningrig"] {
+			return "ALREADY FITTED"
+		}
+		if !cmd.Equip["mining"] {
+			return "FIT A MINING LASER FIRST"
+		}
+		return ""
+	case "shieldboost1":
+		if cmd.Equip["shieldboost1"] {
+			return "ALREADY FITTED"
+		}
+		return ""
+	case "shieldboost2":
+		if cmd.Equip["shieldboost2"] {
+			return "ALREADY FITTED"
+		}
+		if !cmd.Equip["shieldboost1"] {
+			return "NEEDS A SHIELD BOOSTER FIRST"
+		}
+		return ""
+	case "cargobay2":
+		if cmd.Equip["cargobay2"] {
+			return "ALREADY FITTED"
+		}
+		if !cmd.Equip["largebay"] {
+			return "NEEDS A LARGE CARGO BAY FIRST"
+		}
+		return ""
+	}
+	if cmd.Equip[id] {
+		return "ALREADY FITTED"
+	}
+	return ""
 }

@@ -11,6 +11,17 @@
   and the swarm once each, however many waves turn up.
 
 ### Fixed
+- Fittings cannot be bought twice. The mining laser, the rig, the shield
+  booster and the second cargo bay charged again on every press without
+  fitting anything; the shop now asks the game why an item is blocked and
+  refuses before taking money.
+- The shop says why. A rig needs a mining laser, a second booster needs the
+  first, an expansion needs the large bay: the row is drawn dim and the footer
+  names the missing part, instead of silently refusing.
+- Equipment names are no longer cut at fifteen characters, and "FITTED" sits
+  where the price was instead of a cramped badge.
+
+### Fixed again
 - Station mouths now meet the docking plane. The rock hermit's collar ran thirty
   units past the hull, so a pilot could fly into the opening and nothing
   happened; the dodecahedron was four units out. Every station type docks on a

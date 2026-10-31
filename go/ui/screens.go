@@ -315,34 +315,42 @@ func equipScreen(fb *render.FB) {
 		if sel {
 			fb.FillRect(x-4, y-3, x+144, y+8, render.RGB(0x12384f))
 		}
-		owned := false
-		if it.ID == "missile" {
-			owned = cmd.Missiles >= game.MissilesMax
-		} else if len(it.ID) >= 5 && it.ID[:5] == "laser" {
-			owned = false
-		} else {
-			owned = cmd.Equip[it.ID]
-		}
+		// the shop says why before it charges: a rig with no laser, a laser
+		// the hull cannot carry, something already bolted on
+		blocked := g.EquipBlocked(it.ID)
+		owned := blocked == "ALREADY FITTED"
 		c := ColText
-		if owned {
+		switch {
+		case owned:
 			c = ColDim
-		} else if sel {
+		case blocked != "":
+			c = render.RGB(0x6a7f8c) // available, but not to you yet
+		case S.Equip == i:
 			c = ColYellow
 		}
 		name := it.Name
-		if len(name) > 15 {
-			name = name[:15]
+		if len(name) > 18 {
+			name = name[:18]
 		}
 		fb.Text(name, x, y, c, 1)
-		pc := ColRed
-		if cmd.Cash >= float64(it.Price) {
-			pc = ColGreen
+		switch {
+		case owned:
+			fb.TextR(lang.T("FITTED"), x+144, y, ColGreen, 1)
+		case it.ID == "missile":
+			fb.TextR(itoa(it.Price)+" x"+itoa(cmd.Missiles), x+144, y, ColGreen, 1)
+		default:
+			pc := ColRed
+			if cmd.Cash >= float64(it.Price) {
+				pc = ColGreen
+			}
+			fb.TextR(itoa(it.Price), x+144, y, pc, 1)
 		}
-		fb.TextR(itoa(it.Price), x+142, y, pc, 1)
-		if it.ID == "missile" {
-			fb.TextR("x"+itoa(cmd.Missiles), x+108, y, ColText, 1)
-		} else if owned {
-			fb.TextR("OK", x+108, y, ColGreen, 1)
+	}
+	// the reason a row cannot be bought goes in the footer, where the player
+	// is already looking for the key hints
+	if S.Equip >= 0 && S.Equip < len(items) {
+		if why := g.EquipBlocked(items[S.Equip].ID); why != "" && why != "ALREADY FITTED" {
+			Hint = lang.T(why)
 		}
 	}
 }
