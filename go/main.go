@@ -468,6 +468,17 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// a station that sells pardons, with a record to clean
+	g.State = "docked"
+	g.Screen = "launch"
+	g.World.Sys.Government = 3
+	g.World.Sys.Tech = 12
+	g.Cmd.Legal = 150
+	g.Cmd.Cash = 4000
+	shot("g76-diplomat")
+	g.Cmd.Legal = 0
+	g.Cmd.Cash = 3812
+
 	// the log, with a handful of entries so the layout is visible
 	g.State = "docked"
 	g.Cmd.Log = nil

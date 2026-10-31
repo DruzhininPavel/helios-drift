@@ -26,6 +26,7 @@ const (
 	LogPirate = "pirate" // hostiles dropped out of hyperspace on you
 	LogPolice = "police" // a viper came to look at your record
 	LogSwarm  = "swarm"  // the swarm, which is a different thing entirely
+	LogPardon = "pardon" // a record quietly cleaned
 )
 
 // LogLimit is how many entries are kept. Older ones fall off the front: a
@@ -90,6 +91,8 @@ func LogKindLabel(kind string) string {
 		return "POLICE"
 	case LogSwarm:
 		return "SWARM"
+	case LogPardon:
+		return "PARDON"
 	}
 	return strings.ToUpper(kind)
 }
@@ -101,7 +104,7 @@ func LogGroup(kind string) string {
 		return "TRADE"
 	case LogKill, LogDeath, LogPirate, LogPolice, LogSwarm:
 		return "FIGHT"
-	case LogJob, LogDone, LogFail:
+	case LogJob, LogDone, LogFail, LogPardon:
 		return "JOBS"
 	case LogJump, LogMine, LogVisit:
 		return "TRAVEL"

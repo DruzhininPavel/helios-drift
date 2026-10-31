@@ -573,21 +573,7 @@ func flight(fb *render.FB, dt float64) {
 	cockpit(fb, g.Cmd.Ship)
 	crosshair(fb, 160, 75)
 
-	// messages
-	my := 6
-	for i := len(g.Messages) - 1; i >= 0; i-- {
-		msg := g.Messages[i]
-		col := ColYellow
-		if msg.Kind == "bad" {
-			col = ColRed
-		} else if msg.Kind == "good" {
-			col = ColGreen
-		}
-		tw := render.TextWidth(msg.Text, 1)
-		fb.FillRect(160-tw/2-3, my-1, 160+tw/2+2, my+7, render.RGB(0x050b12))
-		fb.TextC(msg.Text, 160, my, col, 1)
-		my += 9
-	}
+	drawMessages(fb, 6, 4)
 
 	hud(fb)
 }
@@ -1164,5 +1150,29 @@ func dockGuide(fb *render.FB, cam *render.Camera, st *game.Entity, t float64) {
 			a, b := pts[i], pts[(i+1)%4]
 			fb.LineDash(int(a.X), int(a.Y), int(b.X), int(b.Y), col)
 		}
+	}
+}
+
+// drawMessages prints the toast stack. It used to live in the flight view only,
+// so every "not enough cargo space" on a station screen was invisible: the shop
+// and the contract board looked like they were ignoring the key.
+func drawMessages(fb *render.FB, top, max int) {
+	g := game.G
+	y := top
+	shown := 0
+	for i := len(g.Messages) - 1; i >= 0 && shown < max; i-- {
+		msg := g.Messages[i]
+		col := ColYellow
+		if msg.Kind == "bad" {
+			col = ColRed
+		} else if msg.Kind == "good" {
+			col = ColGreen
+		}
+		text := lang.T(msg.Text)
+		tw := render.TextWidth(text, 1)
+		fb.FillRect(160-tw/2-3, y-1, 160+tw/2+2, y+7, render.RGB(0x050b12))
+		fb.TextC(text, 160, y, col, 1)
+		y += 9
+		shown++
 	}
 }

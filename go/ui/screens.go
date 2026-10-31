@@ -74,6 +74,9 @@ func docked(fb *render.FB) {
 		stationMenu(fb)
 	}
 	footer(fb)
+	// the answer to "why did nothing happen" belongs on every screen, not just
+	// in flight
+	drawMessages(fb, 192, 2)
 }
 
 func stationMenu(fb *render.FB) {
@@ -141,6 +144,9 @@ func stationMenu(fb *render.FB) {
 		}
 		fb.Text(itoa(i+1)+"  "+it, 180, y, col, 1)
 	}
+	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "DIPLOMAT" {
+		Hint = lang.T("CLEAR RECORD FOR") + " " + itoa(game.G.PardonPrice()) + " CR"
+	}
 	fb.HLine(174, 306, 158, render.RGB(0x1b3348))
 	fb.Text("REFUEL  [F]", 180, 168, ColDim, 1)
 	fb.TextR(itoa(galaxy.FuelPricePerLY)+" CR/LY", 300, 168, ColGreen, 1)
@@ -167,6 +173,9 @@ func menuItems() []string {
 	}
 	if game.G.Cmd.Mission.Kind != "" || len(game.G.Cmd.Contracts) > 0 {
 		items = append(items, "JOURNAL")
+	}
+	if game.G.PardonAvailable() {
+		items = append(items, "DIPLOMAT")
 	}
 	return items
 }
@@ -735,6 +744,8 @@ func dockedKey(k string) bool {
 			case "LOG":
 				g.Screen = "log"
 				S.Log = 0
+			case "DIPLOMAT":
+				g.BuyPardon()
 			}
 			return true
 		}

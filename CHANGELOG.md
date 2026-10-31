@@ -1,4 +1,4 @@
-## v1.16 — 2026-10-31
+## Unreleased
 
 ### Added
 - A log. The commander's own record: every trade with the station and the
@@ -10,7 +10,16 @@
   into it and a jump line every time after, and a visit records police, pirates
   and the swarm once each, however many waves turn up.
 
+### Added
+- A diplomat. On high tech worlds and in dictatorships, communist and
+  corporate states, a fixer will wipe a record for 500 credits plus 40 a point
+  of heat, capped at 60 000. The station menu shows the price while the row is
+  selected, and the pardon goes into the log.
+
 ### Fixed
+- Refusals are visible. Messages were drawn only in the flight view, so a
+  contract refused for lack of hold space, or a shop that would not sell, said
+  nothing at all on a station screen. Every screen shows them now, translated.
 - Fittings cannot be bought twice. The mining laser, the rig, the shield
   booster and the second cargo bay charged again on every press without
   fitting anything; the shop now asks the game why an item is blocked and

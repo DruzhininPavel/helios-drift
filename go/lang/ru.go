@@ -4,12 +4,17 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"NEEDS A SHIELD BOOSTER FIRST":  "СНАЧАЛА НУЖЕН УСИЛИТЕЛЬ ЩИТА",
-	"NEEDS A LARGE CARGO BAY FIRST": "СНАЧАЛА НУЖЕН БОЛЬШОЙ ТРЮМ",
-	"FIRST VISIT":                   "ПЕРВЫЙ ВИЗИТ",
-	"ATTACKED BY PIRATES":           "АТАКА ПИРАТОВ",
-	"STOPPED BY POLICE":             "ВСТРЕЧА С ПОЛИЦИЕЙ",
-	"ALIEN SWARM":                   "РОЙ ЧУЖИХ",
+	"DIPLOMAT":                       "ДИПЛОМАТ",
+	"PARDON":                         "АМНИСТИЯ",
+	"CLEAR RECORD FOR":               "ОЧИСТИТЬ РЕПУТАЦИЮ ЗА",
+	"RECORD CLEARED":                 "РЕПУТАЦИЯ ОЧИЩЕНА",
+	"NOBODY HERE CAN HELP WITH THAT": "ЗДЕСЬ ТАКИХ ВОПРОСОВ НЕ РЕШАЮТ",
+	"NEEDS A SHIELD BOOSTER FIRST":   "СНАЧАЛА НУЖЕН УСИЛИТЕЛЬ ЩИТА",
+	"NEEDS A LARGE CARGO BAY FIRST":  "СНАЧАЛА НУЖЕН БОЛЬШОЙ ТРЮМ",
+	"FIRST VISIT":                    "ПЕРВЫЙ ВИЗИТ",
+	"ATTACKED BY PIRATES":            "АТАКА ПИРАТОВ",
+	"STOPPED BY POLICE":              "ВСТРЕЧА С ПОЛИЦИЕЙ",
+	"ALIEN SWARM":                    "РОЙ ЧУЖИХ",
 
 	// ---- the commander's log
 	"LOG":                     "ЖУРНАЛ",
