@@ -1,4 +1,4 @@
-## Unreleased
+## v1.16 — 2026-10-31
 
 ### Added
 - A log. The commander's own record: every trade with the station and the
@@ -9,8 +9,6 @@
 - First visits and encounters: a system writes one line the first time you jump
   into it and a jump line every time after, and a visit records police, pirates
   and the swarm once each, however many waves turn up.
-
-### Added
 - A diplomat. On high tech worlds and in dictatorships, communist and
   corporate states, a fixer will wipe a record for 500 credits plus 40 a point
   of heat, capped at 60 000. The station menu shows the price while the row is
