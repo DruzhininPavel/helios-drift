@@ -48,10 +48,10 @@ func (g *Game) Update(dt float64) {
 		g.runAutopilot(dt)
 	} else {
 		if g.In.Pitch != 0 {
-			p.Mat = p.Mat.Mul(render.RotX(g.In.Pitch * PitchRate * dt))
+			p.Mat = p.Mat.Mul(render.RotX(g.In.Pitch * PitchRate * g.Ship().Pitch * dt))
 		}
 		if g.In.Roll != 0 {
-			p.Mat = p.Mat.Mul(render.RotZ(-g.In.Roll * RollRate * dt))
+			p.Mat = p.Mat.Mul(render.RotZ(-g.In.Roll * RollRate * g.Ship().Roll * dt))
 		}
 		// yaw did not exist in the 1984 flight model, so Classic ignores it
 		if g.In.Yaw != 0 {
@@ -59,15 +59,17 @@ func (g *Game) Update(dt float64) {
 				g.warnYaw()
 			} else {
 				// negative: a positive yaw input means "nose to the right"
-				p.Mat = p.Mat.Mul(render.RotY(-g.In.Yaw * YawRate * dt))
+				p.Mat = p.Mat.Mul(render.RotY(-g.In.Yaw * YawRate * g.Ship().Yaw * dt))
 			}
 		}
 		if g.In.Pitch != 0 || g.In.Roll != 0 || (!g.Classic() && g.In.Yaw != 0) {
 			p.Mat = p.Mat.Orthonormalize()
 		}
 		if g.In.Accel > 0 {
-			p.Speed = math.Min(g.Ship().Speed, p.Speed+260*dt)
+			p.Speed = math.Min(g.Ship().Speed, p.Speed+g.Ship().Accel*dt)
 		} else if g.In.Accel < 0 {
+			// braking is the same for every hull: the retro thrusters are not
+			// what a ship is sold on
 			p.Speed = math.Max(0, p.Speed-300*dt)
 		}
 		fwd := p.Mat.Col(2).Mul(-1)
@@ -80,8 +82,8 @@ func (g *Game) Update(dt float64) {
 		recharge *= 1.6
 	}
 	p.Energy = math.Min(g.Ship().Energy, p.Energy+recharge*dt)
-	p.ShieldF = math.Min(MaxShield, p.ShieldF+1.9*dt)
-	p.ShieldA = math.Min(MaxShield, p.ShieldA+1.9*dt)
+	p.ShieldF = math.Min(g.Ship().Shield, p.ShieldF+1.9*dt)
+	p.ShieldA = math.Min(g.Ship().Shield, p.ShieldA+1.9*dt)
 	p.LaserTemp = math.Max(0, p.LaserTemp-0.35*dt)
 	if p.Invulnerable > 0 {
 		p.Invulnerable -= dt
@@ -618,6 +620,10 @@ func (g *Game) BuyEquipment(id string) {
 		}
 		if cmd.Laser >= lvl {
 			g.Message("ALREADY FITTED", "bad")
+			return
+		}
+		if lvl > g.Ship().MaxLaser {
+			g.Message("THIS HULL CANNOT MOUNT IT", "bad")
 			return
 		}
 		cmd.Laser = lvl

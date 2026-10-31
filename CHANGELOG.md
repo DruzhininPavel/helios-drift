@@ -1,3 +1,13 @@
+## Unreleased
+
+### Changed
+- Each hull now flies differently. The yard lists turning, shields and the
+  heaviest gun the hull can carry, and those numbers are real: a Fer-de-Lance
+  turns 2.4x faster than a Python, an Adder accelerates 1.8x harder than a
+  Python and carries 60 instead of 140 of shield, and a hauler cannot mount a
+  military laser. Buying a ship is a trade-off now, not just a bigger hold.
+- `-bench-ships` flies every hull through the same fights and prints the table.
+
 ## v1.13.2 — 2026-10-30
 
 ### Changed

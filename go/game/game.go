@@ -247,9 +247,12 @@ type Game struct {
 	OnEvent func(string)
 
 	LastDamageReason string
-	EscapeUsed       bool
-	YawWarned        bool
-	DockT            float64
+	// DamageTaken is the shot damage the commander has absorbed in this life.
+	// The ship benchmark reads it to compare hulls.
+	DamageTaken float64
+	EscapeUsed  bool
+	YawWarned   bool
+	DockT       float64
 
 	// contract targets rolled when the station is entered, so the briefing and
 	// the accepted mission always agree
@@ -381,7 +384,7 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 	}
 	g.Player = Player{
 		Pos: spawnPos, Mat: spawnMat, Speed: speed,
-		Energy: g.Ship().Energy, ShieldF: MaxShield, ShieldA: MaxShield,
+		Energy: g.Ship().Energy, ShieldF: g.Ship().Shield, ShieldA: g.Ship().Shield,
 	}
 	if mode == "launch" {
 		g.Player.Invulnerable = 3
@@ -845,6 +848,7 @@ func (g *Game) DamagePlayer(dmg float64, fromFront bool) {
 	if p.Invulnerable > 0 {
 		return
 	}
+	g.DamageTaken += dmg
 	var sh float64
 	if fromFront {
 		sh = p.ShieldF
@@ -885,8 +889,8 @@ func (g *Game) PlayerDeath() {
 		// the rescue rebuilds the ship: without this the commander sat docked
 		// with the negative energy of the hit that killed them
 		g.Player.Energy = g.Ship().Energy
-		g.Player.ShieldF = MaxShield
-		g.Player.ShieldA = MaxShield
+		g.Player.ShieldF = g.Ship().Shield
+		g.Player.ShieldA = g.Ship().Shield
 		g.Player.Cabin = 0
 		g.Player.Speed = 0
 		g.State = "docked"

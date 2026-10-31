@@ -726,6 +726,7 @@ func main() {
 	manualDock := flag.Bool("manual-dock", false, "fly the docking approach by hand instead of using the computer")
 	god := flag.Bool("god", false, "keep the bot alive: deaths are rolled back, for walking the story")
 	ace := flag.Bool("ace", false, "make the bot a dead shot in a fight")
+	benchShips := flag.Bool("bench-ships", false, "fly every hull through the same trials and print a table")
 	flag.Parse()
 
 	if *seed < 0 && (*shots || *sheet || *probe) {
@@ -763,6 +764,10 @@ func main() {
 			lang.Set(*langFlag)
 		}
 		runShots()
+		return
+	}
+	if *benchShips {
+		fmt.Print(bot.ShipTable(bot.BenchmarkShips()))
 		return
 	}
 	if *replay != "" {

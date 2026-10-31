@@ -723,9 +723,13 @@ func hud(fb *render.FB) {
 	gx, bx, bw := 6, 22, 58
 	maxE := g.Ship().Energy
 	fb.Text("FS", gx, y0+5, ColText, 1)
-	segBar(fb, bx, y0+5, bw, 5, p.ShieldF/game.MaxShield, "blue", p.ShieldF < 22)
+	shieldMax := game.G.Ship().Shield
+	if shieldMax <= 0 {
+		shieldMax = game.MaxShield
+	}
+	segBar(fb, bx, y0+5, bw, 5, p.ShieldF/shieldMax, "blue", p.ShieldF < 22)
 	fb.Text("AS", gx, y0+13, ColText, 1)
-	segBar(fb, bx, y0+13, bw, 5, p.ShieldA/game.MaxShield, "blue", p.ShieldA < 22)
+	segBar(fb, bx, y0+13, bw, 5, p.ShieldA/shieldMax, "blue", p.ShieldA < 22)
 	fb.Text("FU", gx, y0+21, ColText, 1)
 	segBar(fb, bx, y0+21, bw, 5, cmd.Fuel/game.FuelMax, "green", cmd.Fuel < 0.8)
 	fb.Text("EN", gx, y0+29, ColText, 1)

@@ -10,15 +10,24 @@ type ShipClass struct {
 	Speed    float64
 	Energy   float64
 	Missiles int
-	Blurb    string
+	// Pitch, Roll and Yaw scale the base turn rates: a fighter turns far
+	// quicker than a hauler, and that is what makes a hull worth its price in
+	// a fight rather than only in a cargo hold.
+	Pitch, Roll, Yaw float64
+	Shield           float64 // shield strength, per face
+	Accel            float64 // units per second, added to speed
+	MaxLaser         int     // highest laser class the hull can mount
+	Blurb            string
 }
 
 var ShipYard = []ShipClass{
-	{"cobra3", "KESTREL III", 120000, 20, 420, 100, 4, "THE ALL ROUNDER"},
-	{"adder", "ADDER", 34000, 12, 300, 80, 2, "CHEAP AND CHEERFUL"},
-	{"python", "PYTHON", 260000, 40, 250, 160, 4, "SLOW, HUGE HOLD"},
-	{"ferdelance", "FER-DE-LANCE", 420000, 14, 500, 130, 4, "FAST AND LETHAL"},
-	{"asp", "ASP MK II", 300000, 18, 460, 120, 4, "NAVAL SCOUT"},
+	// hull, name, price, cargo, vmax, energy, missiles, pitch, roll, yaw,
+	// shield, accel, max laser, blurb
+	{"cobra3", "KESTREL III", 120000, 20, 420, 100, 4, 1.00, 1.00, 1.00, 100, 260, 2, "THE ALL ROUNDER"},
+	{"adder", "ADDER", 34000, 12, 300, 80, 2, 1.15, 1.20, 1.10, 60, 330, 1, "CHEAP AND CHEERFUL"},
+	{"python", "PYTHON", 260000, 40, 250, 160, 4, 0.60, 0.55, 0.60, 140, 180, 1, "SLOW, HUGE HOLD"},
+	{"ferdelance", "FER-DE-LANCE", 420000, 14, 500, 130, 4, 1.45, 1.40, 1.30, 120, 300, 2, "FAST AND LETHAL"},
+	{"asp", "ASP MK II", 300000, 18, 460, 120, 4, 1.25, 1.20, 1.05, 90, 340, 2, "NAVAL SCOUT"},
 }
 
 // ShipFor returns the class with the given id, defaulting to the Cobra.
@@ -76,9 +85,14 @@ func (g *Game) BuyShip(id string) bool {
 	if cmd.Missiles > want.Missiles {
 		cmd.Missiles = want.Missiles
 	}
+	// a big laser in a small hull has to come out
+	if cmd.Laser > want.MaxLaser {
+		cmd.Laser = want.MaxLaser
+		g.Message("LASER DOWNGRADED FOR THIS HULL", "bad")
+	}
 	g.Player.Energy = want.Energy
-	g.Player.ShieldF = MaxShield
-	g.Player.ShieldA = MaxShield
+	g.Player.ShieldF = want.Shield
+	g.Player.ShieldA = want.Shield
 	g.Message("NOW FLYING "+want.Name, "good")
 	return true
 }

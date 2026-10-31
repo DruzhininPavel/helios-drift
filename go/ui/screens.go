@@ -1128,7 +1128,7 @@ func shipyardScreen(fb *render.FB) {
 	fb.Text("FLYING "+cur.Name, 14, 30, ColYellow, 1)
 	fb.TextR("TRADE IN "+itoa(g.TradeInValue())+" CR", 306, 30, ColGreen, 1)
 	for i, sc := range game.ShipYard {
-		y := 48 + i*24
+		y := 46 + i*28
 		sel := S.Ship == i
 		if sel {
 			fb.FillRect(10, y-4, 310, y+18, render.RGB(0x12384f))
@@ -1139,7 +1139,8 @@ func shipyardScreen(fb *render.FB) {
 			col = ColYellow
 		}
 		fb.Text(sc.Name, 18, y, col, 1)
-		fb.Text("HOLD "+itoa(sc.Cargo)+"T  SPD "+itoa(int(sc.Speed))+"  EN "+itoa(int(sc.Energy)), 18, y+9, ColDim, 1)
+		fb.Text("HOLD "+itoa(sc.Cargo)+"T   SPD "+itoa(int(sc.Speed))+"   EN "+itoa(int(sc.Energy)), 18, y+9, ColDim, 1)
+		fb.Text("SHIELD "+itoa(int(sc.Shield))+"   TURN "+two(sc.Pitch)+"   LASER "+laserCap(sc.MaxLaser), 18, y+17, ColDim, 1)
 		if sc.ID == cur.ID {
 			fb.TextR("FITTED", 302, y, ColGreen, 1)
 		} else {
@@ -1152,6 +1153,22 @@ func shipyardScreen(fb *render.FB) {
 		}
 	}
 	Hint = "UP/DOWN SELECT   ENTER BUY   ESC BACK"
+}
+
+// two formats a multiplier with two decimals, e.g. 1.45.
+func two(v float64) string {
+	return strconv.FormatFloat(v, 'f', 2, 64)
+}
+
+// laserCap names the best gun a hull accepts.
+func laserCap(level int) string {
+	switch {
+	case level >= 2:
+		return "MILITARY"
+	case level == 1:
+		return "BEAM"
+	}
+	return "PULSE"
 }
 
 func shipyardKey(k string) bool {

@@ -37,6 +37,9 @@ type Trader struct {
 	Ace bool
 	// questGood is cargo the campaign stage needs, which must not be sold.
 	questGood int
+	// TradeOnly keeps the bot to buying and selling: the hull benchmark uses
+	// it so story payouts do not mask what the cargo hold is worth.
+	TradeOnly bool
 	// cost is the average price paid for each good in the hold, so the bot
 	// does not sell at a loss just to be rid of cargo.
 	cost map[int]float64
@@ -110,7 +113,7 @@ func (t *Trader) docked(g *game.Game) []Event {
 		ev = append(ev, Event{Kind: "refuel"})
 	}
 	// the 1984 contracts only exist in Classic mode
-	if kind := g.MissionOffer(); kind != "" {
+	if kind := g.MissionOffer(); kind != "" && !t.TradeOnly {
 		switch kind {
 		case "constrictor":
 			ev = append(ev, Event{Kind: "mission", A: 0})
@@ -120,31 +123,33 @@ func (t *Trader) docked(g *game.Game) []Event {
 			}
 		}
 	}
-	if g.CampaignOffer() {
+	if g.CampaignOffer() && !t.TradeOnly {
 		ev = append(ev, Event{Kind: "campaign"})
 		if q := g.CampaignQuest(); q.Kind == "deliver" {
 			t.questGood = q.Good
 		}
 	}
-	if len(g.Offers) > 0 && len(c.Contracts) < 3 && t.rng.Intn(2) == 0 {
+	if len(g.Offers) > 0 && len(c.Contracts) < 3 && t.rng.Intn(2) == 0 && !t.TradeOnly {
 		ev = append(ev, Event{Kind: "contract", A: t.rng.Intn(len(g.Offers))})
 	}
 	// buy what is cheap against its galactic base price, keeping a reserve
 	if room := c.CargoCap - game.CargoUsed(*c); room > 0 && len(g.Market) > 0 {
-		best, bestMargin, price := -1, 0.0, 0
+		// the cheapest good against its galactic base price, even when it is
+		// not a bargain here: the profit is made at the other end of the jump
+		best, bestRatio, price := -1, math.MaxFloat64, 0
 		for i, m := range g.Market {
-			if i >= len(galaxy.Commodities) || m.Qty <= 0 || float64(m.Price) > c.Cash-20 {
+			if i >= len(galaxy.Commodities) || m.Qty <= 0 || float64(m.Price) > c.Cash-20 || m.Price <= 0 {
 				continue
 			}
-			base := galaxy.Commodities[i].Base
-			if margin := base*1.15 - float64(m.Price); margin > bestMargin {
-				best, bestMargin, price = i, margin, m.Price
+			ratio := float64(m.Price) / math.Max(1, galaxy.Commodities[i].Base)
+			if ratio < bestRatio {
+				best, bestRatio, price = i, ratio, m.Price
 			}
 		}
 		if best >= 0 && price > 0 {
 			n := room
-			if n > 6 {
-				n = 6
+			if n > 10 {
+				n = 10
 			}
 			if afford := int(c.Cash-20) / price; n > afford {
 				n = afford
@@ -155,8 +160,11 @@ func (t *Trader) docked(g *game.Game) []Event {
 			}
 		}
 	}
-	// spend spare cash on a sturdier ship, keeping a trading float
-	ev = append(ev, t.upgrade(g)...)
+	// spend spare cash on a sturdier ship, keeping a trading float. The
+	// benchmark compares hulls, so it must not buy a different one.
+	if !t.TradeOnly {
+		ev = append(ev, t.upgrade(g)...)
+	}
 
 	// the story comes first: fly the stage target, trade on the way
 	t.dest = -1
@@ -341,11 +349,11 @@ func (t *Trader) PhaseName() string {
 // nearestFoe finds the closest hostile within engagement range.
 func (t *Trader) nearestFoe(g *game.Game) *game.Entity {
 	var best *game.Entity
-	bestD := 3500.0
+	bestD := 1600.0
 	// near the station the bot has business to finish: only fight what is
 	// actually in the way, otherwise it never docks
 	if st := g.World.Station; st != nil && g.Player.Pos.Sub(st.Pos).Len() < 2500 {
-		bestD = 1500
+		bestD = 900
 	}
 	for _, e := range g.World.Entities {
 		if e.Energy <= 0 || e.Kind == "station" || e.Kind == "planet" {
@@ -370,7 +378,8 @@ func (t *Trader) nearestFoe(g *game.Game) *game.Entity {
 	return best
 }
 
-// dogfight points at the target and holds a firing distance.
+// dogfight points at the target and holds a firing distance: close fast, then
+// match speed so the nose stays on the hull long enough to shoot.
 func (t *Trader) dogfight(g *game.Game, foe *game.Entity) (game.InputState, bool) {
 	to := foe.Pos.Sub(g.Player.Pos)
 	dist := to.Len()
@@ -385,25 +394,27 @@ func (t *Trader) dogfight(g *game.Game, foe *game.Entity) (game.InputState, bool
 
 	want := to.Norm()
 	in := t.pilot.Aim(g, want)
-
-	// lead the shot a little and only fire when the nose is really on it
 	fwd := g.Player.Mat.Col(2).Mul(-1)
 	align := fwd.Dot(want)
 
-	// hold a firing distance: close fast, then match speed so the nose stays
-	// on the hull long enough to shoot. Jousting is what loses the fight.
 	max := g.Ship().Speed
 	switch {
-	case dist > 1200:
+	case dist > 2500:
 		in.Accel = 1
+	case dist > 1200:
+		if g.Player.Speed > max*0.6 {
+			in.Accel = -1
+		} else {
+			in.Accel = 1
+		}
 	case dist > 500:
-		if g.Player.Speed > max*0.55 {
+		if g.Player.Speed > math.Min(190, max*0.4) {
 			in.Accel = -1
 		}
 	case dist < 220:
 		in.Accel = -1
 	default:
-		if g.Player.Speed > max*0.22 {
+		if g.Player.Speed > math.Min(95, max*0.22) {
 			in.Accel = -1
 		} else {
 			in.Accel = 0
@@ -414,31 +425,17 @@ func (t *Trader) dogfight(g *game.Game, foe *game.Entity) (game.InputState, bool
 	}
 	// never chase a target through the station: keep a low speed near the hull
 	if st := g.World.Station; st != nil {
-		if d := p2(g.Player.Pos.Sub(st.Pos)); d < 1200 && g.Player.Speed > max*0.25 {
+		if d := g.Player.Pos.Sub(st.Pos).Len(); d < 1200 && g.Player.Speed > max*0.25 {
 			in.Accel = -1
 		}
 	}
+
 	if t.Ace {
-		// fire whenever the shot would land on the hull, and hold the trigger
 		angle := math.Acos(clamp(align, -1, 1))
 		onTarget := angle*dist < foe.Radius*1.6 || align > 0.995
 		return in, onTarget && dist < 4000
 	}
 	return in, align > 0.99 && dist < 3200
-}
-
-// p2 is the length of a vector, kept short for the speed guards.
-func p2(v render.Vec3) float64 { return math.Hypot(math.Hypot(v[0], v[1]), v[2]) }
-
-// closestApproach is the distance from point c to the segment a-b.
-func closestApproach(a, b, c render.Vec3) float64 {
-	ab := b.Sub(a)
-	den := ab.Dot(ab)
-	if den < 1e-9 {
-		return a.Sub(c).Len()
-	}
-	tt := clamp(c.Sub(a).Dot(ab)/den, 0, 1)
-	return a.Add(ab.Mul(tt)).Sub(c).Len()
 }
 
 // safety is the rule that keeps the bot alive: close to the station and not
