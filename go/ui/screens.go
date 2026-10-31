@@ -1964,9 +1964,9 @@ func logLine(e game.LogEntry) string {
 	case game.LogKill:
 		return lang.T("KILLED") + " " + e.A
 	case game.LogBuy:
-		return lang.T("BOUGHT") + " " + what + " X" + itoa(e.N)
+		return lang.T("BOUGHT") + " " + what + " X" + itoa(e.N) + " @" + itoa(perUnit(e))
 	case game.LogSell:
-		return lang.T("SOLD") + " " + what + " X" + itoa(e.N)
+		return lang.T("SOLD") + " " + what + " X" + itoa(e.N) + " @" + itoa(perUnit(e))
 	case game.LogFuel:
 		return lang.T("REFUELLED") + " " + itoa(e.N) + " LY"
 	case game.LogEquip:
@@ -1995,6 +1995,19 @@ func logLine(e game.LogEntry) string {
 		return lang.T("ALIEN SWARM")
 	}
 	return e.A
+}
+
+// perUnit is the price a single tonne went for: the total is already on the
+// right of the row, and the price is the number a trader actually compares.
+func perUnit(e game.LogEntry) int {
+	if e.N <= 0 || e.CR == 0 {
+		return 0
+	}
+	v := e.CR / float64(e.N)
+	if v < 0 {
+		v = -v
+	}
+	return int(v + 0.5)
 }
 
 // logVisible returns the entries that match the current filter, newest first.
@@ -2051,7 +2064,14 @@ func logScreen(fb *render.FB) {
 	if top < 0 {
 		top = 0
 	}
-	y := 40
+	// column headers, so a row reads as day / what / where / money
+	fb.Text("DAY", 8, 34, render.RGB(0x2d5f7a), 1)
+	fb.Text("WHAT", 32, 34, render.RGB(0x2d5f7a), 1)
+	fb.Text("WHERE", 196, 34, render.RGB(0x2d5f7a), 1)
+	fb.TextR("CR", 306, 34, render.RGB(0x2d5f7a), 1)
+	fb.HLine(8, 306, 41, render.RGB(0x1b3348))
+
+	y := 44
 	for i := top; i < len(ents) && i < top+perPage; i++ {
 		e := ents[i]
 		sel := i == S.Log
@@ -2059,13 +2079,19 @@ func logScreen(fb *render.FB) {
 			fb.FillRect(10, y-1, 306, y+7, render.RGB(0x12384f))
 		}
 		day := "D" + itoa(e.Day)
-		fb.Text(day, 10, y, ColDim, 1)
-		line := clip(logLine(e), 33)
+		fb.Text(day, 8, y, ColDim, 1)
+		line := clip(logLine(e), 26)
 		col := ColText
 		if sel {
 			col = ColYellow
 		}
-		fb.TextRaw(line, 34, y, col, 1)
+		fb.TextRaw(line, 32, y, col, 1)
+		// where it happened: the whole point of a log is knowing the station
+		where := e.Sys
+		if where == "" {
+			where = "-"
+		}
+		fb.TextRaw(clip(where, 9), 196, y, ColDim, 1)
 		if e.CR != 0 {
 			money := "+" + itoa(int(e.CR))
 			c := ColGreen
