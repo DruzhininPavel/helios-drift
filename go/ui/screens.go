@@ -298,11 +298,17 @@ func equipScreen(fb *render.FB) {
 	}
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
 	items := galaxy.AvailableEquipment(g.World.Sys)
+
+	// two columns: the catalogue outgrew a single list
+	const rows = 9
 	for i, it := range items {
-		y := 32 + i*12
+		col := i / rows
+		row := i % rows
+		x := 12 + col*150
+		y := 32 + row*17
 		sel := S.Equip == i
 		if sel {
-			fb.FillRect(8, y-2, 311, y+8, render.RGB(0x12384f))
+			fb.FillRect(x-4, y-3, x+144, y+8, render.RGB(0x12384f))
 		}
 		owned := false
 		if it.ID == "missile" {
@@ -312,22 +318,26 @@ func equipScreen(fb *render.FB) {
 		} else {
 			owned = cmd.Equip[it.ID]
 		}
-		col := ColText
+		c := ColText
 		if owned {
-			col = ColDim
+			c = ColDim
 		} else if sel {
-			col = ColYellow
+			c = ColYellow
 		}
-		fb.Text(it.Name, 14, y, col, 1)
+		name := it.Name
+		if len(name) > 15 {
+			name = name[:15]
+		}
+		fb.Text(name, x, y, c, 1)
 		pc := ColRed
 		if cmd.Cash >= float64(it.Price) {
 			pc = ColGreen
 		}
-		fb.TextR(itoa(it.Price)+" CR", 240, y, pc, 1)
+		fb.TextR(itoa(it.Price), x+142, y, pc, 1)
 		if it.ID == "missile" {
-			fb.TextR("x"+itoa(cmd.Missiles), 290, y, ColText, 1)
+			fb.TextR("x"+itoa(cmd.Missiles), x+108, y, ColText, 1)
 		} else if owned {
-			fb.TextR("FITTED", 290, y, ColGreen, 1)
+			fb.TextR("OK", x+108, y, ColGreen, 1)
 		}
 	}
 }

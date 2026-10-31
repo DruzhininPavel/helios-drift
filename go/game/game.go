@@ -32,11 +32,13 @@ var StationSize = models.StationSize
 var SlotW = models.StationSlotW
 var SlotH = models.StationSlotH
 
-var LaserRange = [4]float64{2600, 3400, 4600, 2000}
-var LaserDamage = [4]float64{9, 16, 26, 7}
-var LaserHeat = [4]float64{0.055, 0.10, 0.13, 0.05}
-var LaserCooldown = [4]float64{0.14, 0.075, 0.06, 0.2}
-var LaserName = [4]string{"PULSE LASER", "BEAM LASER", "MILITARY LASER", "MINING LASER"}
+// Four combat lasers, cheapest to worst: a plasma accelerator hits almost five
+// times as hard as the starting pulse and only the fighting hulls can carry it.
+var LaserRange = [4]float64{2600, 3400, 4600, 5200}
+var LaserDamage = [4]float64{9, 16, 26, 42}
+var LaserHeat = [4]float64{0.055, 0.10, 0.13, 0.18}
+var LaserCooldown = [4]float64{0.14, 0.075, 0.06, 0.09}
+var LaserName = [4]string{"PULSE LASER", "BEAM LASER", "MILITARY LASER", "PLASMA ACCELERATOR"}
 
 type ShipDef struct {
 	Mesh     string
@@ -680,15 +682,24 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 		g.addExplosion(e.Pos, e.Radius)
 		g.Emit("explode")
 		if cmd.Equip["mining"] || e.Mission {
-			// a mining laser cuts the rock into pieces you can scoop
-			g.breakRock(e, "boulder", 3)
+			// a mining laser cuts the rock into pieces you can scoop; a heavy
+			// rig gets more out of the same stone
+			pieces := 3
+			if cmd.Equip["miningrig"] {
+				pieces = 4
+			}
+			g.breakRock(e, "boulder", pieces)
 		} else if randFloat() < 0.4 {
 			g.SpawnCargo(e.Pos.Add(randDir().Mul(30)), 12)
 		}
 	case "boulder":
 		g.addExplosion(e.Pos, e.Radius*0.8)
 		g.Emit("hit")
-		g.breakRock(e, "splinter", 3)
+		pieces := 3
+		if cmd.Equip["miningrig"] {
+			pieces = 5 // a proper rig cuts the rock into more of what you sell
+		}
+		g.breakRock(e, "splinter", pieces)
 	case "canister", "plate":
 		g.addExplosion(e.Pos, 10)
 	case "genship":
@@ -1155,3 +1166,16 @@ func (g *Game) runAutopilot(dt float64) {
 
 // meshFor exposes the mesh table to tests without importing models there.
 func meshFor(name string) *render.Mesh { return models.Get(name) }
+
+// ShieldMax is the shield strength of the current hull plus whatever boosting
+// the commander has bought. The HUD, the recharge and the repair all read it.
+func (g *Game) ShieldMax() float64 {
+	max := g.Ship().Shield
+	if g.Cmd.Equip["shieldboost1"] {
+		max += 40
+	}
+	if g.Cmd.Equip["shieldboost2"] {
+		max += 80
+	}
+	return max
+}

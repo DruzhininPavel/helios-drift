@@ -82,8 +82,8 @@ func (g *Game) Update(dt float64) {
 		recharge *= 1.6
 	}
 	p.Energy = math.Min(g.Ship().Energy, p.Energy+recharge*dt)
-	p.ShieldF = math.Min(g.Ship().Shield, p.ShieldF+1.9*dt)
-	p.ShieldA = math.Min(g.Ship().Shield, p.ShieldA+1.9*dt)
+	p.ShieldF = math.Min(g.ShieldMax(), p.ShieldF+1.9*dt)
+	p.ShieldA = math.Min(g.ShieldMax(), p.ShieldA+1.9*dt)
 	p.LaserTemp = math.Max(0, p.LaserTemp-0.35*dt)
 	if p.Invulnerable > 0 {
 		p.Invulnerable -= dt
@@ -611,12 +611,15 @@ func (g *Game) BuyEquipment(id string) {
 			return
 		}
 		cmd.Missiles++
-	case "laserpulse", "laserbeam", "lasermilitary":
+	case "laserpulse", "laserbeam", "lasermilitary", "laserplasma":
 		lvl := 0
-		if id == "laserbeam" {
+		switch id {
+		case "laserbeam":
 			lvl = 1
-		} else if id == "lasermilitary" {
+		case "lasermilitary":
 			lvl = 2
+		case "laserplasma":
+			lvl = 3
 		}
 		if cmd.Laser >= lvl {
 			g.Message("ALREADY FITTED", "bad")
@@ -628,8 +631,34 @@ func (g *Game) BuyEquipment(id string) {
 		}
 		cmd.Laser = lvl
 	case "mininglaser":
+		// the mining laser is a tool, not a gun: it no longer takes the
+		// weapon slot, so a miner keeps his lasers
 		cmd.Equip["mining"] = true
-		cmd.Laser = 3
+	case "miningrig":
+		if !cmd.Equip["mining"] {
+			g.Message("FIT A MINING LASER FIRST", "bad")
+			return
+		}
+		cmd.Equip["miningrig"] = true
+	case "shieldboost1":
+		cmd.Equip["shieldboost1"] = true
+		g.Player.ShieldF = g.ShieldMax()
+		g.Player.ShieldA = g.ShieldMax()
+	case "shieldboost2":
+		if !cmd.Equip["shieldboost1"] {
+			g.Message("NEEDS A SHIELD BOOSTER FIRST", "bad")
+			return
+		}
+		cmd.Equip["shieldboost2"] = true
+		g.Player.ShieldF = g.ShieldMax()
+		g.Player.ShieldA = g.ShieldMax()
+	case "cargobay2":
+		if !cmd.Equip["largebay"] {
+			g.Message("NEEDS A LARGE CARGO BAY FIRST", "bad")
+			return
+		}
+		cmd.Equip["cargobay2"] = true
+		cmd.CargoCap = g.CargoCapacity()
 	case "largebay":
 		if cmd.Equip["largebay"] {
 			g.Message("ALREADY FITTED", "bad")

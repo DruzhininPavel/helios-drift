@@ -332,8 +332,8 @@ func revive(g *game.Game) {
 	g.Screen = "flight"
 	g.Dead = nil
 	g.Player.Energy = g.Ship().Energy
-	g.Player.ShieldF = g.Ship().Shield
-	g.Player.ShieldA = g.Ship().Shield
+	g.Player.ShieldF = g.ShieldMax()
+	g.Player.ShieldA = g.ShieldMax()
 	g.Player.Cabin = 0
 	g.Player.Speed = 0
 	g.Player.Invulnerable = 3

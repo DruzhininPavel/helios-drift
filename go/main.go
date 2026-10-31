@@ -727,6 +727,7 @@ func main() {
 	god := flag.Bool("god", false, "keep the bot alive: deaths are rolled back, for walking the story")
 	ace := flag.Bool("ace", false, "make the bot a dead shot in a fight")
 	benchShips := flag.Bool("bench-ships", false, "fly every hull through the same trials and print a table")
+	shipFlag := flag.String("ship", "", "fly this hull in a bot run (default: the starting one)")
 	flag.Parse()
 
 	if *seed < 0 && (*shots || *sheet || *probe) {
@@ -775,7 +776,7 @@ func main() {
 		return
 	}
 	if *botRun {
-		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock, *god, *ace)
+		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock, *god, *ace, *shipFlag)
 		return
 	}
 	if *sim {
@@ -949,7 +950,7 @@ func toggleMute() {
 }
 
 // runBot lets the bot play and reports what happened.
-func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, god, ace bool) {
+func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, god, ace bool, ship string) {
 	g := game.New()
 	if mode == "classic" {
 		g.NewGameMode(game.ModeClassic, "BOT")
@@ -959,6 +960,10 @@ func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, g
 	if gear {
 		g.Cmd.Equip["dockcomp"] = true
 		g.Cmd.Equip["fuelscoop"] = true
+	}
+	if ship != "" {
+		g.Cmd.Ship = ship
+		g.Cmd.CargoCap = g.CargoCapacity()
 	}
 	pol := bot.NewTrader(game.Seed())
 	pol.ManualDock = manualDock

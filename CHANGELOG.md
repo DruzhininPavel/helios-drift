@@ -1,5 +1,16 @@
 ## Unreleased
 
+### Added
+- Plasma accelerator, shield booster and heavy shielding, a second cargo bay and
+  a heavy mining rig. The mining laser no longer takes the weapon slot, and the
+  rig cuts more out of a rock.
+- Contracts pay enough to matter: a few runs fund a real gun, not thirty.
+- The last stage is a boss worth preparing for: 1400 hull, 180 shield and two
+  escorts. Measured, a pulse laser needs 176 hits, a military one 61.
+- `docs/progression.md`: what you earn, what it costs, and why the finale wants
+  a better ship.
+- `-ship` picks the hull for a bot run, so both paths can be measured.
+
 ### Changed
 - Each hull now flies differently. The yard lists turning, shields and the
   heaviest gun the hull can carry, and those numbers are real: a Fer-de-Lance

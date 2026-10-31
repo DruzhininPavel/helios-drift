@@ -465,34 +465,41 @@ func (t *Trader) safety(g *game.Game, in game.InputState) game.InputState {
 	return out
 }
 
-// upgrade buys what keeps a trader alive, cheapest first, and only with money
-// that is not needed for cargo.
+// upgrade buys what keeps a commander alive, in the order that pays off: a
+// better gun first, then shields, then the rest.
 func (t *Trader) upgrade(g *game.Game) []Event {
 	var ev []Event
 	c := &g.Cmd
-	float := 300.0
-	buy := func(id string, price float64) bool {
-		if c.Equip[id] || c.Cash < price+float {
-			return false
+	reserve := 300.0
+	buy := func(id string, price float64) {
+		if c.Equip[id] || c.Cash < price+reserve || equipIndex(id) < 0 {
+			return
 		}
 		ev = append(ev, Event{Kind: "equip", A: equipIndex(id)})
-		return true
 	}
-	// a beam laser first: the pulse one barely scratches a pirate
-	if c.Laser < 1 && !c.Equip["laserbeam"] {
+	// guns: the hull has to be able to carry them
+	if c.Laser < 1 {
 		buy("laserbeam", 1000)
+	} else if c.Laser < 2 && g.Ship().MaxLaser >= 2 {
+		buy("lasermilitary", 6000)
+	} else if c.Laser < 3 && g.Ship().MaxLaser >= 3 {
+		buy("laserplasma", 18000)
 	}
-	if c.Missiles < 3 {
-		if c.Cash > 30+float {
-			ev = append(ev, Event{Kind: "equip", A: equipIndex("missile")})
-		}
+	if c.Missiles < 3 && c.Cash > 30+reserve {
+		ev = append(ev, Event{Kind: "equip", A: equipIndex("missile")})
 	}
-	buy("galdrive", 5000)
+	// protection
+	buy("shieldboost1", 4000)
 	buy("extraenergy", 1500)
+	buy("shieldboost2", 12000)
 	buy("escape", 1000)
 	buy("ecm", 600)
+	// working kit
 	buy("fuelscoop", 525)
+	buy("mininglaser", 800)
+	buy("miningrig", 2600)
 	buy("largebay", 400)
+	buy("cargobay2", 9000)
 	return ev
 }
 

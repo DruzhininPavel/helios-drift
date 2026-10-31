@@ -222,18 +222,28 @@ func (g *Game) campaignArrive() {
 			e.Speed = 4
 		case "MOTHER":
 			e.Radius = 62
-			e.Energy, e.MaxEnergy = 520, 520
-			e.Shield, e.MaxShield = 90, 90
+			e.Energy, e.MaxEnergy = 700, 700
+			e.Shield, e.MaxShield = 110, 110
 			if mesh := models.Get("mothership"); mesh != nil {
 				e.Mesh = mesh
 			}
 		case "FLAGSHIP":
-			e.Radius = 70
-			e.Energy, e.MaxEnergy = 900, 900
-			e.Shield, e.MaxShield = 120, 120
+			// the last fight is meant to be the one you buy a warship for: a
+			// pulse laser needs minutes, a military one seconds
+			e.Radius = 74
+			e.Energy, e.MaxEnergy = 1400, 1400
+			e.Shield, e.MaxShield = 180, 180
 			e.Speed = 120
 		}
 		g.World.Entities = append(g.World.Entities, e)
+	}
+	if q.Tag == "FLAGSHIP" {
+		// two escorts: the flagship alone would just be a long slog
+		for i := 0; i < 2; i++ {
+			esc := g.spawnAtDistance("viper", randRange(2200, 3200), "pirate")
+			esc.Hostile = true
+			g.World.Entities = append(g.World.Entities, esc)
+		}
 	}
 	if q.Tag == "MOTHER" {
 		for i := 0; i < 4; i++ {

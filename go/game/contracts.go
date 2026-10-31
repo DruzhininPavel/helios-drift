@@ -47,7 +47,7 @@ func (g *Game) rollContracts() {
 		case r < 0.42:
 			good := randInt(12)
 			qty := 1 + randInt(6)
-			pay := int(math.Round(float64(qty)*galaxy.Commodities[good].Base*0.55 + d*55 + randFloat()*40))
+			pay := int(math.Round(float64(qty)*galaxy.Commodities[good].Base*0.9 + d*90 + randFloat()*60))
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractCourier, Good: good, Qty: qty,
 				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: pay, Due: due,
@@ -59,7 +59,7 @@ func (g *Game) rollContracts() {
 				good = 6
 			}
 			qty := 2 + randInt(4)
-			pay := qty * (240 + randInt(160))
+			pay := qty * (420 + randInt(260))
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractSmuggle, Good: good, Qty: qty,
 				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: pay, Due: due,
@@ -68,19 +68,19 @@ func (g *Game) rollContracts() {
 			qty := 1 + randInt(4)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractPassenger, Qty: qty,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (90 + randInt(70)), Due: due + 1,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (220 + randInt(150)), Due: due + 1,
 			})
 		case r < 0.78:
 			qty := 1 + randInt(5)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractMail, Qty: qty,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (45 + randInt(35)), Due: due,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (110 + randInt(80)), Due: due,
 			})
 		default:
 			qty := 2 + randInt(4)
 			g.Offers = append(g.Offers, Contract{
 				Kind: ContractBounty, Qty: qty, Done: 0,
-				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (110 + randInt(60)), Due: due + 2,
+				System: tgt, Galaxy: g.Cmd.Galaxy, Pay: qty * (320 + randInt(180)), Due: due + 2,
 			})
 		}
 	}

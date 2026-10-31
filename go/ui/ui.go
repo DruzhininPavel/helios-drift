@@ -723,7 +723,7 @@ func hud(fb *render.FB) {
 	gx, bx, bw := 6, 22, 58
 	maxE := g.Ship().Energy
 	fb.Text("FS", gx, y0+5, ColText, 1)
-	shieldMax := game.G.Ship().Shield
+	shieldMax := game.G.ShieldMax()
 	if shieldMax <= 0 {
 		shieldMax = game.MaxShield
 	}
