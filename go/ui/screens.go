@@ -611,6 +611,11 @@ func pauseScreen(fb *render.FB) {
 // Key handles a key press; returns true when consumed.
 func Key(k string) bool {
 	g := game.G
+	// a conversation owns every key, in flight as much as at a counter: it used
+	// to be checked after the flight branch, which ate the digits
+	if g.Screen == "talk" {
+		return talkKey(k)
+	}
 	// the settings screen sits on top of whatever state opened it, so it gets
 	// first refusal on every key
 	if g.Screen == "settings" {
@@ -788,9 +793,6 @@ func dockedKey(k string) bool {
 	}
 	if g.Screen == "log" {
 		return logKey(k)
-	}
-	if g.Screen == "talk" {
-		return talkKey(k)
 	}
 	if g.Screen == "contracts" {
 		return contractsKey(k)
