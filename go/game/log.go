@@ -10,18 +10,22 @@ import "strings"
 // much money. The screen builds the sentence, so the log reads Russian or
 // English like everything else without a second copy of every line.
 const (
-	LogKill  = "kill"  // a ship destroyed
-	LogBuy   = "buy"   // freight bought
-	LogSell  = "sell"  // freight sold
-	LogFuel  = "fuel"  // refuelled
-	LogEquip = "equip" // equipment fitted
-	LogShip  = "ship"  // a hull bought
-	LogJob   = "job"   // a contract taken
-	LogDone  = "done"  // a contract paid or a stage finished
-	LogFail  = "fail"  // a contract lapsed
-	LogJump  = "jump"  // a hyperspace jump
-	LogMine  = "mine"  // ore scooped or a rock broken
-	LogDeath = "death" // the pilot lost a ship
+	LogKill   = "kill"   // a ship destroyed
+	LogBuy    = "buy"    // freight bought
+	LogSell   = "sell"   // freight sold
+	LogFuel   = "fuel"   // refuelled
+	LogEquip  = "equip"  // equipment fitted
+	LogShip   = "ship"   // a hull bought
+	LogJob    = "job"    // a contract taken
+	LogDone   = "done"   // a contract paid or a stage finished
+	LogFail   = "fail"   // a contract lapsed
+	LogJump   = "jump"   // a hyperspace jump
+	LogMine   = "mine"   // ore scooped or a rock broken
+	LogDeath  = "death"  // the pilot lost a ship
+	LogVisit  = "visit"  // first time in a system
+	LogPirate = "pirate" // hostiles dropped out of hyperspace on you
+	LogPolice = "police" // a viper came to look at your record
+	LogSwarm  = "swarm"  // the swarm, which is a different thing entirely
 )
 
 // LogLimit is how many entries are kept. Older ones fall off the front: a
@@ -78,6 +82,14 @@ func LogKindLabel(kind string) string {
 		return "MINED"
 	case LogDeath:
 		return "LOST SHIP"
+	case LogVisit:
+		return "FIRST VISIT"
+	case LogPirate:
+		return "PIRATES"
+	case LogPolice:
+		return "POLICE"
+	case LogSwarm:
+		return "SWARM"
 	}
 	return strings.ToUpper(kind)
 }
@@ -87,11 +99,11 @@ func LogGroup(kind string) string {
 	switch kind {
 	case LogBuy, LogSell, LogFuel, LogEquip, LogShip:
 		return "TRADE"
-	case LogKill, LogDeath:
+	case LogKill, LogDeath, LogPirate, LogPolice, LogSwarm:
 		return "FIGHT"
 	case LogJob, LogDone, LogFail:
 		return "JOBS"
-	case LogJump, LogMine:
+	case LogJump, LogMine, LogVisit:
 		return "TRAVEL"
 	}
 	return "TRADE"

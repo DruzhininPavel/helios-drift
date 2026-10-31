@@ -6,6 +6,9 @@
   and failed, jumps, ore scooped, and the loss of a ship. Opens from the
   station menu, scrolls with up/down and page keys, filters into everything,
   trade, fights, jobs and travel. Three hundred entries, kept in the save.
+- First visits and encounters: a system writes one line the first time you jump
+  into it and a jump line every time after, and a visit records police, pirates
+  and the swarm once each, however many waves turn up.
 
 ### Fixed
 - Station mouths now meet the docking plane. The rock hermit's collar ran thirty

@@ -4,6 +4,10 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"FIRST VISIT":         "ПЕРВЫЙ ВИЗИТ",
+	"ATTACKED BY PIRATES": "АТАКА ПИРАТОВ",
+	"STOPPED BY POLICE":   "ВСТРЕЧА С ПОЛИЦИЕЙ",
+	"ALIEN SWARM":         "РОЙ ЧУЖИХ",
 
 	// ---- the commander's log
 	"LOG":                     "ЖУРНАЛ",

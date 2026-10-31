@@ -471,7 +471,9 @@ func runShots() {
 	// the log, with a handful of entries so the layout is visible
 	g.State = "docked"
 	g.Cmd.Log = nil
-	g.Note(game.LogJump, "THILQU", 0, 0)
+	g.Note(game.LogVisit, "THILQU", 0, 0)
+	g.Note(game.LogPirate, "", 2, 0)
+	g.Note(game.LogPolice, "", 1, 0)
 	g.Note(game.LogBuy, "FOOD", 4, -120)
 	g.Note(game.LogKill, "KRAIT", 0, 100)
 	g.Note(game.LogSell, "TEXTILES", 6, 402)

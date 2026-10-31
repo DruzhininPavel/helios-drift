@@ -1985,6 +1985,14 @@ func logLine(e game.LogEntry) string {
 		return lang.T("MINED") + " " + what
 	case game.LogDeath:
 		return lang.T("LOST SHIP") + " " + lang.T(e.A)
+	case game.LogVisit:
+		return lang.T("FIRST VISIT") + " " + e.A
+	case game.LogPirate:
+		return lang.T("ATTACKED BY PIRATES")
+	case game.LogPolice:
+		return lang.T("STOPPED BY POLICE")
+	case game.LogSwarm:
+		return lang.T("ALIEN SWARM")
 	}
 	return e.A
 }

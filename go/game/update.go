@@ -724,7 +724,7 @@ func (g *Game) NewGameMode(mode, name string) {
 	g.Cmd.System = 0
 	g.Cmd.Galaxy = 0
 	g.EscapeUsed = false
-	g.EnterSystem(0, "arrive", 9000, false)
+	g.EnterSystem(0, "start", 9000, false)
 	g.State = "docked"
 	g.dockedAt()
 }

@@ -101,16 +101,18 @@ type Commander struct {
 	Equip        map[string]bool
 	Bombs        int
 	Deaths       int
-	Mission      Mission       `json:"mission"`
-	MissionFlags int           `json:"missionFlags"`
-	Contracts    []Contract    `json:"contracts"`
-	Day          int           `json:"day"`
-	Pax          int           `json:"pax"`
-	Log          []LogEntry    `json:"log,omitempty"`
-	Mail         int           `json:"mail"`
-	Ship         string        `json:"ship"`
-	Mode         string        `json:"mode"`
-	Campaign     CampaignState `json:"campaign"`
+	Mission      Mission    `json:"mission"`
+	MissionFlags int        `json:"missionFlags"`
+	Contracts    []Contract `json:"contracts"`
+	Day          int        `json:"day"`
+	Pax          int        `json:"pax"`
+	Log          []LogEntry `json:"log,omitempty"`
+	// Visited keys are "galaxy:system". A system is worth a log line once.
+	Visited  map[string]bool `json:"visited,omitempty"`
+	Mail     int             `json:"mail"`
+	Ship     string          `json:"ship"`
+	Mode     string          `json:"mode"`
+	Campaign CampaignState   `json:"campaign"`
 }
 
 func NewCommander() Commander {
@@ -187,17 +189,20 @@ type Star struct {
 type Dust struct{ Pos render.Vec3 }
 
 type World struct {
-	Witchspace   bool
-	Hermit       bool
-	Sys          *galaxy.System
-	Planet       Planet
-	Sun          Sun
-	Station      *Entity
-	Entities     []*Entity
-	Stars        []Star
-	Dust         []Dust
-	Nebula       *render.FB
-	PlanetFrames []*render.FB
+	Witchspace bool
+	Hermit     bool
+	// encounters are logged once per visit: four pirate waves in one system is
+	// one line in the record, not four
+	notedPirate, notedPolice, notedSwarm bool
+	Sys                                  *galaxy.System
+	Planet                               Planet
+	Sun                                  Sun
+	Station                              *Entity
+	Entities                             []*Entity
+	Stars                                []Star
+	Dust                                 []Dust
+	Nebula                               *render.FB
+	PlanetFrames                         []*render.FB
 }
 
 type Approach struct {
@@ -246,6 +251,9 @@ type Game struct {
 	Shake, BeamFlash, EcmFlash, BombFlash float64
 	EncounterTimer                        float64
 	TrafficTimer                          float64
+	// encounters go into the log once per visit: four pirate waves in one
+	// system are one line in the record, not four
+	notedPirate, notedPolice, notedSwarm bool
 
 	In      InputState
 	OnEvent func(string)
@@ -398,8 +406,23 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 	} else {
 		g.Player.Invulnerable = 1.5
 	}
+	g.notedPirate, g.notedPolice, g.notedSwarm = false, false, false
+	key := itoa(g.Cmd.Galaxy) + ":" + itoa(sys.ID)
+	if g.Cmd.Visited == nil {
+		g.Cmd.Visited = map[string]bool{}
+	}
+	first := !g.Cmd.Visited[key]
+	if first {
+		g.Cmd.Visited[key] = true
+	}
+	// a visit is only worth a line when you jumped in: launching from the
+	// station where the game started is not an arrival
 	if mode == "arrive" && !misjump {
-		g.Note(LogJump, sys.Name, 0, 0)
+		if first {
+			g.Note(LogVisit, sys.Name, 0, 0)
+		} else {
+			g.Note(LogJump, sys.Name, 0, 0)
+		}
 	}
 	g.State = "flight"
 	g.Screen = "flight"
@@ -478,6 +501,10 @@ func (g *Game) spawnAtDistance(typeKey string, dist float64, behaviour string) *
 }
 
 func (g *Game) SpawnPirates(n int) {
+	if !g.notedPirate {
+		g.Note(LogPirate, "", n, 0)
+		g.notedPirate = true
+	}
 	types := []string{"sidewinder", "krait", "mamba", "adder", "cobra3", "moray", "ferdelance", "asp", "gecko", "cobra1"}
 	for i := 0; i < n; i++ {
 		t := types[randInt(len(types))]
@@ -500,6 +527,10 @@ func (g *Game) SpawnTraffic(n int) {
 }
 
 func (g *Game) spawnPolice(n int) {
+	if !g.notedPolice {
+		g.Note(LogPolice, "", n, 0)
+		g.notedPolice = true
+	}
 	for i := 0; i < n; i++ {
 		g.World.Entities = append(g.World.Entities, g.spawnAtDistance("viper", randRange(4000, 7000), "police"))
 	}
@@ -507,6 +538,10 @@ func (g *Game) spawnPolice(n int) {
 }
 
 func (g *Game) spawnThargoids() {
+	if !g.notedSwarm {
+		g.Note(LogSwarm, "", 2, 0)
+		g.notedSwarm = true
+	}
 	for i := 0; i < 2; i++ {
 		g.World.Entities = append(g.World.Entities, g.spawnAtDistance("thargoid", randRange(3000, 6000), "thargoid"))
 	}
