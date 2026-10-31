@@ -334,3 +334,25 @@ func TestContinueFlight(t *testing.T) {
 	}
 	DropSession()
 }
+
+// TestTitleMenuIsTranslatedAndFits: every entry of the title menu must have a
+// Russian word for it, and six entries must not run into the key hints.
+func TestTitleMenuIsTranslatedAndFits(t *testing.T) {
+	newTitle()
+	lang.Set("ru")
+	defer lang.Set("en")
+	S.HasSession = true
+	items := TitleItems()
+	for _, name := range items {
+		if lang.T(name) == name {
+			t.Errorf("title entry %q is not translated", name)
+		}
+	}
+	top := 186 - (len(items)-1)*11
+	if last := top + (len(items)-1)*11; last+7 > 196 {
+		t.Errorf("%d entries end at %d, the key hints start at 196", len(items), last+7)
+	}
+	if top < 100 {
+		t.Errorf("menu starts at %d, it would sit on the ship", top)
+	}
+}

@@ -74,6 +74,7 @@ var ru = map[string]string{
 	"JOBS HAVE DEADLINES: A MISSED ONE COSTS.":      "У РАБОТЫ ЕСТЬ СРОК: ПРОСРОЧКА - ШТРАФ.",
 	"TO WIN A FIGHT, BUY A BIGGER GUN FIRST.":       "ЧТОБЫ ПОБЕДИТЬ В БОЮ, КУПИ ПУШКУ ПОБОЛЬШЕ.",
 	// ---- title / menu
+	"CONTINUE FLIGHT":                "ПРОДОЛЖИТЬ ПОЛЁТ",
 	"NEW GAME":                       "НОВАЯ ИГРА",
 	"LOAD COMMANDER":                 "ЗАГРУЗИТЬ ПИЛОТА",
 	"SETTINGS":                       "НАСТРОЙКИ",

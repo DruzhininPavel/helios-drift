@@ -966,8 +966,11 @@ func Title(fb *render.FB) {
 	if S.Title >= len(items) {
 		S.Title = len(items) - 1
 	}
+	// anchor the block to the bottom of the list, so a longer menu (continue
+	// appears once a session exists) grows upwards instead of onto the keys
+	top := 186 - (len(items)-1)*11
 	for i, name := range items {
-		y := 140 + i*11
+		y := top + i*11
 		col := ColText
 		if name == "LOAD COMMANDER" && !game.SaveExists() {
 			col = ColDim
