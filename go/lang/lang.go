@@ -20,6 +20,11 @@ type Config struct {
 	// NoCockpit hides the canopy frame. Stored inverted so that a config
 	// written before the setting existed keeps the cockpit on.
 	NoCockpit bool `json:"no_cockpit,omitempty"`
+	// TesterUnlocked is set by typing the phrase in the settings screen; the
+	// row it reveals switches TesterMode, which is what actually lets the
+	// cheat keys work. Both live in the config so a tester keeps them.
+	TesterUnlocked bool `json:"tester_unlocked,omitempty"`
+	TesterMode     bool `json:"tester_mode,omitempty"`
 }
 
 var Cfg = Config{Lang: "en", Volume: 0.8}

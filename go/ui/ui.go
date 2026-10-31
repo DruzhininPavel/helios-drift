@@ -41,6 +41,7 @@ type Sel struct {
 	Help                int
 	Log                 int
 	LogFilter           int
+	Typed               string
 	PrevState           string
 	PrevScreen          string
 	PadTestFrom         string

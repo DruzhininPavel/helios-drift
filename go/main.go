@@ -76,7 +76,7 @@ func (a *App) Update() error {
 	// M adds credits, control plus G turns off damage from guns, missiles and
 	// debris. Ramming a station still kills. The frame ends here so the same
 	// key press cannot also fire a missile or open the chart.
-	if ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight) {
+	if lang.Cfg.TesterMode && (ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight)) {
 		if inpututil.IsKeyJustPressed(ebiten.KeyM) {
 			g.CheatMoney(10000)
 			return nil
@@ -102,6 +102,7 @@ func (a *App) Update() error {
 			ebiten.KeyL, ebiten.KeyJ, ebiten.KeyF, ebiten.KeyB, ebiten.KeyS, ebiten.KeyX, ebiten.KeyZ,
 			ebiten.Key1, ebiten.Key2, ebiten.Key3, ebiten.Key4, ebiten.Key5, ebiten.Key6,
 			ebiten.Key7, ebiten.Key8, ebiten.Key9, ebiten.Key0, ebiten.KeyG, ebiten.KeyQ, ebiten.KeyH, ebiten.KeyK,
+			ebiten.KeyI, ebiten.KeyD,
 			ebiten.KeyBackspace,
 		} {
 			if inpututil.IsKeyJustPressed(k) {
@@ -301,6 +302,10 @@ func keyName(k ebiten.Key) string {
 		return "9"
 	case ebiten.Key0:
 		return "0"
+	case ebiten.KeyI:
+		return "i"
+	case ebiten.KeyD:
+		return "d"
 	case ebiten.KeyK:
 		return "k"
 	case ebiten.KeyG:

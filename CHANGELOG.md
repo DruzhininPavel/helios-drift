@@ -11,10 +11,6 @@
   and the swarm once each, however many waves turn up.
 
 ### Added
-- Testing cheats: `Ctrl+M` adds ten thousand credits, `Ctrl+G` switches on a
-  shield that ignores lasers, missiles and debris. Ramming a station, a planet
-  or another ship still kills, which is the point: the cheat skips firefights,
-  not walls. Documented in `docs/bot-testing.md`.
 - A diplomat. On high tech worlds and in dictatorships, communist and
   corporate states, a fixer will wipe a record for 500 credits plus 40 a point
   of heat, capped at 60 000. The station menu shows the price while the row is

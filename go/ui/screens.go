@@ -992,11 +992,25 @@ func OpenSettings() {
 	g.Screen = "settings"
 }
 
+// settingsRows is built each time: the tester switch only exists once the
+// phrase has been typed, and rows are addressed by name so adding one cannot
+// silently shift the key handling.
+func settingsRows() []string {
+	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "COCKPIT"}
+	if lang.Cfg.TesterUnlocked {
+		rows = append(rows, "TESTER MODE")
+	}
+	return append(rows, "CONTROLS", "BACK")
+}
+
 func settingsScreen(fb *render.FB) {
 	plate(fb, 40, 18, 280, 186, "")
-	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "COCKPIT", "CONTROLS", "BACK"}
+	rows := settingsRows()
+	if S.Settings >= len(rows) {
+		S.Settings = len(rows) - 1
+	}
 	for i, name := range rows {
-		y := 34 + i*24
+		y := 34 + i*20
 		sel := S.Settings == i
 		if sel {
 			fb.FillRect(48, y-8, 272, y+11, render.RGB(0x12384f))
@@ -1007,20 +1021,20 @@ func settingsScreen(fb *render.FB) {
 			col = ColYellow
 		}
 		fb.Text(name, 60, y, col, 1)
-		switch i {
-		case 0:
+		switch name {
+		case "LANGUAGE":
 			val := "ENGLISH"
 			if lang.IsRU() {
 				val = "RUSSIAN"
 			}
 			fb.TextR(val, 264, y, ColGreen, 1)
-		case 1:
+		case "SOUND":
 			val := "ON"
 			if lang.Cfg.Muted {
 				val = "OFF"
 			}
 			fb.TextR(val, 264, y, ColGreen, 1)
-		case 2:
+		case "VOLUME":
 			pips := int(lang.Cfg.Volume*5 + 0.5)
 			for k := 0; k < 5; k++ {
 				c := render.RGB(0x25405a)
@@ -1029,38 +1043,49 @@ func settingsScreen(fb *render.FB) {
 				}
 				fb.FillRect(224+k*9, y-1, 230+k*9, y+6, c)
 			}
-		case 3:
+		case "COCKPIT":
 			val := "ON"
 			if lang.Cfg.NoCockpit {
 				val = "OFF"
 			}
 			fb.TextR(val, 264, y, ColGreen, 1)
-		case 4:
+		case "TESTER MODE":
+			val := "OFF"
+			if lang.Cfg.TesterMode {
+				val = "ON"
+			}
+			fb.TextR(val, 264, y, ColGreen, 1)
+		case "CONTROLS":
 			fb.TextR(">", 264, y, ColGreen, 1)
 		}
 	}
-	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 172, ColDim, 1)
+	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 176, ColDim, 1)
 	Hint = "UP/DOWN  LEFT/RIGHT  ENTER  ESC"
 }
 
 func settingsKey(k string) bool {
+	rows := settingsRows()
+	n := len(rows)
 	switch k {
 	case "ArrowUp":
-		S.Settings = (S.Settings + 5) % 6
+		S.Settings = (S.Settings + n - 1) % n
 	case "ArrowDown":
-		S.Settings = (S.Settings + 1) % 6
+		S.Settings = (S.Settings + 1) % n
 	case "Escape":
 		closeSettings()
 	case "Enter", "ArrowLeft", "ArrowRight":
-		switch S.Settings {
-		case 0:
+		if S.Settings >= n {
+			return true
+		}
+		switch rows[S.Settings] {
+		case "LANGUAGE":
 			if lang.IsRU() {
 				lang.Set("en")
 			} else {
 				lang.Set("ru")
 			}
 			lang.Save()
-		case 1:
+		case "SOUND":
 			lang.Cfg.Muted = !lang.Cfg.Muted
 			lang.Save()
 			state := "ON"
@@ -1068,7 +1093,7 @@ func settingsKey(k string) bool {
 				state = "OFF"
 			}
 			game.G.Message(lang.T("SOUND")+" "+lang.T(state), "info")
-		case 2:
+		case "VOLUME":
 			steps := []float64{0.2, 0.4, 0.6, 0.8, 1.0}
 			idx := 3
 			for i, v := range steps {
@@ -1083,7 +1108,7 @@ func settingsKey(k string) bool {
 			}
 			lang.Cfg.Volume = steps[idx]
 			lang.Save()
-		case 3:
+		case "COCKPIT":
 			lang.Cfg.NoCockpit = !lang.Cfg.NoCockpit
 			lang.Save()
 			state := "ON"
@@ -1091,10 +1116,32 @@ func settingsKey(k string) bool {
 				state = "OFF"
 			}
 			game.G.Message(lang.T("COCKPIT")+" "+lang.T(state), "info")
-		case 4:
+		case "TESTER MODE":
+			lang.Cfg.TesterMode = !lang.Cfg.TesterMode
+			lang.Save()
+			state := "OFF"
+			if lang.Cfg.TesterMode {
+				state = "ON"
+			}
+			game.G.Message(lang.T("TESTER MODE")+" "+lang.T(state), "info")
+		case "CONTROLS":
 			openControls()
-		case 5:
+		case "BACK":
 			closeSettings()
+		}
+	default:
+		// the phrase that reveals the tester switch: typed, never listed
+		if len(k) == 1 {
+			S.Typed = (S.Typed + k)
+			if len(S.Typed) > 8 {
+				S.Typed = S.Typed[len(S.Typed)-8:]
+			}
+			if !lang.Cfg.TesterUnlocked && strings.HasSuffix(strings.ToUpper(S.Typed), "IDDQD") {
+				lang.Cfg.TesterUnlocked = true
+				lang.Save()
+				S.Typed = ""
+				game.G.Message("TESTER MODE UNLOCKED", "good")
+			}
 		}
 	}
 	return true
