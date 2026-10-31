@@ -161,14 +161,22 @@ func (g *Game) Update(dt float64) {
 		st.Mat = st.Mat.Mul(render.RotY(0.05 * dt))
 		dst := p.Pos.Sub(st.Pos).Len()
 		if dst < StationSize*1.06 {
-			if !g.TryDock() {
-				local := st.Mat.ApplyT(p.Pos.Sub(st.Pos))
-				outsideSlot := math.Abs(local[0]) > SlotW*StationSize+10 || math.Abs(local[1]) > SlotH*StationSize+10
-				if dst < StationSize*1.02 && outsideSlot {
-					g.LastDamageReason = "CRASHED INTO THE STATION"
-					g.PlayerDeath()
+			// the slot is a shaft through the +Z face, not a tunnel through the
+			// station: flying at the hull from behind has to hurt. Without the
+			// z check a ship entered the back, crossed the whole station and
+			// came out of the mouth untouched.
+			local := st.Mat.ApplyT(p.Pos.Sub(st.Pos))
+			halfW, halfH := SlotW*StationSize+10, SlotH*StationSize+10
+			inShaft := math.Abs(local[0]) < halfW && math.Abs(local[1]) < halfH &&
+				local[2] > StationSize-MouthDepth
+			if inShaft {
+				if g.TryDock() {
 					return
 				}
+			} else if dst < StationSize*1.02 {
+				g.LastDamageReason = "CRASHED INTO THE STATION"
+				g.PlayerDeath()
+				return
 			}
 		} else if g.TryDock() {
 			return
