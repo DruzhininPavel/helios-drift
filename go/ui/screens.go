@@ -964,10 +964,10 @@ func OpenSettings() {
 }
 
 func settingsScreen(fb *render.FB) {
-	plate(fb, 40, 20, 240, 158, "")
-	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "CONTROLS", "BACK"}
+	plate(fb, 40, 18, 280, 186, "")
+	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "COCKPIT", "CONTROLS", "BACK"}
 	for i, name := range rows {
-		y := 42 + i*28
+		y := 34 + i*24
 		sel := S.Settings == i
 		if sel {
 			fb.FillRect(48, y-8, 272, y+11, render.RGB(0x12384f))
@@ -1001,19 +1001,25 @@ func settingsScreen(fb *render.FB) {
 				fb.FillRect(224+k*9, y-1, 230+k*9, y+6, c)
 			}
 		case 3:
+			val := "ON"
+			if lang.Cfg.NoCockpit {
+				val = "OFF"
+			}
+			fb.TextR(val, 264, y, ColGreen, 1)
+		case 4:
 			fb.TextR(">", 264, y, ColGreen, 1)
 		}
 	}
-	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 168, ColDim, 1)
+	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 172, ColDim, 1)
 	Hint = "UP/DOWN  LEFT/RIGHT  ENTER  ESC"
 }
 
 func settingsKey(k string) bool {
 	switch k {
 	case "ArrowUp":
-		S.Settings = (S.Settings + 4) % 5
+		S.Settings = (S.Settings + 5) % 6
 	case "ArrowDown":
-		S.Settings = (S.Settings + 1) % 5
+		S.Settings = (S.Settings + 1) % 6
 	case "Escape":
 		closeSettings()
 	case "Enter", "ArrowLeft", "ArrowRight":
@@ -1049,8 +1055,16 @@ func settingsKey(k string) bool {
 			lang.Cfg.Volume = steps[idx]
 			lang.Save()
 		case 3:
-			openControls()
+			lang.Cfg.NoCockpit = !lang.Cfg.NoCockpit
+			lang.Save()
+			state := "ON"
+			if lang.Cfg.NoCockpit {
+				state = "OFF"
+			}
+			game.G.Message(lang.T("COCKPIT")+" "+lang.T(state), "info")
 		case 4:
+			openControls()
+		case 5:
 			closeSettings()
 		}
 	}

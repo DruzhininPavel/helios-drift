@@ -461,6 +461,14 @@ func runShots() {
 	g.Overlay = "pause"
 	shot("g68-pause")
 	g.Overlay = ""
+	// one shot per canopy, same view, so the hull is the only difference
+	for i, sc := range game.ShipYard {
+		g.Cmd.Ship = sc.ID
+		g.State = "flight"
+		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
+		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
+	}
+	g.Cmd.Ship = "cobra3"
 	g.State = prevState
 	g.Screen = "help"
 	ui.S.Help = 0
@@ -622,10 +630,11 @@ func runShots() {
 
 	g.Screen = "launch"
 	ui.OpenSettings()
+	ui.S.Settings = 3 // the cockpit row, so the new setting is visible
 	shot("g41-settings")
 
 	g.Screen = "settings"
-	ui.S.Settings = 3
+	ui.S.Settings = 4
 	ui.Key("Enter")
 	shot("g52-controls")
 
@@ -743,6 +752,12 @@ func main() {
 	human := flag.Bool("human", false, "play like a person: station time, saving up, side jobs")
 	flag.Parse()
 
+	// Headless modes are tools, not play: they must never rewrite the
+	// player's config. A shots run once switched the cockpit off and left the
+	// game in English, because a scripted Enter landed on a settings row.
+	if *shots || *sheet || *sim || *probe || *botRun || *benchShips || *ver {
+		lang.ReadOnly = true
+	}
 	if *seed < 0 && (*shots || *sheet || *probe) {
 		// reference screenshots and probes must be reproducible
 		*seed = 1

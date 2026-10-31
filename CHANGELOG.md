@@ -1,3 +1,24 @@
+## Unreleased
+
+### Added
+- Every hull has its own cockpit. The Kestrel keeps the wide all-round view; the
+  Adder is cramped with thick pillars and a strut across your sight; the Python
+  has panoramic glass, a low dashboard and a centre console; the Asp is armoured
+  with narrow slits and a gunsight column; the Fer-de-Lance sits low behind a
+  V-brace. Same seat, different glass.
+- `COCKPIT: ON / OFF` in the settings, remembered between runs. Off leaves the
+  view clean, HUD and sight only.
+- The title screen offers `HOW TO PLAY`, and pause opens the handbook with `H`.
+
+### Fixed
+- The pause list grew to fourteen rows and the last one fell off the plate.
+- Lower-case letters rendered as question marks; the font now falls back to the
+  capital.
+- The Russian handbook was English: the translations were never added.
+- Headless modes (`-shots`, `-bot`, `-sim`, `-probe`, ...) no longer rewrite the
+  player's config. A shots run had switched the cockpit off and left the game
+  in English because a scripted key press landed on a settings row.
+
 ## v1.14 — 2026-10-31
 
 ### Added

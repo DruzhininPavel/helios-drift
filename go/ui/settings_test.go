@@ -94,8 +94,8 @@ func TestSettingsNavigation(t *testing.T) {
 		t.Fatalf("up -> %d, want 0", S.Settings)
 	}
 	Key("ArrowUp")
-	if S.Settings != 4 {
-		t.Fatalf("up from first -> %d, want 4 (wrap)", S.Settings)
+	if S.Settings != 5 {
+		t.Fatalf("up from first -> %d, want 5 (wrap)", S.Settings)
 	}
 }
 
@@ -163,7 +163,7 @@ func TestControlsScreen(t *testing.T) {
 	newTitle()
 	game.G.State = "docked"
 	game.G.Screen = "settings"
-	S.Settings = 3
+	S.Settings = 4
 
 	Key("Enter")
 	if game.G.Screen != "controls" {
@@ -281,7 +281,7 @@ func TestCampaignScreen(t *testing.T) {
 func TestPadTestReachable(t *testing.T) {
 	newTitle()
 	OpenSettings()
-	S.Settings = 3 // CONTROLS
+	S.Settings = 4 // CONTROLS
 	Key("Enter")
 	if game.G.Screen != "controls" {
 		t.Fatalf("screen = %q, want controls", game.G.Screen)

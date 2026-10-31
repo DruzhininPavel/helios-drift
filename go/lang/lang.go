@@ -17,6 +17,9 @@ type Config struct {
 	Lang   string  `json:"lang"`
 	Muted  bool    `json:"muted"`
 	Volume float64 `json:"volume"` // 0..1
+	// NoCockpit hides the canopy frame. Stored inverted so that a config
+	// written before the setting existed keeps the cockpit on.
+	NoCockpit bool `json:"no_cockpit,omitempty"`
 }
 
 var Cfg = Config{Lang: "en", Volume: 0.8}

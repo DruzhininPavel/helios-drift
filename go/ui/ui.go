@@ -3,6 +3,7 @@ package ui
 
 import (
 	"fmt"
+	"heliosdrift/lang"
 	"math"
 	"strconv"
 
@@ -564,7 +565,7 @@ func flight(fb *render.FB, dt float64) {
 	if g.LaserFlash > 0 {
 		laserBeam(fb, 160, 75, g.LaserFlash, game.G.Cmd.Laser)
 	}
-	cockpit(fb)
+	cockpit(fb, g.Cmd.Ship)
 	crosshair(fb, 160, 75)
 
 	// messages
@@ -668,29 +669,111 @@ func reticle(fb *render.FB, cam *render.Camera) {
 	fb.Text(label, int(bs.X)-render.TextWidth(label, 1)/2, y1+3, render.Color("red", 3), 1)
 }
 
-func cockpit(fb *render.FB) {
+// cockpitStyle is one ship's canopy seen from the pilot's seat. The numbers
+// describe the frame: how far the pillars reach in at the top and at the
+// dashboard, where the canopy line sits and how tall the dash band is.
+type cockpitStyle struct {
+	beam    string // ramp for the structural members
+	glass   string // tint where the canopy edge meets the sky
+	canopyY int    // y where the side pillars start
+	sideW   int    // inward reach at the canopy line
+	footW   int    // inward reach at the dashboard
+	bezel   int    // y of the dashboard edge
+	struts  int    // extra vertical bars per side
+	console int    // width of a centre console, 0 for none
+	vbrace  int    // depth of a V brace from the top corners, 0 for none
+}
+
+// cockpitStyles is what makes a Python feel like a lorry and a Fer-de-Lance
+// like a knife: same seat, different glass around it.
+var cockpitStyles = map[string]cockpitStyle{
+	// the all rounder: wide view, thin steel, nothing in the way
+	"cobra3": {beam: "steel", glass: "teal", canopyY: 92, sideW: 9, footW: 74, bezel: 146},
+	// cramped and cheap: heavy pillars, little glass, a strut across the view
+	"adder": {beam: "brown", glass: "yellow", canopyY: 106, sideW: 28, footW: 98, bezel: 140, struts: 1},
+	// the lorry: thin frame, tall canopy, a wide dashboard under the chin
+	"python": {beam: "ash", glass: "blue", canopyY: 74, sideW: 5, footW: 46, bezel: 147, console: 44},
+	// the scout: armour everywhere, a narrow slit and a gunsight column
+	"asp": {beam: "steel", glass: "green", canopyY: 88, sideW: 42, footW: 118, bezel: 148, struts: 2, console: 22},
+	// the knife: glass low and steep, braced from the top corners
+	"ferdelance": {beam: "red", glass: "red", canopyY: 68, sideW: 20, footW: 96, bezel: 144, vbrace: 54},
+}
+
+func cockpitStyleFor(ship string) cockpitStyle {
+	if st, ok := cockpitStyles[ship]; ok {
+		return st
+	}
+	return cockpitStyles["cobra3"]
+}
+
+func cockpit(fb *render.FB, ship string) {
+	f := func(v int) float64 { return float64(v) }
+	if lang.Cfg.NoCockpit {
+		return
+	}
+	st := cockpitStyleFor(ship)
 	dark := render.RGB(0x040a11)
-	beam := render.Color("steel", 1)
-	beamHi := render.Color("steel", 3)
-	glass := render.Color("teal", 2)
-	// left and right structural members of the canopy frame
-	fb.Poly([]render.Pt3{{X: 0, Y: 92}, {X: 9, Y: 92}, {X: 74, Y: 150}, {X: 0, Y: 150}}, beam)
-	fb.Poly([]render.Pt3{{X: 319, Y: 92}, {X: 310, Y: 92}, {X: 245, Y: 150}, {X: 319, Y: 150}}, beam)
-	fb.Line(0, 92, 74, 150, beamHi)
-	fb.Line(319, 92, 245, 150, beamHi)
-	fb.Line(9, 92, 74, 150, glass)
-	fb.Line(310, 92, 245, 150, glass)
-	// bottom bezel band
-	fb.FillRect(0, 146, 319, 149, render.RGB(0x0b1622))
-	fb.HLine(0, 319, 146, beamHi)
-	fb.HLine(0, 319, 147, render.Color("steel", 2))
+	beam := render.Color(st.beam, 1)
+	beamHi := render.Color(st.beam, 3)
+	glass := render.Color(st.glass, 2)
+
+	// side pillars
+	fb.Poly([]render.Pt3{
+		{X: 0, Y: f(st.canopyY)}, {X: f(st.sideW), Y: f(st.canopyY)},
+		{X: f(st.footW), Y: f(st.bezel)}, {X: 0, Y: f(st.bezel)},
+	}, beam)
+	fb.Poly([]render.Pt3{
+		{X: 319, Y: f(st.canopyY)}, {X: f(319 - st.sideW), Y: f(st.canopyY)},
+		{X: f(319 - st.footW), Y: f(st.bezel)}, {X: 319, Y: f(st.bezel)},
+	}, beam)
+	// the inner edge of each pillar: steel highlight, then the glass
+	fb.Line(0, st.canopyY, st.footW, st.bezel, beamHi)
+	fb.Line(319, st.canopyY, 319-st.footW, st.bezel, beamHi)
+	fb.Line(st.sideW, st.canopyY, st.footW, st.bezel, glass)
+	fb.Line(319-st.sideW, st.canopyY, 319-st.footW, st.bezel, glass)
+
+	// struts across the canopy
+	for i := 0; i < st.struts; i++ {
+		f := 0.35 + float64(i)*0.28
+		x0 := int(float64(st.sideW) * f)
+		x1 := int(float64(st.footW) * f)
+		y0 := st.canopyY + int(float64(st.bezel-st.canopyY)*f)
+		fb.Line(x0, y0, x1+6, st.bezel, beam)
+		fb.Line(319-x0, y0, 319-x1-6, st.bezel, beam)
+	}
+
+	// centre console, the instrument binnacle between the knees
+	if st.console > 0 {
+		cw := st.console
+		fb.Poly([]render.Pt3{
+			{X: f(160 - cw/2), Y: f(st.bezel - 14)}, {X: f(160 + cw/2), Y: f(st.bezel - 14)},
+			{X: f(160 + cw/2 + 4), Y: f(st.bezel)}, {X: f(160 - cw/2 - 4), Y: f(st.bezel)},
+		}, beam)
+		fb.HLine(160-cw/2, 160+cw/2, st.bezel-14, beamHi)
+		fb.HLine(160-cw/2+2, 160+cw/2-2, st.bezel-10, render.Color(st.glass, 1))
+	}
+
+	// V brace from the top corners
+	if st.vbrace > 0 {
+		fb.Line(0, st.canopyY, 160, st.canopyY-st.vbrace, beamHi)
+		fb.Line(319, st.canopyY, 160, st.canopyY-st.vbrace, beamHi)
+		fb.Line(0, st.canopyY+2, 160, st.canopyY-st.vbrace+2, beam)
+		fb.Line(319, st.canopyY+2, 160, st.canopyY-st.vbrace+2, beam)
+	}
+
+	// dashboard band under the glass
+	fb.FillRect(0, st.bezel, 319, st.bezel+3, render.RGB(0x0b1622))
+	fb.HLine(0, 319, st.bezel, beamHi)
+	fb.HLine(0, 319, st.bezel+1, render.Color(st.beam, 2))
 	for x := 6; x < 319; x += 14 {
-		fb.Px(x, 148, render.Color("steel", 2))
+		fb.Px(x, st.bezel+2, render.Color(st.beam, 2))
 	}
-	// corner rivets
-	for _, p := range [][2]int{{6, 96}, {313, 96}, {40, 142}, {280, 142}} {
-		fb.Px(p[0], p[1], render.Color("steel", 4))
+
+	// rivets where the panels are bolted together
+	for _, p := range [][2]int{{6, st.canopyY + 4}, {313, st.canopyY + 4}, {st.footW - 34, st.bezel - 4}, {319 - st.footW + 34, st.bezel - 4}} {
+		fb.Px(p[0], p[1], render.Color(st.beam, 4))
 	}
+
 	// top edge
 	fb.HLine(0, 319, 0, dark)
 	fb.HLine(0, 319, 1, render.RGB(0x0b1622))
