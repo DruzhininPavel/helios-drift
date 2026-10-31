@@ -1,3 +1,19 @@
+## Unreleased
+
+### Fixed
+- Station mouths now meet the docking plane. The rock hermit's collar ran thirty
+  units past the hull, so a pilot could fly into the opening and nothing
+  happened; the dodecahedron was four units out. Every station type docks on a
+  straight run down the slot axis, and two tests hold that: the geometry test
+  checks no slot geometry reaches past the plane, the flying test docks at
+  every station mesh.
+- System and ship names no longer pass through the dictionary. A system called
+  QUIT read as "ВЫХОД" on the chart while contracts kept the English word.
+
+### Changed
+- The station mouth reads as an opening: dark interior, lit inner rim, lamps
+  inside, and a corridor of dashes marking the last stretch of the approach.
+
 ## v1.15 — 2026-10-31
 
 ### Added

@@ -126,7 +126,7 @@ func addExtraShips(m map[string]*render.Mesh) {
 		for _, f := range idx {
 			b.Face([]V{pts[f[0]], pts[f[1]], pts[f[2]]}, "brown", nil)
 		}
-		collarSlot(b, 150, 250)
+		collarSlot(b, 150, StationSize)
 		m["hermit"] = b.Mesh()
 	}
 	// generation ship: a slow city in space
@@ -312,7 +312,7 @@ func dodeca() *render.Mesh {
 	for _, v := range front {
 		z = v.Dot(n) * scale
 	}
-	collarSlot(b, z-70, z+40)
+	collarSlot(b, z-70, StationSize)
 	return b.Mesh()
 }
 
