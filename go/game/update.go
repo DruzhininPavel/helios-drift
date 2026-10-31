@@ -293,7 +293,7 @@ func (g *Game) updateEntities(dt float64) {
 				} else if dc < 22 {
 					g.DamagePlayer(2, true)
 					ents = append(ents[:i], ents[i+1:]...)
-					g.Message("CARGO CANISTER HIT HULL", "bad")
+					g.Message("NO SCOOP FITTED - CANISTER HIT HULL", "bad")
 					continue
 				}
 			}

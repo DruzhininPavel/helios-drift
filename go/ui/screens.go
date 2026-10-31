@@ -32,7 +32,8 @@ func chrome(fb *render.FB, title string) {
 	fb.HLine(0, 319, 13, ColFrame)
 	fb.Text(title, 6, 4, ColYellow, 1)
 	g := game.G
-	fb.TextR("GALAXY "+itoa(g.Cmd.Galaxy+1)+"   "+money(g.Cmd.Cash)+" CR", 314, 4, ColText, 1)
+	// composed strings bypass the dictionary, so translate the word itself
+	fb.TextR(lang.T("GALAXY")+" "+itoa(g.Cmd.Galaxy+1)+"   "+money(g.Cmd.Cash)+" CR", 314, 4, ColText, 1)
 }
 
 func footer(fb *render.FB) {
@@ -355,7 +356,7 @@ func chartScreen(fb *render.FB) {
 	}
 	sel := gal.Systems[selIdx]
 
-	plate(fb, 4, 18, 196, 190, "GALACTIC CHART "+itoa(cmd.Galaxy+1))
+	plate(fb, 4, 18, 196, 190, lang.T("GALACTIC CHART")+" "+itoa(cmd.Galaxy+1))
 	ox, oy, cw, ch := 14, 34, 176, 164
 	fb.Rect(ox, oy, ox+cw, oy+ch, render.RGB(0x16394a))
 	cxp := float64(ox) + float64(cur.X)/256*float64(cw)

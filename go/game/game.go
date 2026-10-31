@@ -650,6 +650,10 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 			for k := 0; k < n; k++ {
 				g.SpawnCargo(e.Pos.Add(randDir().Mul(20)), randInt(12))
 			}
+		} else if randFloat() < 0.45 {
+			// a fighter carries no freight, but a wreck always has something
+			// worth scooping: one canister of whatever the ship had aboard
+			g.SpawnCargo(e.Pos.Add(randDir().Mul(20)), 7+randInt(10))
 		}
 		if e.Behaviour == "pirate" || e.Behaviour == "thargoid" {
 			bounty := def.Bounty

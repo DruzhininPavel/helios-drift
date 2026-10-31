@@ -24,3 +24,20 @@ func TestUiScreensAreTranslated(t *testing.T) {
 		}
 	}
 }
+
+// TestHintsKeepTheirTail: a hint that ends with ESC BACK in English must still
+// say НАЗАД in Russian. Trimming a line to fit the bar once dropped the word.
+func TestHintsKeepTheirTail(t *testing.T) {
+	Set("ru")
+	defer Set("en")
+	for k, v := range ru {
+		if strings.Contains(k, "ESC BACK") && !strings.Contains(v, "НАЗАД") {
+			t.Errorf("%q -> %q lost BACK", k, v)
+		}
+	}
+	for _, k := range []string{"GALAXY", "GALACTIC CHART"} {
+		if T(k) == k {
+			t.Errorf("%q is not translated, and screens compose it with a number", k)
+		}
+	}
+}
