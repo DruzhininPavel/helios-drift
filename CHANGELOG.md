@@ -1,4 +1,4 @@
-## Unreleased
+## v1.15 — 2026-10-31
 
 ### Added
 - Every hull has its own cockpit. The Kestrel keeps the wide all-round view; the
