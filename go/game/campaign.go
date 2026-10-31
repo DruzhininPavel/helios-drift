@@ -33,7 +33,7 @@ const (
 var campaignQuests = []Quest{
 	{
 		Title: "MEDICAL RUN",
-		Kind:  QuestDeliver, Good: 0, Qty: 4, Pay: 1200,
+		Kind:  QuestDeliver, Good: 0, Qty: 4, Pay: 1500,
 		Brief: []string{
 			"THE FRONTIER CLINIC IS OUT OF SUPPLIES.",
 			"TAKE FOUR TONNES OF FOOD OUT TO THEM.",
@@ -43,7 +43,7 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "AMBUSH",
-		Kind:  QuestKill, Tag: "AMBUSH", Spawn: "krait", Count: 3, Pay: 2600,
+		Kind:  QuestKill, Tag: "AMBUSH", Spawn: "krait", Count: 3, Pay: 5000,
 		Brief: []string{
 			"THE CLINIC WAS A DECOY. THEY WERE WAITING",
 			"FOR WHOEVER CAME WITH THE SUPPLIES.",
@@ -53,7 +53,7 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "BLACK BOX",
-		Kind:  QuestKill, Tag: "HULK", Spawn: "python", Count: 1, Pay: 3400,
+		Kind:  QuestKill, Tag: "HULK", Spawn: "python", Count: 1, Pay: 7000,
 		Brief: []string{
 			"THEIR SHIP WENT DOWN WITH A FLIGHT",
 			"RECORDER. FIND THE WRECK AND BURN IT -",
@@ -62,7 +62,7 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "THE COURIER",
-		Kind:  QuestKill, Tag: "COURIER", Spawn: "cobra1", Count: 1, Pay: 5200,
+		Kind:  QuestKill, Tag: "COURIER", Spawn: "cobra1", Count: 1, Pay: 9000,
 		Brief: []string{
 			"THE BOX NAMED A NAVY LIAISON SELLING",
 			"JUMP COORDINATES. HIS COURIER RUNS THE",
@@ -73,7 +73,7 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "THE CONVOY",
-		Kind:  QuestKill, Tag: "CONVOY", Spawn: "boa", Count: 3, Pay: 8800,
+		Kind:  QuestKill, Tag: "CONVOY", Spawn: "boa", Count: 3, Pay: 14000,
 		Brief: []string{
 			"WITH THE LIAISON EXPOSED, HELIOS COMBINE",
 			"IS MOVING SOMETHING BIG. THREE HAULERS,",
@@ -84,7 +84,7 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "FRAMED",
-		Kind:  QuestKill, Tag: "NAVY", Spawn: "viper", Count: 2, Pay: 0,
+		Kind:  QuestKill, Tag: "NAVY", Spawn: "viper", Count: 2, Pay: 12000,
 		Brief: []string{
 			"THEY HAVE PUT YOUR NAME ON THE CONVOY",
 			"MASSACRE. NAVY VIPERS ARE ON YOUR TAIL",

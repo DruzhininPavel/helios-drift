@@ -37,6 +37,26 @@ type Trader struct {
 	Ace bool
 	// questGood is cargo the campaign stage needs, which must not be sold.
 	questGood int
+	// Human makes the bot play the way a person does: it spends time at
+	// stations, reads the board before choosing work, and saves up for a
+	// better ship instead of flying the starter to the end.
+	Human bool
+	// stationPhase is where the commander is in the dock round.
+	stationPhase int
+	phaseUntil   int // frame the current station phase ends
+	// log is the story of the run, in the order it happened.
+	log []string
+	// lastStage and lastContracts notice progress worth writing down; the
+	// rest of the journal is read from the commander's own state, so it can
+	// only ever record things that really happened.
+	lastStage     int
+	lastContracts int
+	lastShip      string
+	lastLaser     int
+	lastEquip     int
+	cashMark      int
+	// spendCap is how much of the purse is free for equipment in this visit.
+	spendCap float64
 	// TradeOnly keeps the bot to buying and selling: the hull benchmark uses
 	// it so story payouts do not mask what the cargo hold is worth.
 	TradeOnly bool
@@ -70,7 +90,11 @@ func (t *Trader) Act(g *game.Game, frame int) (game.InputState, []Event) {
 
 	switch g.State {
 	case "docked":
-		ev = append(ev, t.docked(g)...)
+		if t.Human {
+			ev = append(ev, t.stationRound(g, frame)...)
+		} else {
+			ev = append(ev, t.docked(g)...)
+		}
 		t.in = game.InputState{}
 	case "flight":
 		var in game.InputState
@@ -475,6 +499,10 @@ func (t *Trader) upgrade(g *game.Game) []Event {
 		if c.Equip[id] || c.Cash < price+reserve || equipIndex(id) < 0 {
 			return
 		}
+		// essential kit is bought even while saving; toys wait for the ship
+		if price > t.spendCap && price > 2000 {
+			return
+		}
 		ev = append(ev, Event{Kind: "equip", A: equipIndex(id)})
 	}
 	// guns: the hull has to be able to carry them
@@ -534,4 +562,259 @@ func (t *Trader) nextHop(g *game.Game, dest int) (int, bool) {
 		return 0, false
 	}
 	return best, true
+}
+
+// stationRound is the dock round at a human pace: market first, then the shop,
+// then the boards, then out. Each phase costs a few seconds of looking at the
+// screen, which is most of what a real visit to a station is.
+func (t *Trader) stationRound(g *game.Game, frame int) []Event {
+	var ev []Event
+	t.noticeProgress(g, frame)
+
+	if frame < t.phaseUntil {
+		return nil // still reading the screen
+	}
+	switch t.stationPhase {
+	case 0:
+		ev = append(ev, t.sellAll(g)...)
+		ev = append(ev, t.buyCargo(g)...)
+		if g.Cmd.Fuel < game.FuelMax-0.5 && g.Cmd.Cash >= 20 {
+			ev = append(ev, Event{Kind: "refuel"})
+		}
+		t.stationPhase = 1
+		t.phaseUntil = frame + 4*60 + t.rng.Intn(5*60) // four to nine seconds at the market
+	case 1:
+		// a commander saving for a better hull stops buying gadgets: only
+		// what is essential, or whatever is left above the ship fund
+		t.spendCap = t.gearBudget(g)
+		ev = append(ev, t.upgrade(g)...)
+		if id, ok := t.wantedShip(g); ok {
+			if e, bought := t.buyShip(g, id, frame); bought {
+				ev = append(ev, e)
+			}
+		}
+		t.stationPhase = 2
+		t.phaseUntil = frame + 5*60 + t.rng.Intn(6*60) // and longer at the outfitters
+	case 2:
+		ev = append(ev, t.takeWork(g, frame)...)
+		t.stationPhase = 3
+		t.phaseUntil = frame + 3*60 + t.rng.Intn(4*60) // reading the board
+	default:
+		t.dest = -1
+		switch {
+		case g.Cmd.Campaign.Active && g.Cmd.Campaign.Target != g.Cmd.System:
+			t.dest = g.Cmd.Campaign.Target
+		case g.Cmd.Mission.Kind != "" && g.Cmd.Mission.System != g.Cmd.System:
+			t.dest = g.Cmd.Mission.System
+		default:
+			if id, ok := t.contractTarget(g); ok {
+				t.dest = id
+			} else if id, ok := t.reachable(g); ok {
+				t.questGood = -1
+				t.dest = id
+			}
+		}
+		// nothing to fly to means nothing to take off for: a commander who is
+		// already where the work is stays put instead of bouncing off the pad
+		if t.dest < 0 || t.dest == g.Cmd.System {
+			t.stationPhase = 0
+			t.phaseUntil = frame + 3*60 + t.rng.Intn(5*60)
+			t.dest = -1
+			return ev
+		}
+		t.phaseUntil = frame + 60 + t.rng.Intn(2)*60
+		t.stationPhase = 0
+		ev = append(ev, Event{Kind: "launch"})
+	}
+	return ev
+}
+
+// sellAll empties the hold of anything worth selling.
+func (t *Trader) sellAll(g *game.Game) []Event {
+	var ev []Event
+	c := &g.Cmd
+	goods := make([]int, 0, len(c.Cargo))
+	for good := range c.Cargo {
+		goods = append(goods, good)
+	}
+	sort.Ints(goods)
+	for _, good := range goods {
+		qty := c.Cargo[good]
+		if qty <= 0 || (good == t.questGood && c.Campaign.Active) {
+			continue
+		}
+		if good < len(g.Market) && float64(g.Market[good].Sell) > t.cost[good]*1.02 {
+			ev = append(ev, Event{Kind: "sell", A: good, B: qty})
+			delete(t.cost, good)
+		}
+	}
+	return ev
+}
+
+// buyCargo fills the hold with whatever is cheapest against its base price.
+func (t *Trader) buyCargo(g *game.Game) []Event {
+	var ev []Event
+	c := &g.Cmd
+	room := c.CargoCap - game.CargoUsed(*c)
+	if room <= 0 || len(g.Market) == 0 {
+		return nil
+	}
+	best, bestRatio, price := -1, math.MaxFloat64, 0
+	for i, m := range g.Market {
+		if i >= len(galaxy.Commodities) || m.Qty <= 0 || float64(m.Price) > c.Cash-20 || m.Price <= 0 {
+			continue
+		}
+		ratio := float64(m.Price) / math.Max(1, galaxy.Commodities[i].Base)
+		if ratio < bestRatio {
+			best, bestRatio, price = i, ratio, m.Price
+		}
+	}
+	if best < 0 || price <= 0 {
+		return nil
+	}
+	n := room
+	if n > 10 {
+		n = 10
+	}
+	if afford := int(c.Cash-20) / price; n > afford {
+		n = afford
+	}
+	if n > 0 {
+		ev = append(ev, Event{Kind: "buy", A: best, B: n})
+		t.cost[best] = (t.cost[best]*float64(c.Cargo[best]) + float64(price*n)) / float64(c.Cargo[best]+n)
+	}
+	return ev
+}
+
+// takeWork accepts a campaign stage, a 1984 contract or a board job.
+func (t *Trader) takeWork(g *game.Game, frame int) []Event {
+	var ev []Event
+	c := &g.Cmd
+	if kind := g.MissionOffer(); kind != "" {
+		switch kind {
+		case "constrictor":
+			ev = append(ev, Event{Kind: "mission", A: 0})
+			t.note(g, frame, "took the Shrike contract")
+		case "documents":
+			if c.Equip["galdrive"] {
+				ev = append(ev, Event{Kind: "mission", A: 1})
+				t.note(g, frame, "took the documents run")
+			}
+		}
+	}
+	if g.CampaignOffer() {
+		ev = append(ev, Event{Kind: "campaign"})
+		if q := g.CampaignQuest(); q.Kind == "deliver" {
+			t.questGood = q.Good
+		}
+		t.note(g, frame, "accepted campaign stage "+itoa(g.Cmd.Campaign.Stage+1))
+	}
+	// fill the contract slots: a working commander flies with three jobs on
+	// the board, not one
+	for len(c.Contracts) < 3 && len(g.Offers) > 0 {
+		pick := 0
+		for i := 1; i < len(g.Offers); i++ {
+			if g.Offers[i].Pay > g.Offers[pick].Pay {
+				pick = i
+			}
+		}
+		ev = append(ev, Event{Kind: "contract", A: pick})
+		t.note(g, frame, "took a board job: "+g.ContractLabel(g.Offers[pick]))
+		g.Offers = append(g.Offers[:pick], g.Offers[pick+1:]...)
+	}
+	return ev
+}
+
+// shipGoal is the hull the commander is saving for: a faster one first, and a
+// real fighter once the story turns serious. It is the plan, not the purchase,
+// so saving starts long before the money is there.
+func (t *Trader) shipGoal(g *game.Game) (string, bool) {
+	c := &g.Cmd
+	switch c.Ship {
+	case "cobra3":
+		return "asp", true
+	case "asp":
+		if c.Campaign.Stage >= 4 {
+			return "ferdelance", true
+		}
+	}
+	return "", false
+}
+
+// wantedShip reports the goal only when the commander can actually pay.
+func (t *Trader) wantedShip(g *game.Game) (string, bool) {
+	id, ok := t.shipGoal(g)
+	if !ok {
+		return "", false
+	}
+	if float64(ShipPrice(id)-tradeIn(g)) <= g.Cmd.Cash-5000 {
+		return id, true
+	}
+	return "", false
+}
+
+// buyShip trades up and writes it down.
+func (t *Trader) buyShip(g *game.Game, id string, frame int) (Event, bool) {
+	idx := shipIndex(id)
+	if idx < 0 {
+		return Event{}, false
+	}
+	cost := ShipPrice(id) - tradeIn(g)
+	t.note(g, frame, "traded the hull for a "+ShipName(id)+" ("+itoa(cost)+" CR to pay)")
+	return Event{Kind: "ship", A: idx}, true
+}
+
+// noticeProgress writes down what actually changed: stages, hull, guns, kit
+// and the money milestones a player would notice.
+func (t *Trader) noticeProgress(g *game.Game, frame int) {
+	c := &g.Cmd
+	if c.Campaign.Stage != t.lastStage {
+		if c.Campaign.Stage > 0 {
+			t.note(g, frame, "campaign stage "+itoa(c.Campaign.Stage)+" done")
+		}
+		t.lastStage = c.Campaign.Stage
+	}
+	if t.lastShip != "" && c.Ship != t.lastShip {
+		t.note(g, frame, "now flying a "+g.Ship().Name)
+	}
+	t.lastShip = c.Ship
+	if c.Laser > t.lastLaser {
+		t.note(g, frame, "fitted a "+game.LaserName[c.Laser])
+		t.lastLaser = c.Laser
+	}
+	if n := len(c.Equip); n > t.lastEquip && t.lastEquip > 0 {
+		t.note(g, frame, "bought new equipment ("+itoa(n)+" items fitted)")
+	}
+	t.lastEquip = len(c.Equip)
+	if n := len(c.Contracts); n < t.lastContracts {
+		t.note(g, frame, "a contract paid out, cash "+itoa(int(c.Cash)))
+	}
+	t.lastContracts = len(c.Contracts)
+	for _, mark := range []int{10000, 50000, 100000, 200000} {
+		if c.Cash >= float64(mark) && t.cashMark < mark {
+			t.note(g, frame, "cash passed "+itoa(mark))
+			t.cashMark = mark
+		}
+	}
+}
+
+func (t *Trader) note(g *game.Game, frame int, what string) {
+	t.log = append(t.log, itoa(frame/60)+"s: "+what)
+}
+
+// Journal is the story of the run.
+func (t *Trader) Journal() []string { return t.log }
+
+// gearBudget is what is left over after the next hull is paid for. A commander
+// who wants a warship for the finale saves first and shops later.
+func (t *Trader) gearBudget(g *game.Game) float64 {
+	if id, ok := t.wantedShip(g); ok {
+		cost := float64(ShipPrice(id) - tradeIn(g))
+		left := g.Cmd.Cash - cost - 5000
+		if left < 0 {
+			return 0
+		}
+		return left
+	}
+	return g.Cmd.Cash
 }

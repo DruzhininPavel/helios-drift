@@ -78,6 +78,7 @@ type Report struct {
 	Revives      int            `json:"revives,omitempty"`
 	Stage        int            `json:"stage"`
 	StageFrames  []StageMark    `json:"stage_frames,omitempty"`
+	Journal      []string       `json:"journal,omitempty"`
 	CampaignDone bool           `json:"campaign_done"`
 	Mission      string         `json:"mission,omitempty"`
 	MissionFlags int            `json:"mission_flags"`
@@ -209,6 +210,9 @@ func RunWith(g *game.Game, frames int, pol Policy, opt Options) *Script {
 	sc.Report.Hash = sc.Hash
 	sc.Report.CashEnd = g.Cmd.Cash
 	sc.Report.Ended = g.State
+	if jp, ok := pol.(interface{ Journal() []string }); ok {
+		sc.Report.Journal = jp.Journal()
+	}
 	sc.Report.Stage = g.Cmd.Campaign.Stage
 	sc.Report.CampaignDone = g.Cmd.Campaign.Stage >= game.CampaignTotal()
 	sc.Report.Mission = g.Cmd.Mission.Kind
@@ -282,6 +286,10 @@ func applyEvent(g *game.Game, e Event) {
 		g.Sell(e.A, n)
 	case "campaign":
 		g.AcceptCampaign()
+	case "ship":
+		if i := e.A; i >= 0 && i < len(game.ShipYard) {
+			g.BuyShip(game.ShipYard[i].ID)
+		}
 	case "mission":
 		if e.A == 0 {
 			g.AcceptMission(game.MissionConstrictor)

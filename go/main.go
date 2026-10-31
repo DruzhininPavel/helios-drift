@@ -728,6 +728,7 @@ func main() {
 	ace := flag.Bool("ace", false, "make the bot a dead shot in a fight")
 	benchShips := flag.Bool("bench-ships", false, "fly every hull through the same trials and print a table")
 	shipFlag := flag.String("ship", "", "fly this hull in a bot run (default: the starting one)")
+	human := flag.Bool("human", false, "play like a person: station time, saving up, side jobs")
 	flag.Parse()
 
 	if *seed < 0 && (*shots || *sheet || *probe) {
@@ -776,7 +777,7 @@ func main() {
 		return
 	}
 	if *botRun {
-		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock, *god, *ace, *shipFlag)
+		runBot(*frames, *record, *report, *modeFlag, *gearFlag, *manualDock, *god, *ace, *shipFlag, *human)
 		return
 	}
 	if *sim {
@@ -950,7 +951,7 @@ func toggleMute() {
 }
 
 // runBot lets the bot play and reports what happened.
-func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, god, ace bool, ship string) {
+func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, god, ace bool, ship string, human bool) {
 	g := game.New()
 	if mode == "classic" {
 		g.NewGameMode(game.ModeClassic, "BOT")
@@ -968,6 +969,7 @@ func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, g
 	pol := bot.NewTrader(game.Seed())
 	pol.ManualDock = manualDock
 	pol.Ace = ace
+	pol.Human = human
 	sc := bot.RunWith(g, frames, pol, bot.Options{God: god})
 	sc.Mode = mode
 
@@ -995,6 +997,12 @@ func runBot(frames int, recordPath, reportPath, mode string, gear, manualDock, g
 	}
 	if len(rep.Phases) > 0 {
 		fmt.Println("phases:", rep.Phases)
+	}
+	if len(rep.Journal) > 0 {
+		fmt.Println("journal:")
+		for _, line := range rep.Journal {
+			fmt.Println("  " + line)
+		}
 	}
 	if len(rep.StageFrames) > 0 {
 		fmt.Print("campaign: ")

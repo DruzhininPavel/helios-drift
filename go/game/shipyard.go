@@ -26,8 +26,8 @@ var ShipYard = []ShipClass{
 	{"cobra3", "KESTREL III", 120000, 20, 420, 100, 4, 1.00, 1.00, 1.00, 100, 260, 2, "THE ALL ROUNDER"},
 	{"adder", "ADDER", 34000, 12, 300, 80, 2, 1.15, 1.20, 1.10, 60, 330, 1, "CHEAP AND CHEERFUL"},
 	{"python", "PYTHON", 260000, 40, 250, 160, 4, 0.60, 0.55, 0.60, 140, 180, 1, "SLOW, HUGE HOLD"},
-	{"ferdelance", "FER-DE-LANCE", 180000, 14, 500, 130, 4, 1.45, 1.40, 1.30, 120, 300, 3, "FAST AND LETHAL"},
-	{"asp", "ASP MK II", 150000, 18, 460, 120, 4, 1.25, 1.20, 1.05, 90, 340, 2, "NAVAL SCOUT"},
+	{"ferdelance", "FER-DE-LANCE", 140000, 14, 500, 130, 4, 1.45, 1.40, 1.30, 120, 300, 3, "FAST AND LETHAL"},
+	{"asp", "ASP MK II", 100000, 18, 460, 120, 4, 1.25, 1.20, 1.05, 90, 340, 2, "NAVAL SCOUT"},
 }
 
 // ShipFor returns the class with the given id, defaulting to the Cobra.
