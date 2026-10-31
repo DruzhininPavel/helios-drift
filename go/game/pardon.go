@@ -20,7 +20,7 @@ func (g *Game) PardonPrice() int {
 // A high tech world has lawyers; a dictatorship, a communist state or a
 // corporate state just has people who can make a call.
 func (g *Game) PardonAvailable() bool {
-	if g.Cmd.Legal <= 0 || g.World == nil || g.World.Sys == nil {
+	if g.Cmd.Legal <= 0 || g.World == nil || g.World.Sys == nil || g.Classic() {
 		return false
 	}
 	switch g.World.Sys.Government {

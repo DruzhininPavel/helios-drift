@@ -311,7 +311,7 @@ func equipScreen(fb *render.FB) {
 		tech = g.World.Sys.Tech
 	}
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
-	items := galaxy.AvailableEquipment(g.World.Sys)
+	items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
 
 	// two columns: the catalogue outgrew a single list
 	const rows = 9
@@ -807,7 +807,7 @@ func dockedKey(k string) bool {
 		}
 		return true
 	case "equip":
-		items := galaxy.AvailableEquipment(g.World.Sys)
+		items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
 		if len(items) == 0 {
 			return true
 		}

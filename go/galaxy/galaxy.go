@@ -97,6 +97,10 @@ type Equipment struct {
 	// gun's place in the ladder. Both only matter for some kinds.
 	Needs string
 	Level int
+	// AdvancedOnly keeps a fitting out of the 1984 rule set: a Classic
+	// commander could otherwise buy a plasma accelerator and a mining rig,
+	// which is not the game he chose.
+	AdvancedOnly bool
 }
 
 var EquipmentList = []Equipment{
@@ -107,12 +111,12 @@ var EquipmentList = []Equipment{
 	{ID: "laserpulse", Name: "PULSE LASER", Price: 400, Tech: 2, Kind: EquipLaser, Level: 0},
 	{ID: "laserbeam", Name: "BEAM LASER", Price: 1000, Tech: 5, Kind: EquipLaser, Level: 1},
 	{ID: "lasermilitary", Name: "MILITARY LASER", Price: 6000, Tech: 10, Kind: EquipLaser, Level: 2},
-	{ID: "laserplasma", Name: "PLASMA ACCELERATOR", Price: 18000, Tech: 12, Kind: EquipLaser, Level: 3},
+	{ID: "laserplasma", AdvancedOnly: true, Name: "PLASMA ACCELERATOR", Price: 18000, Tech: 12, Kind: EquipLaser, Level: 3},
 	{ID: "mininglaser", Name: "MINING LASER", Price: 800, Tech: 4, Kind: EquipUnique},
-	{ID: "miningrig", Name: "HEAVY MINING RIG", Price: 2600, Tech: 5, Kind: EquipUnique, Needs: "mining"},
-	{ID: "shieldboost1", Name: "SHIELD BOOSTER", Price: 4000, Tech: 6, Kind: EquipUnique},
-	{ID: "shieldboost2", Name: "HEAVY SHIELDING", Price: 12000, Tech: 11, Kind: EquipUnique, Needs: "shieldboost1"},
-	{ID: "cargobay2", Name: "CARGO EXPANSION", Price: 9000, Tech: 7, Kind: EquipUnique, Needs: "largebay"},
+	{ID: "miningrig", AdvancedOnly: true, Name: "HEAVY MINING RIG", Price: 2600, Tech: 5, Kind: EquipUnique, Needs: "mining"},
+	{ID: "shieldboost1", AdvancedOnly: true, Name: "SHIELD BOOSTER", Price: 4000, Tech: 6, Kind: EquipUnique},
+	{ID: "shieldboost2", AdvancedOnly: true, Name: "HEAVY SHIELDING", Price: 12000, Tech: 11, Kind: EquipUnique, Needs: "shieldboost1"},
+	{ID: "cargobay2", AdvancedOnly: true, Name: "CARGO EXPANSION", Price: 9000, Tech: 7, Kind: EquipUnique, Needs: "largebay"},
 	{ID: "bomb", Name: "ENERGY BOMB", Price: 900, Tech: 7, Kind: EquipConsumable},
 	{ID: "escape", Name: "ESCAPE CAPSULE", Price: 1000, Tech: 6, Kind: EquipUnique},
 	{ID: "extraenergy", Name: "EXTRA ENERGY UNIT", Price: 1500, Tech: 8, Kind: EquipUnique},
@@ -336,12 +340,18 @@ func MakeMarket(sys *System, salt uint32) []Market {
 	return out
 }
 
-func AvailableEquipment(sys *System) []Equipment {
+// AvailableEquipment lists what this station sells, in this commander's rule
+// set: the 1984 catalogue has no plasma gun and no mining rig.
+func AvailableEquipment(sys *System, classic bool) []Equipment {
 	var out []Equipment
 	for _, e := range EquipmentList {
-		if sys.Tech >= e.Tech {
-			out = append(out, e)
+		if sys.Tech < e.Tech {
+			continue
 		}
+		if classic && e.AdvancedOnly {
+			continue
+		}
+		out = append(out, e)
 	}
 	return out
 }
