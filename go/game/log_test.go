@@ -97,6 +97,9 @@ func TestLogVisitOnceAndEncountersThrottled(t *testing.T) {
 		t.Fatalf("visit lines %d (want 2), jump lines %d (want 1)", visits, jumps)
 	}
 
+	// the arrival may have spawned pirates of its own; start the wave count
+	// from a clean throttle
+	g.notedPirate = false
 	before := len(g.Cmd.Log)
 	g.SpawnPirates(2)
 	g.SpawnPirates(2)

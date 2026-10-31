@@ -18,6 +18,10 @@
 - The shop says why. A rig needs a mining laser, a second booster needs the
   first, an expansion needs the large bay: the row is drawn dim and the footer
   names the missing part, instead of silently refusing.
+- The catalogue now says what each item is: a fitting bought once and never
+  sold back, ammunition bought as often as you like, or a gun that replaces
+  the one in the slot. The shop asks the data, so an item added tomorrow
+  cannot repeat the double charge.
 - Equipment names are no longer cut at fifteen characters, and "FITTED" sits
   where the price was instead of a cramped badge.
 

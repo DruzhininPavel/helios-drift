@@ -3,6 +3,7 @@ package galaxy
 
 import (
 	"math"
+	"strings"
 
 	"heliosdrift/models"
 )
@@ -76,32 +77,70 @@ type Galaxy struct {
 	Systems []*System
 }
 
+// Equipment kinds. A shop sells three different things and only one of them
+// can be bought twice: freight you resell, fittings you keep, ammunition you
+// spend. Getting that wrong charged players for a second mining laser they
+// could never sell.
+const (
+	EquipUnique     = "unique"     // bolted on once, never sellable
+	EquipConsumable = "consumable" // missiles and bombs, buy as many as you like
+	EquipLaser      = "laser"      // one gun in one slot, better replaces worse
+)
+
 type Equipment struct {
 	ID    string
 	Name  string
 	Price int
 	Tech  int
+	Kind  string // one of the Equip* constants
+	// Needs is the equipment flag that must be fitted first, and Level is the
+	// gun's place in the ladder. Both only matter for some kinds.
+	Needs string
+	Level int
 }
 
 var EquipmentList = []Equipment{
-	{"missile", "MISSILE", 30, 1},
-	{"largebay", "LARGE CARGO BAY", 400, 2},
-	{"ecm", "E.C.M. SYSTEM", 600, 3},
-	{"fuelscoop", "FUEL SCOOP", 525, 4},
-	{"laserpulse", "PULSE LASER", 400, 2},
-	{"laserbeam", "BEAM LASER", 1000, 5},
-	{"lasermilitary", "MILITARY LASER", 6000, 10},
-	{"laserplasma", "PLASMA ACCELERATOR", 18000, 12},
-	{"mininglaser", "MINING LASER", 800, 4},
-	{"miningrig", "HEAVY MINING RIG", 2600, 5},
-	{"shieldboost1", "SHIELD BOOSTER", 4000, 6},
-	{"shieldboost2", "HEAVY SHIELDING", 12000, 11},
-	{"cargobay2", "CARGO EXPANSION", 9000, 7},
-	{"bomb", "ENERGY BOMB", 900, 7},
-	{"escape", "ESCAPE CAPSULE", 1000, 6},
-	{"extraenergy", "EXTRA ENERGY UNIT", 1500, 8},
-	{"dockcomp", "DOCKING COMPUTER", 1500, 9},
-	{"galdrive", "GALACTIC HYPERDRIVE", 5000, 11},
+	{ID: "missile", Name: "MISSILE", Price: 30, Tech: 1, Kind: EquipConsumable},
+	{ID: "largebay", Name: "LARGE CARGO BAY", Price: 400, Tech: 2, Kind: EquipUnique},
+	{ID: "ecm", Name: "E.C.M. SYSTEM", Price: 600, Tech: 3, Kind: EquipUnique},
+	{ID: "fuelscoop", Name: "FUEL SCOOP", Price: 525, Tech: 4, Kind: EquipUnique},
+	{ID: "laserpulse", Name: "PULSE LASER", Price: 400, Tech: 2, Kind: EquipLaser, Level: 0},
+	{ID: "laserbeam", Name: "BEAM LASER", Price: 1000, Tech: 5, Kind: EquipLaser, Level: 1},
+	{ID: "lasermilitary", Name: "MILITARY LASER", Price: 6000, Tech: 10, Kind: EquipLaser, Level: 2},
+	{ID: "laserplasma", Name: "PLASMA ACCELERATOR", Price: 18000, Tech: 12, Kind: EquipLaser, Level: 3},
+	{ID: "mininglaser", Name: "MINING LASER", Price: 800, Tech: 4, Kind: EquipUnique},
+	{ID: "miningrig", Name: "HEAVY MINING RIG", Price: 2600, Tech: 5, Kind: EquipUnique, Needs: "mining"},
+	{ID: "shieldboost1", Name: "SHIELD BOOSTER", Price: 4000, Tech: 6, Kind: EquipUnique},
+	{ID: "shieldboost2", Name: "HEAVY SHIELDING", Price: 12000, Tech: 11, Kind: EquipUnique, Needs: "shieldboost1"},
+	{ID: "cargobay2", Name: "CARGO EXPANSION", Price: 9000, Tech: 7, Kind: EquipUnique, Needs: "largebay"},
+	{ID: "bomb", Name: "ENERGY BOMB", Price: 900, Tech: 7, Kind: EquipConsumable},
+	{ID: "escape", Name: "ESCAPE CAPSULE", Price: 1000, Tech: 6, Kind: EquipUnique},
+	{ID: "extraenergy", Name: "EXTRA ENERGY UNIT", Price: 1500, Tech: 8, Kind: EquipUnique},
+	{ID: "dockcomp", Name: "DOCKING COMPUTER", Price: 1500, Tech: 9, Kind: EquipUnique},
+	{ID: "galdrive", Name: "GALACTIC HYPERDRIVE", Price: 5000, Tech: 11, Kind: EquipUnique},
+}
+
+// EquipByID finds a catalogue entry.
+func EquipByID(id string) *Equipment {
+	for i := range EquipmentList {
+		if EquipmentList[i].ID == id {
+			return &EquipmentList[i]
+		}
+	}
+	return nil
+}
+
+// EquipNameForFlag gives the shop its words: "mining" is the flag, and the
+// thing the player has to buy first is a MINING LASER.
+func EquipNameForFlag(flag string) string {
+	switch flag {
+	case "mining":
+		return "MINING LASER"
+	}
+	if e := EquipByID(flag); e != nil {
+		return e.Name
+	}
+	return strings.ToUpper(flag)
 }
 
 const FuelPricePerLY = 2

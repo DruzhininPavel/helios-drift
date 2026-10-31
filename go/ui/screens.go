@@ -318,7 +318,7 @@ func equipScreen(fb *render.FB) {
 		// the shop says why before it charges: a rig with no laser, a laser
 		// the hull cannot carry, something already bolted on
 		blocked := g.EquipBlocked(it.ID)
-		owned := blocked == "ALREADY FITTED"
+		owned := blocked == "ALREADY FITTED" && g.EquipFitted(it.ID)
 		c := ColText
 		switch {
 		case owned:
