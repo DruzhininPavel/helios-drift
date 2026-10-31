@@ -1,4 +1,4 @@
-## Unreleased
+## v1.16 — 2026-10-31
 
 ### Added
 - A log. The commander's own record: every trade with the station and the
