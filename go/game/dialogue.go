@@ -48,6 +48,7 @@ const (
 	FxAudit  = "audit"
 	FxEnding = "ending"
 	FxQuest  = "quest"
+	FxSpawn  = "spawn"
 )
 
 var dialogueNodes = map[string]*Node{}
@@ -170,19 +171,24 @@ func (g *Game) apply(e Effect) {
 		cmd.Ending = e.S
 	case FxQuest:
 		g.advanceCampaign()
+	case FxSpawn:
+		g.spawnQuestGroup(e.Key)
 	}
 }
 
-// TalkStart opens a conversation, applying the node's entry effects.
+// TalkStart opens a conversation. It works at a counter and in flight: the
+// screen is the same, and EndTalk puts the player back where he was.
 func (g *Game) TalkStart(id string) bool {
 	n := DialogueNode(id)
 	if n == nil {
 		return false
 	}
+	if g.Screen != "talk" {
+		g.TalkBack = g.Screen
+	}
 	g.Talk = id
-	g.TalkLines(n)
-	g.State = "docked"
 	g.Screen = "talk"
+	g.TalkLines(n)
 	return true
 }
 
@@ -223,10 +229,14 @@ func (g *Game) TalkChoose(visibleIndex int) bool {
 	return true
 }
 
-// EndTalk closes the conversation and returns to the station menu.
+// EndTalk closes the conversation and returns to whatever was behind it.
 func (g *Game) EndTalk() {
 	g.Talk = ""
-	g.Screen = "launch"
+	g.Screen = g.TalkBack
+	g.TalkBack = ""
+	if g.Screen == "" && g.State == "docked" {
+		g.Screen = "launch"
+	}
 }
 
 // TalkText returns the node's lines, translated for the screen.

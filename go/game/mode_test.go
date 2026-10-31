@@ -151,6 +151,19 @@ func TestCampaignChain(t *testing.T) {
 				g.TalkChoose(0)
 			}
 		case QuestKill:
+			// a stage can open with a conversation: answer it, and if the
+			// answer is a fight the contacts appear
+			if n := DialogueNode(g.Talk); g.Screen == "talk" && n != nil {
+				for vi, idx := range g.VisibleOptions(n) {
+					if n.Options[idx].Text == "FIGHT THEM" {
+						g.TalkChoose(vi)
+						break
+					}
+				}
+				if g.Screen == "talk" {
+					g.TalkChoose(0)
+				}
+			}
 			killed := 0
 			for _, e := range append([]*Entity(nil), g.World.Entities...) {
 				if e.CampaignTag == q.Tag {

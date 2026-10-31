@@ -488,6 +488,18 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// chapter two: the collectors over the comms, in flight
+	g.State = "flight"
+	g.Cmd.Campaign.Stage = 1
+	g.Cmd.Campaign.Active = true
+	g.Cmd.Cash = 812.0
+	g.TalkStart("c2_cmdA")
+	ui.S.TalkScroll = 0
+	shot("g79-talk-ch2")
+	g.EndTalk()
+	g.Cmd.Campaign.Active = false
+	g.Cmd.Cash = 3812
+
 	// the market with a crate in the hold: it sits under the commodities and
 	// cannot be sold
 	g.State = "docked"

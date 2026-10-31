@@ -4,6 +4,28 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	// ---- chapter two, the collectors
+	"COLLECTOR LEADER":                   "КОМАНДИР ЗАСАДЫ",
+	"COMPANY":                            "КОНТОРА",
+	"YOU BROUGHT FOOD. WE WILL TAKE IT.": "ТЫ ПРИВЁЗ ЕДУ. МЫ ЗАБЕРЁМ.",
+	"NO HARD FEELINGS, IT IS NOT PERSONAL. WE WERE HIRED FOR THE CARGO, NOT FOR YOU.":                      "НЕ ОБИЖАЙСЯ, ЭТО НЕ ЛИЧНОЕ. НАС НАНЯЛИ НА ГРУЗ, А НЕ НА ТЕБЯ.",
+	"YOU CAN FIGHT - AND WE WILL SELL YOU FOR SCRAP TOO. OR YOU CAN PAY, AND WE PART PRETTY.":              "МОЖЕШЬ ДРАТЬСЯ - ТОГДА МЫ ТЕБЯ ТОЖЕ СДАДИМ В УТИЛЬ. А МОЖЕШЬ ЗАПЛАТИТЬ, И МЫ РАЗОЙДЁМСЯ КРАСИВО.",
+	"THREE THOUSAND. CHEAPER THAN A HULL.":                                                                 "ТРИ ТЫСЯЧИ. ЭТО ДЕШЕВЛЕ, ЧЕМ КОРПУС.",
+	"AND YOU HAVE A RECEIPT FOR THAT CRATE. THE CUSTODIAN PAYS US BY THE PAPER, SO NOW IT COSTS YOU MORE.": "И У ТЕБЯ РАСПИСКА НА ЯЩИК. ХРАНИТЕЛЬ ПЛАТИТ НАМ ПО БУМАГЕ, ТАК ЧТО ТЕПЕРЬ ЭТО СТОИТ ДОРОЖЕ.",
+	"FOUR AND A HALF THOUSAND, AND WE PRETEND WE NEVER MET.":                                               "ЧЕТЫРЕ С ПОЛОВИНОЙ, И МЫ ДЕЛАЕМ ВИД, ЧТО НЕ ВСТРЕЧАЛИСЬ.",
+	"NO CRATE. YOU LEFT IT AT THE CLINIC AND LEFT THEM TO US.":                                             "ЯЩИКА НЕТ. ТЫ ОСТАВИЛ ЕГО В КЛИНИКЕ И ОСТАВИЛ ИХ НАМ.",
+	"SO WE WAITED FOR YOU INSTEAD. THE CLINIC STILL OWES, AND SOMEONE HAS TO PAY.":                         "ТАК ЧТО МЫ ПОДОЖДАЛИ ТЕБЯ. КЛИНИКА ВСЁ ЕЩЁ ДОЛЖНА, И КТО-ТО ДОЛЖЕН ПЛАТИТЬ.",
+	"THREE THOUSAND, OR WE SETTLE IT THE OTHER WAY.":                                                       "ТРИ ТЫСЯЧИ, ИЛИ ДОГОВОРИМСЯ ДРУГИМ СПОСОБОМ.",
+	"CLEAN. WE NEVER MET.": "ЧИСТО. МЫ НЕ ВСТРЕЧАЛИСЬ.",
+	"IF THE CUSTODIAN ASKS - YOU PAID FOR A PERMIT, NOT FOR US.":                                    "ЕСЛИ ХРАНИТЕЛЬ СПРОСИТ - ТЫ ПЛАТИЛ ЗА ДОПУСК, А НЕ НАМ.",
+	"THE RUN WAS NOT DELIVERED. THE DEBT GOES TO THE GUARANTOR.":                                    "РЕЙС НЕ СДАН. ДОЛГ ПЕРЕВОДИТСЯ НА ПОРУЧИТЕЛЯ.",
+	"THE GUARANTOR IS THE ONE WHO ACCEPTED THE CARGO. WE SUGGEST YOU DO NOT RETURN TO THIS SYSTEM.": "ПОРУЧИТЕЛЬ - ТОТ, КТО ПРИНЯЛ ГРУЗ. РЕКОМЕНДУЕМ НЕ ВОЗВРАЩАТЬСЯ В ЭТУ СИСТЕМУ.",
+	"PAY 3000":            "ЗАПЛАТИТЬ 3000",
+	"PAY 4500":            "ЗАПЛАТИТЬ 4500",
+	"FIGHT THEM":          "ДРАТЬСЯ",
+	"JUMP OUT":            "УЙТИ В ПРЫЖОК",
+	"LEAVE":               "УЙТИ",
+	"ACKNOWLEDGE":         "ПОНЯЛ",
 	"OWNER IS THE HOLDER": "ВЛАДЕЛЕЦ - ДЕРЖАТЕЛЬ",
 	"CRATE":               "ЯЩИК",
 	"NOM":                 "НОМИНАЛ",

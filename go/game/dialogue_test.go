@@ -81,7 +81,7 @@ func TestDialogueGraphIntegrity(t *testing.T) {
 			}
 			for _, e := range o.Do {
 				switch e.Kind {
-				case FxFlag, FxUnflag, FxCash, FxPapers, FxBox, FxWanted, FxClock, FxAudit, FxEnding, FxQuest:
+				case FxFlag, FxUnflag, FxCash, FxPapers, FxBox, FxWanted, FxClock, FxAudit, FxEnding, FxQuest, FxSpawn:
 				default:
 					t.Errorf("%s: unknown effect %q", id, e.Kind)
 				}

@@ -10,6 +10,12 @@ import (
 	"heliosdrift/models"
 )
 
+// TalkVariant picks a different opening for a stage when its conditions hold.
+type TalkVariant struct {
+	If   []Cond
+	Node string
+}
+
 // Quest is one campaign stage.
 type Quest struct {
 	Title string
@@ -24,10 +30,13 @@ type Quest struct {
 	Tag     string // entity tag that has to die
 	// Talk is a dialogue node opened on arrival instead of paying out on the
 	// spot: the story happens at the counter, not in the mission screen.
-	Talk  string
-	Spawn string // ship type spawned on arrival
-	Count int
-	Brief []string
+	Talk string
+	// Variants are alternative openings in order of priority: the same stage
+	// tells a different story depending on what the player did last time.
+	Variants []TalkVariant
+	Spawn    string // ship type spawned on arrival
+	Count    int
+	Brief    []string
 }
 
 const (
@@ -51,7 +60,12 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "AMBUSH",
-		Kind:  QuestKill, Tag: "AMBUSH", Spawn: "krait", Count: 3, Pay: 5000,
+		Kind:  QuestKill, Tag: "AMBUSH", Spawn: "krait", Count: 3, Pay: 2600,
+		Talk: "c2_cmdA",
+		Variants: []TalkVariant{
+			{If: []Cond{{Key: "REFUSED_SEAL", Op: "flag"}}, Node: "c2_cmdB"},
+			{If: []Cond{{Key: "HAS_RECEIPT", Op: "flag"}}, Node: "c2_cmdAR"},
+		},
 		Brief: []string{
 			"THE CLINIC WAS A DECOY. THEY WERE WAITING",
 			"FOR WHOEVER CAME WITH THE SUPPLIES.",
@@ -224,6 +238,41 @@ func (g *Game) campaignArrive() {
 	if q.Kind != QuestKill {
 		return
 	}
+	// a stage with a conversation speaks first: the shooting is the answer to
+	// a question, not the arrival itself
+	if q.Talk != "" {
+		if g.Cmd.Flags["SPOKEN_"+q.Tag] {
+			return
+		}
+		if g.Cmd.Flags == nil {
+			g.Cmd.Flags = map[string]bool{}
+		}
+		g.Cmd.Flags["SPOKEN_"+q.Tag] = true
+		for _, v := range q.Variants {
+			if g.conditionsMet(v.If) {
+				g.TalkStart(v.Node)
+				return
+			}
+		}
+		g.TalkStart(q.Talk)
+		return
+	}
+	g.spawnCampaignGroup(q)
+}
+
+// spawnQuestGroup releases the ships of a tagged stage group in the current
+// system: used when a conversation ends in a fight.
+func (g *Game) spawnQuestGroup(tag string) {
+	c := &g.Cmd.Campaign
+	q := QuestAt(c.Stage)
+	if q.Tag != tag {
+		return
+	}
+	g.spawnCampaignGroup(q)
+}
+
+// spawnCampaignGroup puts the stage's opposition into the system.
+func (g *Game) spawnCampaignGroup(q Quest) {
 	for i := 0; i < q.Count; i++ {
 		e := g.spawnAtDistance(q.Spawn, randRange(3200, 5200), "pirate")
 		e.CampaignTag = q.Tag

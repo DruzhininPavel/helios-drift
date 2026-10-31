@@ -240,6 +240,13 @@ func maxInt(a, b int) int {
 // Draw paints the current screen.
 func Draw(fb *render.FB, dt float64) {
 	g := game.G
+	if g.Screen == "talk" {
+		// a conversation looks the same at a counter and over the comms
+		chrome(fb, "COMMS")
+		talkScreen(fb)
+		footer(fb)
+		return
+	}
 	if g.Screen == "settings" {
 		chrome(fb, "SETTINGS")
 		settingsScreen(fb)

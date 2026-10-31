@@ -43,6 +43,17 @@ func TestCampaignKillStage(t *testing.T) {
 		}
 	}
 
+	// stage two opens with the collectors asking a question: answer it with a
+	// fight before counting contacts
+	if n := game.DialogueNode(g.Talk); g.Screen == "talk" && n != nil {
+		for vi, idx := range g.VisibleOptions(n) {
+			if n.Options[idx].Text == "FIGHT THEM" {
+				g.TalkChoose(vi)
+				break
+			}
+		}
+	}
+
 	tagged := 0
 	for _, e := range g.World.Entities {
 		if e.CampaignTag != "" {

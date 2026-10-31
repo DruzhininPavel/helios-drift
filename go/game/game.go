@@ -269,8 +269,10 @@ type Game struct {
 	LastDamageReason string
 	// CheatShield ignores fire and debris for testing; collisions still kill.
 	CheatShield bool
-	// Talk is the dialogue node on screen, "" when nobody is talking.
-	Talk string
+	// Talk is the dialogue node on screen, "" when nobody is talking, and
+	// TalkBack is the screen to return to when it closes.
+	Talk     string
+	TalkBack string
 	// LaserFlash fades right after a shot; the cockpit draws the beam while it
 	// lasts. Purely cosmetic.
 	LaserFlash float64
