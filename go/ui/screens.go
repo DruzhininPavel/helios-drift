@@ -100,13 +100,14 @@ func stationMenu(fb *render.FB) {
 	}
 	row("LEGAL", legal, 130, lc)
 	gal := galaxy.Get(cmd.Galaxy)
-	row("TARGET", gal.Systems[((cmd.TargetSystem%256)+256)%256].Name, 146, ColText)
+	fb.Text("TARGET", 16, 146, ColDim, 1)
+	drawDataR(fb, gal.Systems[((cmd.TargetSystem%256)+256)%256].Name, 150, 146, ColText)
 
 	// system block at the bottom of the same plate
 	fb.HLine(16, 150, 160, render.RGB(0x1b3348))
 	if g.World != nil {
 		sys := g.World.Sys
-		fb.Text(sys.Name, 16, 168, ColYellow, 1)
+		drawData(fb, sys.Name, 16, 168, ColYellow)
 		fb.Text(galaxy.EconomyNames[sys.Economy], 16, 178, ColDim, 1)
 		fb.Text(galaxy.GovNames[sys.Government], 16, 188, ColDim, 1)
 	}
@@ -1167,7 +1168,7 @@ func shipyardScreen(fb *render.FB) {
 	g := game.G
 	cur := g.Ship()
 	plate(fb, 6, 16, 308, 180, "SHIPYARD")
-	fb.Text("FLYING "+cur.Name, 14, 30, ColYellow, 1)
+	drawData(fb, "FLYING "+cur.Name, 14, 30, ColYellow)
 	fb.TextR("TRADE IN "+itoa(g.TradeInValue())+" CR", 306, 30, ColGreen, 1)
 	for i, sc := range game.ShipYard {
 		y := 46 + i*28
@@ -1180,7 +1181,7 @@ func shipyardScreen(fb *render.FB) {
 		if sel {
 			col = ColYellow
 		}
-		fb.Text(sc.Name, 18, y, col, 1)
+		drawData(fb, sc.Name, 18, y, col)
 		fb.Text("HOLD "+itoa(sc.Cargo)+"T   SPD "+itoa(int(sc.Speed))+"   EN "+itoa(int(sc.Energy)), 18, y+9, ColDim, 1)
 		fb.Text("SHIELD "+itoa(int(sc.Shield))+"   TURN "+two(sc.Pitch)+"   LASER "+laserCap(sc.MaxLaser), 18, y+17, ColDim, 1)
 		if sc.ID == cur.ID {

@@ -468,6 +468,15 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// the last stretch of a docking approach, with the guide on
+	if st := g.World.Station; st != nil {
+		nrm := st.Mat.Col(2)
+		g.State = "flight"
+		g.Player.Pos = st.Pos.Add(nrm.Mul(game.StationSize + 420))
+		g.Player.Mat = render.LookMatrix(nrm.Mul(-1))
+		g.Player.Speed = 60
+		shot("g74-dock-approach")
+	}
 	g.Cmd.Ship = "cobra3"
 	g.State = prevState
 	g.Screen = "help"

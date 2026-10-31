@@ -331,9 +331,10 @@ func sort5(v []V, less func(a, b V) bool) {
 func collarSlot(b *Builder, zBack, zFront float64) {
 	w := StationSlotW * StationSize * 0.95
 	h := StationSlotH * StationSize * 1.05
-	// back wall (inside the rock), lit so it never reads as space
-	b.Face([]V{{-w, h, zBack}, {w, h, zBack}, {w, -h, zBack}, {-w, -h, zBack}}, "steel",
-		&FOpts{Shade: 1.3, Fixed: true, Double: true})
+	// back wall: dark, so the mouth reads as an opening rather than a hatch
+	// welded onto the face. Lit steel here made the whole collar look solid.
+	b.Face([]V{{-w, h, zBack}, {w, h, zBack}, {w, -h, zBack}, {-w, -h, zBack}}, "ash",
+		&FOpts{Shade: 0.2, Fixed: true, Double: true})
 	// four walls running out to the mouth
 	b.Face([]V{{-w, h, zBack}, {-w, h, zFront}, {w, h, zFront}, {w, h, zBack}}, "steel",
 		&FOpts{Shade: 2.6, Fixed: true, Double: true})
@@ -343,12 +344,23 @@ func collarSlot(b *Builder, zBack, zFront float64) {
 		&FOpts{Shade: 2.2, Fixed: true, Double: true})
 	b.Face([]V{{w, h, zBack}, {w, h, zFront}, {w, -h, zFront}, {w, -h, zBack}}, "steel",
 		&FOpts{Shade: 1.9, Fixed: true, Double: true})
-	// lights on the back wall and a frame around the mouth
+	// a line of lamps deep inside, so the eye can find the hole from far away
 	for i := -2; i <= 2; i++ {
 		lx := float64(i) * (w / 2.4)
-		b.Face([]V{{lx - 4, 5, zBack + 1}, {lx + 4, 5, zBack + 1}, {lx + 4, -5, zBack + 1}, {lx - 4, -5, zBack + 1}},
+		b.Face([]V{{lx - 4, 6, zBack + 2}, {lx + 4, 6, zBack + 2}, {lx + 4, -6, zBack + 2}, {lx - 4, -6, zBack + 2}},
 			"yellow", &FOpts{Shade: 5, Fixed: true, Double: true})
 	}
+	// bright lit inner rim around the opening: the contrast that says "fly here"
+	const inner = 5.0
+	b.Face([]V{{-w, h, zFront}, {w, h, zFront}, {w, h - inner, zFront}, {-w, h - inner, zFront}},
+		"steel", &FOpts{Shade: 5, Fixed: true, Double: true})
+	b.Face([]V{{-w, -h + inner, zFront}, {w, -h + inner, zFront}, {w, -h, zFront}, {-w, -h, zFront}},
+		"steel", &FOpts{Shade: 5, Fixed: true, Double: true})
+	b.Face([]V{{-w, h, zFront}, {-w + inner, h, zFront}, {-w + inner, -h, zFront}, {-w, -h, zFront}},
+		"steel", &FOpts{Shade: 5, Fixed: true, Double: true})
+	b.Face([]V{{w - inner, h, zFront}, {w, h, zFront}, {w, -h, zFront}, {w - inner, -h, zFront}},
+		"steel", &FOpts{Shade: 5, Fixed: true, Double: true})
+
 	const rim = 8.0
 	for _, sg := range []float64{-1, 1} {
 		b.Face([]V{{-w - rim, sg * h, zFront}, {w + rim, sg * h, zFront}, {w + rim, sg * (h + rim), zFront}, {-w - rim, sg * (h + rim), zFront}},

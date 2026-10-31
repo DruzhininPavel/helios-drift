@@ -565,6 +565,9 @@ func flight(fb *render.FB, dt float64) {
 	if g.LaserFlash > 0 {
 		laserBeam(fb, 160, 75, g.LaserFlash, game.G.Cmd.Laser)
 	}
+	if g.World != nil && g.World.Station != nil {
+		dockGuide(fb, cam, g.World.Station, g.Time)
+	}
 	cockpit(fb, g.Cmd.Ship)
 	crosshair(fb, 160, 75)
 
@@ -867,7 +870,7 @@ func hud(fb *render.FB) {
 
 	fb.Text("SPD "+itoa(int(p.Speed)), gx, y0+55, ColText, 1)
 	fb.Text(strconv.FormatFloat(cmd.Fuel, 'f', 1, 64)+"LY", bx+bw-26, y0+55, ColGreen, 1)
-	fb.Text("SYS "+g.World.Sys.Name, gx, y0+64, render.RGB(0x79c9e6), 1)
+	drawData(fb, "SYS "+g.World.Sys.Name, gx, y0+64, render.RGB(0x79c9e6))
 
 	scanner(fb, 160, y0+40, 56, 26)
 
@@ -1098,6 +1101,66 @@ func drawSun(fb *render.FB, cx, cy, radius float64) {
 			if dy == 0 || (x*13+py*7)&3 == 0 {
 				fb.Px(px, py, render.Color("yellow", 4-dy))
 			}
+		}
+	}
+}
+
+// drawData prints a string that is not interface text: system names, ship
+// names, anything the player could see reproduced verbatim. It never goes
+// through the dictionary, so a system called QUIT stays QUIT and does not turn
+// into "ВЫХОД" on the chart while contracts still call it QUIT.
+func drawData(fb *render.FB, s string, x, y int, c uint32) {
+	fb.TextRaw(s, x, y, c, 1)
+}
+
+func drawDataR(fb *render.FB, s string, rx, y int, c uint32) {
+	fb.TextRaw(s, rx-render.TextWidth(s, 1), y, c, 1)
+}
+
+// dockGuide draws the last stretch of a docking approach: the mouth as a lit
+// rectangle with a corridor of dashes running out of it. The slot is on one
+// face only, and reading a dark hole in a dark face from 400 units away is the
+// part of docking people give up on.
+func dockGuide(fb *render.FB, cam *render.Camera, st *game.Entity, t float64) {
+	d := cam.Pos.Sub(st.Pos).Len()
+	if d > 1400 || d < game.StationSize*0.5 {
+		return
+	}
+	local := st.Mat.ApplyT(cam.Pos.Sub(st.Pos))
+	if local[2] < 0 {
+		return // the mouth is on the far side of the station
+	}
+	w := game.SlotW * game.StationSize
+	h := game.SlotH * game.StationSize
+	blink := 0.55 + 0.45*math.Sin(t*5)
+	for k := 0; k < 4; k++ {
+		z := game.StationSize - 20 + float64(k)*130
+		var pts [4]render.Pt3
+		ok := true
+		for i, c := range [4][2]float64{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}} {
+			world := st.Pos.Add(st.Mat.Apply(render.V3(c[0]*w, c[1]*h, z)))
+			v := cam.ToView(world)
+			if v[2] > -1 {
+				ok = false
+				break
+			}
+			pts[i] = cam.ProjectView(v)
+		}
+		if !ok {
+			continue
+		}
+		var col uint32
+		switch {
+		case k == 0:
+			col = render.Color("yellow", 5)
+		case k == 1:
+			col = render.Color("green", 4)
+		default:
+			col = render.Color("green", int(3*blink)+1)
+		}
+		for i := 0; i < 4; i++ {
+			a, b := pts[i], pts[(i+1)%4]
+			fb.LineDash(int(a.X), int(a.Y), int(b.X), int(b.Y), col)
 		}
 	}
 }
