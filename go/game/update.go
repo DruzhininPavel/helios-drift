@@ -529,8 +529,10 @@ func (g *Game) scoopCargo(e *Entity) {
 	g.Message("SCOOPED: "+name, "good")
 }
 
+// CargoUsed counts tonnes in the hold plus the crate, which is not a commodity
+// and cannot be sold: it still takes two tonnes.
 func CargoUsed(c Commander) int {
-	n := 0
+	n := 2 * c.Boxes
 	for _, q := range c.Cargo {
 		n += q
 	}

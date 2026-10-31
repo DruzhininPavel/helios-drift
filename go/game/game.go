@@ -107,6 +107,14 @@ type Commander struct {
 	Day          int        `json:"day"`
 	Pax          int        `json:"pax"`
 	Log          []LogEntry `json:"log,omitempty"`
+	// Campaign v2 state. Every field has a zero value that reads as "nothing
+	// happened yet", so saves written before this existed still load.
+	Flags    map[string]bool `json:"flags,omitempty"`
+	Papers   int             `json:"papers,omitempty"`
+	Boxes    int             `json:"boxes,omitempty"`
+	Audit    string          `json:"audit,omitempty"`  // broken | runs | rewritten
+	Ending   string          `json:"ending,omitempty"` // combine | chaos | council
+	ViperClk int             `json:"viperclk,omitempty"`
 	// Visited keys are "galaxy:system". A system is worth a log line once.
 	Visited  map[string]bool `json:"visited,omitempty"`
 	Mail     int             `json:"mail"`
@@ -261,6 +269,8 @@ type Game struct {
 	LastDamageReason string
 	// CheatShield ignores fire and debris for testing; collisions still kill.
 	CheatShield bool
+	// Talk is the dialogue node on screen, "" when nobody is talking.
+	Talk string
 	// LaserFlash fades right after a shot; the cockpit draws the beam while it
 	// lasts. Purely cosmetic.
 	LaserFlash float64
@@ -1047,8 +1057,10 @@ func (g *Game) finishDock() {
 	g.Screen = "launch"
 	g.Player.Speed = 0
 	g.missionDock()
-	g.campaignDock()
+	// the market and the board are rolled first, then the story: a dialogue
+	// that opens on arrival must not be overwritten by the station screen
 	g.dockedAt()
+	g.campaignDock()
 	g.Message("DOCKED", "good")
 	g.Emit("dock")
 }

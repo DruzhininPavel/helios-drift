@@ -146,6 +146,10 @@ func TestCampaignChain(t *testing.T) {
 			for j := 0; j < 200 && g.State != "docked"; j++ {
 				g.Update(1.0 / 60.0)
 			}
+			// delivery now ends at a counter, not at a payment
+			if g.Screen == "talk" {
+				g.TalkChoose(0)
+			}
 		case QuestKill:
 			killed := 0
 			for _, e := range append([]*Entity(nil), g.World.Entities...) {

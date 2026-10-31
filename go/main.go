@@ -488,6 +488,14 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// the counter: chapter one's opening speech, scrolled to the top
+	g.State = "docked"
+	g.Screen = "launch"
+	g.TalkStart("c1_disp")
+	ui.S.TalkScroll = 0
+	shot("g77-talk")
+	g.EndTalk()
+
 	// a station that sells pardons, with a record to clean
 	g.State = "docked"
 	g.Screen = "launch"

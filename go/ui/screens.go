@@ -66,6 +66,8 @@ func docked(fb *render.FB) {
 		journalScreen(fb)
 	case "log":
 		logScreen(fb)
+	case "talk":
+		talkScreen(fb)
 	case "shipyard":
 		shipyardScreen(fb)
 	case "slots":
@@ -162,11 +164,15 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD")
 	}
-	items = append(items, "LOG", "GALACTIC CHART",
+	items = append(items, "GALACTIC CHART",
 		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER", "SETTINGS")
 	if game.G.MissionOffer() != "" || game.G.Cmd.Mission.Kind != "" ||
 		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active {
 		items = append(items, "MISSION")
+	}
+	if !game.G.Classic() {
+		// the log is a modern comfort: a 1984 commander keeps his own notes
+		items = append(items, "LOG")
 	}
 	if !game.G.Classic() && (len(game.G.Offers) > 0 || len(game.G.Cmd.Contracts) > 0) {
 		items = append(items, "CONTRACTS")
@@ -759,6 +765,9 @@ func dockedKey(k string) bool {
 	}
 	if g.Screen == "log" {
 		return logKey(k)
+	}
+	if g.Screen == "talk" {
+		return talkKey(k)
 	}
 	if g.Screen == "contracts" {
 		return contractsKey(k)
@@ -2206,6 +2215,143 @@ func logKey(k string) bool {
 			S.LogFilter = (S.LogFilter + len(logFilters) - 2) % len(logFilters)
 		}
 		S.Log = 0
+	}
+	return true
+}
+
+// ---------------------------------------------------------------- talk
+
+// wrapText breaks a line into 46-character rows, by words. The dialog window
+// shows six of them at a time and scrolls, which is what lets a speech be a
+// paragraph instead of a telegram.
+func wrapText(src string, width int) []string {
+	var out []string
+	for _, para := range strings.Split(src, "\n") {
+		words := strings.Fields(para)
+		if len(words) == 0 {
+			out = append(out, "")
+			continue
+		}
+		line := ""
+		for _, w := range words {
+			if line == "" {
+				line = w
+				continue
+			}
+			if len(line)+1+len(w) <= width {
+				line += " " + w
+			} else {
+				out = append(out, line)
+				line = w
+			}
+		}
+		if line != "" {
+			out = append(out, line)
+		}
+	}
+	return out
+}
+
+// talkScreen is the conversation: six lines of window, a scroll indicator and
+// the options pinned at the bottom.
+func talkScreen(fb *render.FB) {
+	g := game.G
+	n := game.DialogueNode(g.Talk)
+	if n == nil {
+		g.EndTalk()
+		return
+	}
+	plate(fb, 6, 14, 310, 190, "")
+	if n.Speaker != "" {
+		fb.FillRect(8, 16, 308, 26, render.RGB(0x08131f))
+		fb.Text(lang.T(n.Speaker), 12, 19, ColYellow, 1)
+	}
+	var rows []string
+	for _, ln := range g.TalkText(n) {
+		rows = append(rows, wrapText(ln, 46)...)
+		rows = append(rows, "") // a gap between paragraphs
+	}
+	const visible = 6
+	maxTop := len(rows) - visible
+	if maxTop < 0 {
+		maxTop = 0
+	}
+	if S.TalkScroll > maxTop {
+		S.TalkScroll = maxTop
+	}
+	if S.TalkScroll < 0 {
+		S.TalkScroll = 0
+	}
+	y := 32
+	for i := S.TalkScroll; i < len(rows) && i < S.TalkScroll+visible; i++ {
+		fb.TextRaw(rows[i], 12, y, ColText, 1)
+		y += 10
+	}
+	if len(rows) > visible {
+		fb.TextR(itoa(S.TalkScroll+visible)+"/"+itoa(len(rows)), 304, 19, ColDim, 1)
+	}
+	// options, numbered: digits are unambiguous and need no cursor
+	opts := g.VisibleOptions(n)
+	oy := 150
+	for i, idx := range opts {
+		col := ColYellow
+		if i == S.TalkOpt {
+			fb.FillRect(10, oy-2, 306, oy+8, render.RGB(0x12384f))
+		}
+		fb.Text(itoa(i+1)+"  "+lang.T(n.Options[idx].Text), 14, oy, col, 1)
+		oy += 11
+	}
+	if len(rows) > visible {
+		Hint = "UP/DOWN SCROLL   1-3 CHOOSE"
+	} else {
+		Hint = "1-3 CHOOSE"
+	}
+}
+
+func talkKey(k string) bool {
+	g := game.G
+	n := game.DialogueNode(g.Talk)
+	if n == nil {
+		g.EndTalk()
+		return true
+	}
+	rows := 0
+	for _, ln := range g.TalkText(n) {
+		rows += len(wrapText(ln, 46)) + 1
+	}
+	maxTop := rows - 6
+	if maxTop < 0 {
+		maxTop = 0
+	}
+	switch k {
+	case "Escape":
+		g.EndTalk()
+	case "ArrowUp":
+		S.TalkScroll--
+		if S.TalkScroll < 0 {
+			S.TalkScroll = 0
+		}
+	case "ArrowDown":
+		S.TalkScroll++
+		if S.TalkScroll > maxTop {
+			S.TalkScroll = maxTop
+		}
+	case "PageUp":
+		S.TalkScroll -= 6
+		if S.TalkScroll < 0 {
+			S.TalkScroll = 0
+		}
+	case "PageDown":
+		S.TalkScroll += 6
+		if S.TalkScroll > maxTop {
+			S.TalkScroll = maxTop
+		}
+	default:
+		if len(k) == 1 && k[0] >= '1' && k[0] <= '9' {
+			g.TalkChoose(int(k[0] - '1'))
+			S.TalkScroll = 0
+			S.TalkOpt = 0
+		}
 	}
 	return true
 }

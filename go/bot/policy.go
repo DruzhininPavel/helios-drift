@@ -21,6 +21,16 @@ const (
 // Trader is the first working policy: it flies, docks, trades, takes work and
 // jumps. It is deliberately paced like a person — it decides a few times a
 // second, not every frame — and it only uses the controls a player has.
+// TalkChoice is which option a policy picks at a counter. The plain trader
+// takes the first: it is the greedy one, and the story is written so the greedy
+// option is always first.
+func (t *Trader) TalkChoice(g *game.Game) int {
+	if t.Talk > 0 {
+		return t.Talk
+	}
+	return 0
+}
+
 type Trader struct {
 	hold     int // frames until the next decision
 	in       game.InputState
@@ -29,6 +39,8 @@ type Trader struct {
 	nextJump int
 	phase    int
 	stuckFor int
+	// Talk is the option index a policy picks at a counter; zero is the first.
+	Talk int
 	// ManualDock forces the hand-flown approach even with a computer fitted.
 	ManualDock bool
 	// Ace makes the pilot a dead shot: the bot still has to fly the attack,

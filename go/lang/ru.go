@@ -4,6 +4,17 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	// ---- chapter one, the dispatcher at the clinic
+	"DISPATCHER": "ДИСПЕТЧЕР",
+	"FOUR TONNES, AS ORDERED. ALL ACCOUNTED FOR, I CHECKED.": "ЧЕТЫРЕ ТОННЫ, КАК ЗАКАЗЫВАЛИ. ВСЁ НА МЕСТЕ, Я ПРОВЕРИЛА.",
+	"YOU WILL BE PAID ON ACCEPTANCE. NOT BY US - BY THE COMPANY. WE HAVE NOTHING TO PAY WITH: THE LAST PAYMENT WAS RECALLED, NO ACCOUNTS OPEN SINCE APRIL.": "ТЕБЕ ЗАПЛАТЯТ ПО ПРИЁМКЕ. ЭТО НЕ МЫ, ЭТО КОНТОРА. НАМ ПЛАТИТЬ НЕЧЕМ: ПОСЛЕДНИЙ ПЛАТЁЖ ОТОЗВАЛИ, СЧЕТА НЕ ОТКРЫВАЮТ С АПРЕЛЯ.",
+	"BUT THERE IS A CRATE. IT IS VALUED HIGHER THAN YOUR WHOLE RUN. TAKE IT OFF OUR HANDS, SELL IT AT A FREE STATION AND FORGET US.":                        "ЗАТО ЕСТЬ ЯЩИК. ОН ОЦЕНИВАЕТСЯ ВЫШЕ, ЧЕМ ВЕСЬ ТВОЙ РЕЙС. ВОЗЬМИ В ЗАЧЁТ, ПРОДАЙ НА ВОЛЬНОЙ СТАНЦИИ И ЗАБУДЬ ПРО НАС.",
+	"AND DO NOT ASK WHAT IS INSIDE. I AM SERIOUS.":                                                               "И НЕ ВЫЯСНЯЙ, ЧТО ВНУТРИ. Я СЕРЬЁЗНО.",
+	"...FINE. YOU ARE THE PILOT, IT IS YOUR CALL. THREE RUNS LIKE THIS IN A MONTH. ALL THREE LEFT WITH A CRATE.": "...ЛАДНО. ТЫ ПИЛОТ, ТЕБЕ РЕШАТЬ. ТАКИХ РЕЙСОВ ЗА МЕСЯЦ БЫЛО ТРИ. ВСЕ ТРОЕ УЛЕТЕЛИ С ЯЩИКОМ.",
+	"TAKE THE CRATE":                 "ВЗЯТЬ ЯЩИК",
+	"REFUSE":                         "ОТКАЗАТЬСЯ",
+	"DEMAND A RECEIPT":               "ПОТРЕБОВАТЬ РАСПИСКУ",
+	"CARGO BOUND TO THE PILOT":       "ГРУЗ ПРИВЯЗАН К ПИЛОТУ",
 	"TESTER MODE":                    "РЕЖИМ ТЕСТИРОВЩИКА",
 	"TESTER MODE UNLOCKED":           "РЕЖИМ ТЕСТИРОВЩИКА ОТКРЫТ",
 	"CHEAT":                          "ЧИТ",

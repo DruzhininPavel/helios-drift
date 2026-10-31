@@ -17,7 +17,14 @@ type Quest struct {
 	Good  int
 	Qty   int
 	Pay   int
-	Tag   string // entity tag that has to die
+	// Advance is paid when the job is taken, Papers is the paperwork that
+	// comes with it: the board hands over the cargo and the forms together.
+	Advance int
+	Papers  int
+	Tag     string // entity tag that has to die
+	// Talk is a dialogue node opened on arrival instead of paying out on the
+	// spot: the story happens at the counter, not in the mission screen.
+	Talk  string
 	Spawn string // ship type spawned on arrival
 	Count int
 	Brief []string
@@ -33,7 +40,8 @@ const (
 var campaignQuests = []Quest{
 	{
 		Title: "MEDICAL RUN",
-		Kind:  QuestDeliver, Good: 0, Qty: 4, Pay: 1500,
+		Kind:  QuestDeliver, Good: 0, Qty: 4, Pay: 1200, Talk: "c1_disp",
+		Advance: 400, Papers: 1,
 		Brief: []string{
 			"THE FRONTIER CLINIC IS OUT OF SUPPLIES.",
 			"TAKE FOUR TONNES OF FOOD OUT TO THEM.",
@@ -158,6 +166,15 @@ func (g *Game) AcceptCampaign() bool {
 		}
 		g.Cmd.Cargo[q.Good] += q.Qty
 	}
+	if q.Advance > 0 {
+		g.Cmd.Cash += float64(q.Advance)
+	}
+	if q.Papers > 0 {
+		if g.Cmd.Flags == nil {
+			g.Cmd.Flags = map[string]bool{}
+		}
+		g.Cmd.Papers += q.Papers
+	}
 	g.Cmd.Campaign.Active = true
 	g.Cmd.Campaign.Target = g.missionTarget()
 	g.Cmd.Campaign.Galaxy = g.Cmd.Galaxy
@@ -254,6 +271,23 @@ func (g *Game) campaignArrive() {
 	g.Emit("warning")
 }
 
+// advanceCampaign moves to the next stage after a dialogue settles the current
+// one. Payment and rewards are the dialogue's business, not the chain's.
+func (g *Game) advanceCampaign() {
+	c := &g.Cmd.Campaign
+	if c.Stage >= CampaignTotal() {
+		return
+	}
+	c.Active = false
+	c.Stage++
+	if c.Stage >= CampaignTotal() {
+		g.Message("HELIOS COMBINE IS FINISHED", "good")
+		g.Cmd.Legal = 0
+		return
+	}
+	g.Message("STAGE COMPLETE", "good")
+}
+
 // campaignKill advances the chain when the tagged target dies.
 func (g *Game) campaignKill(tag string) {
 	c := &g.Cmd.Campaign
@@ -296,6 +330,12 @@ func (g *Game) campaignDock() {
 		return
 	}
 	g.Cmd.Cargo[q.Good] -= q.Qty
+	if q.Talk != "" {
+		// the counter is where the story happens: the payment is settled in
+		// the conversation, not on the spot
+		g.TalkStart(q.Talk)
+		return
+	}
 	g.Cmd.Cash += float64(q.Pay)
 	c.Active = false
 	c.Stage++

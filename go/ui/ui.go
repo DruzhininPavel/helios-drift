@@ -42,6 +42,8 @@ type Sel struct {
 	Log                 int
 	LogFilter           int
 	Typed               string
+	TalkScroll          int
+	TalkOpt             int
 	PrevState           string
 	PrevScreen          string
 	PadTestFrom         string

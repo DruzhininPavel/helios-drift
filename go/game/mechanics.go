@@ -56,6 +56,10 @@ func (g *Game) Jettison() bool {
 			return true
 		}
 	}
+	if g.Cmd.Boxes > 0 {
+		g.Message("CARGO BOUND TO THE PILOT", "bad")
+		return false
+	}
 	g.Message("NOTHING TO JETTISON", "bad")
 	return false
 }

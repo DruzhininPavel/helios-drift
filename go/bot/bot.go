@@ -51,6 +51,15 @@ type Policy interface {
 	Name() string
 }
 
+// talkChoice asks a policy what it wants at a counter, defaulting to the first
+// option, which is always the greedy one.
+func talkChoice(pol Policy, g *game.Game) int {
+	if tp, ok := pol.(interface{ TalkChoice(*game.Game) int }); ok {
+		return tp.TalkChoice(g)
+	}
+	return 0
+}
+
 // StageMark records the frame at which the campaign moved to a new stage.
 type StageMark struct {
 	Frame int `json:"frame"`
@@ -137,6 +146,12 @@ func RunWith(g *game.Game, frames int, pol Policy, opt Options) *Script {
 	lastProgress := g.Hash64()
 
 	for f := 0; f < frames; f++ {
+		// a conversation blocks play until it is answered: the bot picks the
+		// option its policy prefers, the first one by default
+		if g.Screen == "talk" && g.Talk != "" {
+			g.TalkChoose(talkChoice(pol, g))
+			sc.Report.Steps["talk"]++
+		}
 		in, events := pol.Act(g, f)
 		in = quantize(in)
 		if in != last {
