@@ -21,7 +21,6 @@
 - Equipment names are no longer cut at fifteen characters, and "FITTED" sits
   where the price was instead of a cramped badge.
 
-### Fixed again
 - Station mouths now meet the docking plane. The rock hermit's collar ran thirty
   units past the hull, so a pilot could fly into the opening and nothing
   happened; the dodecahedron was four units out. Every station type docks on a
