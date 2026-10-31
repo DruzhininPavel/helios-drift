@@ -132,6 +132,17 @@ func (g *Game) Update(dt float64) {
 		if p.Cabin < 0 {
 			p.Cabin = 0
 		}
+		// the crate is warm, and it gets warmer the longer it rides along: the
+		// cabin creeps up towards a floor set by how many boxes are aboard
+		if g.Cmd.Boxes > 0 {
+			floor := 0.22 * float64(g.Cmd.Boxes)
+			if floor > 0.6 {
+				floor = 0.6
+			}
+			if p.Cabin < floor {
+				p.Cabin += (floor - p.Cabin) * 0.08 * dt * 60
+			}
+		}
 		if p.Cabin > 0.8 {
 			g.DamagePlayer(9*dt*(p.Cabin-0.8)/0.2, true, "heat")
 			if randFloat() < dt*1.5 {

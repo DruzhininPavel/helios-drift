@@ -273,7 +273,7 @@ func marketScreen(fb *render.FB) {
 	fb.TextR("HOLD", 294, 30, ColDim, 1)
 	fb.HLine(10, 310, 37, ColFrame)
 	for i, m := range g.Market {
-		y := 42 + i*9
+		y := 42 + i*8
 		sel := S.Market == i
 		if sel {
 			fb.FillRect(8, y-1, 311, y+7, render.RGB(0x12384f))
@@ -304,6 +304,21 @@ func marketScreen(fb *render.FB) {
 			hc = ColYellow
 		}
 		fb.TextR(itoa(have), 294, y, hc, 1)
+	}
+	// the crate rides in the hold and the market will not touch it: show it
+	// where a player looks for their cargo, and let him try
+	if cmd.Boxes > 0 {
+		y := 42 + len(g.Market)*8
+		sel := S.Market == len(g.Market)
+		if sel {
+			fb.FillRect(8, y-1, 311, y+7, render.RGB(0x12384f))
+		}
+		col := ColText
+		if sel {
+			col = ColYellow
+		}
+		fb.Text("CRATE x"+itoa(cmd.Boxes), 20, y, col, 1)
+		fb.TextR(itoa(40000*cmd.Boxes)+" NOM", 294, y, ColDim, 1)
 	}
 	fb.Text("HOLD "+itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 240, 197, ColYellow, 1)
 }
@@ -535,6 +550,12 @@ func statusScreen(fb *render.FB) {
 	yy += 10
 	any := false
 	more := 0
+	if cmd.Boxes > 0 {
+		any = true
+		fb.Text("CRATE x"+itoa(cmd.Boxes), 168, yy, ColYellow, 1)
+		fb.TextR(itoa(40000*cmd.Boxes)+" NOM", 308, yy, ColDim, 1)
+		yy += 9
+	}
 	for i := 0; i < len(galaxy.Commodities); i++ {
 		if cmd.Cargo[i] <= 0 {
 			continue
@@ -556,7 +577,7 @@ func statusScreen(fb *render.FB) {
 
 func pauseScreen(fb *render.FB) {
 	chrome(fb, "PAUSED")
-	plate(fb, 8, 18, 312, 190, "FLIGHT CONTROLS X")
+	plate(fb, 8, 18, 312, 190, "FLIGHT CONTROLS")
 	steer := "PITCH AND ROLL"
 	if !game.G.Classic() {
 		steer = "PITCH / ROLL / YAW"
@@ -802,17 +823,25 @@ func dockedKey(k string) bool {
 	case "market":
 		switch k {
 		case "ArrowUp":
-			S.Market = (S.Market + 16) % 17
+			S.Market = (S.Market + marketRows() - 1) % marketRows()
 		case "ArrowDown":
-			S.Market = (S.Market + 1) % 17
-		case "b":
-			g.Buy(S.Market, 1)
-		case "B":
-			g.Buy(S.Market, 10)
-		case "s":
-			g.Sell(S.Market, 1)
-		case "S":
-			g.Sell(S.Market, 10)
+			S.Market = (S.Market + 1) % marketRows()
+		case "b", "B", "s", "S":
+			if S.Market >= len(g.Market) {
+				// the crate is owned by whoever holds it
+				g.Message("OWNER IS THE HOLDER", "bad")
+				return true
+			}
+			switch k {
+			case "b":
+				g.Buy(S.Market, 1)
+			case "B":
+				g.Buy(S.Market, 10)
+			case "s":
+				g.Sell(S.Market, 1)
+			case "S":
+				g.Sell(S.Market, 10)
+			}
 		}
 		return true
 	case "equip":
@@ -2354,4 +2383,14 @@ func talkKey(k string) bool {
 		}
 	}
 	return true
+}
+
+// marketRows is how many lines the market list has: the commodities plus the
+// crate when one is aboard.
+func marketRows() int {
+	n := len(game.G.Market)
+	if game.G.Cmd.Boxes > 0 {
+		n++
+	}
+	return n
 }

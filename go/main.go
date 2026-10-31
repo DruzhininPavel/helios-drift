@@ -488,6 +488,15 @@ func runShots() {
 		lookAt(render.V3(0, 0, 0), render.V3(0.6, 0.25, 1))
 		shot(fmt.Sprintf("g%d-cockpit-%s", 69+i, sc.ID))
 	}
+	// the market with a crate in the hold: it sits under the commodities and
+	// cannot be sold
+	g.State = "docked"
+	g.Cmd.Boxes = 1
+	g.Screen = "market"
+	shot("g78-market-crate")
+	g.Screen = "launch"
+	g.Cmd.Boxes = 0
+
 	// the counter: chapter one's opening speech, scrolled to the top
 	g.State = "docked"
 	g.Screen = "launch"

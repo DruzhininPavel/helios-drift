@@ -4,6 +4,9 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"OWNER IS THE HOLDER": "ВЛАДЕЛЕЦ - ДЕРЖАТЕЛЬ",
+	"CRATE":               "ЯЩИК",
+	"NOM":                 "НОМИНАЛ",
 	// ---- chapter one, the dispatcher at the clinic
 	"DISPATCHER": "ДИСПЕТЧЕР",
 	"FOUR TONNES, AS ORDERED. ALL ACCOUNTED FOR, I CHECKED.": "ЧЕТЫРЕ ТОННЫ, КАК ЗАКАЗЫВАЛИ. ВСЁ НА МЕСТЕ, Я ПРОВЕРИЛА.",

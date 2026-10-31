@@ -155,3 +155,40 @@ func TestClassicHasNoDialogue(t *testing.T) {
 		t.Fatal("classic opened a dialogue")
 	}
 }
+
+// The crate travels with the pilot: a new hull keeps it and reserves the space.
+func TestCrateSurvivesShipChange(t *testing.T) {
+	g := New()
+	g.NewGame("TEST")
+	g.EnterSystem(3, "launch", 0, false)
+	g.Cmd.Boxes = 1
+	g.Cmd.Cash = 500000
+	if !g.BuyShip("adder") {
+		t.Fatal("could not buy a hull with a crate aboard")
+	}
+	if g.Cmd.Boxes != 1 {
+		t.Fatalf("crate lost on the way to the new ship: %d", g.Cmd.Boxes)
+	}
+	if g.Cmd.CargoCap < 2 {
+		t.Fatalf("new hull has %d tonnes, no room for the crate", g.Cmd.CargoCap)
+	}
+}
+
+// And it heats the cabin: a box in the hold raises the resting temperature.
+func TestCrateHeatsTheCabin(t *testing.T) {
+	run := func(boxes int) float64 {
+		g := New()
+		g.NewGame("TEST")
+		g.EnterSystem(3, "launch", 0, false)
+		g.Cmd.Boxes = boxes
+		g.Player.Invulnerable = 1e9
+		for i := 0; i < 240; i++ {
+			g.Update(1.0 / 60.0)
+		}
+		return g.Player.Cabin
+	}
+	plain, loaded := run(0), run(1)
+	if loaded <= plain {
+		t.Fatalf("cabin %.3f with a crate, %.3f without: the box does not warm it", loaded, plain)
+	}
+}
