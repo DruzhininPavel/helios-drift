@@ -72,3 +72,27 @@ func TestPoliceGiveUpWaiting(t *testing.T) {
 		t.Fatalf("state %q after ignoring the hail, want a fight", g.PoliceState)
 	}
 }
+
+// The hail asks you to slow down; it does not ask you to survive a countdown
+// while they fly in from two thousand kilometres away. Stop, and they come.
+func TestStoppingIsEnoughEvenIfTheyAreFar(t *testing.T) {
+	g := New()
+	g.NewGame("TEST")
+	g.EnterSystem(3, "launch", 0, false)
+	g.Cmd.Legal = 0
+	g.Cmd.Cargo = map[int]int{}
+	g.Player.Speed = 0
+	g.spawnPolice(1)
+	last := "hail"
+	for i := 0; i < 60*45; i++ {
+		g.Player.Speed = 0 // the pilot holds still, as asked
+		g.Update(1.0 / 60.0)
+		last = g.PoliceState
+		if last != "hail" {
+			break
+		}
+	}
+	if last != "" {
+		t.Fatalf("after standing still the state is %q, want the inspection cleared", last)
+	}
+}

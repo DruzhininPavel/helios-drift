@@ -4,6 +4,11 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"POLICE INSPECTION - HOLD STILL, THEY ARE COMING": "ДОСМОТР: СТОЙ, ОНИ ПОДХОДЯТ",
+	"POLICE INSPECTION - SLOW TO":                     "ДОСМОТР: СБРОСЬ ДО",
+	"YOU ARE AT":                                      "У ТЕБЯ",
+	"POLICE HAIL - CUT SPEED TO":                      "ПОЛИЦИЯ: СБРОСЬ СКОРОСТЬ ДО",
+	"OR LESS":                                         "ИЛИ МЕНЬШЕ",
 	// ---- chapter three, the wreck
 	"EXECUTED CORRECTLY. THAT IS RARE.": "ИСПОЛНЕНО КОРРЕКТНО. ЭТО РЕДКОСТЬ.",
 	"CLEAN WORK":                        "ЧИСТАЯ РАБОТА",

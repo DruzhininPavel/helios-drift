@@ -590,7 +590,15 @@ func flight(fb *render.FB, dt float64) {
 
 	// what the police want, said plainly, for as long as they want it
 	if g.PoliceState == "hail" {
-		fb.TextC(lang.T("POLICE INSPECTION - CUT SPEED TO 25%"), 160, 112, ColYellow, 1)
+		// say the numbers, not a fraction: nobody counts quarters of a hull
+		limit := int(g.InspectionSpeed())
+		now := int(g.Player.Speed)
+		if now <= limit {
+			fb.TextC(lang.T("POLICE INSPECTION - HOLD STILL, THEY ARE COMING"), 160, 112, ColGreen, 1)
+		} else {
+			fb.TextC(lang.T("POLICE INSPECTION - SLOW TO")+" "+itoa(limit)+
+				" ("+lang.T("YOU ARE AT")+" "+itoa(now)+")", 160, 112, ColYellow, 1)
+		}
 	}
 	drawMessages(fb, 6, 4)
 

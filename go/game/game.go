@@ -552,8 +552,8 @@ func (g *Game) PoliceHail() {
 		return
 	}
 	g.PoliceState = "hail"
-	g.PoliceTimer = 12
-	g.Message("POLICE HAIL - CUT SPEED TO 25% FOR INSPECTION", "info")
+	g.PoliceTimer = 20
+	g.Message("POLICE HAIL - CUT SPEED TO "+itoa(int(g.InspectionSpeed()))+" OR LESS", "info")
 }
 
 func (g *Game) spawnPolice(n int) {
@@ -1275,6 +1275,10 @@ func (g *Game) ShieldMax() float64 {
 	return max
 }
 
+// InspectionSpeed is the speed the police want you under: a quarter of what the
+// hull can do, in the same units the speed readout uses.
+func (g *Game) InspectionSpeed() float64 { return g.Ship().Speed * 0.25 }
+
 // updatePolice runs the inspection stop: hail, inspect, or open fire.
 func (g *Game) updatePolice(dt float64) {
 	if g.PoliceState == "" || g.World == nil {
@@ -1298,8 +1302,12 @@ func (g *Game) updatePolice(dt float64) {
 	if g.PoliceState != "hail" {
 		return
 	}
-	g.PoliceTimer -= dt
-	slow := g.Player.Speed <= g.Ship().Speed*0.25
+	// the clock is for answering the hail, not for waiting for them to arrive:
+	// once you are slow enough you have answered, and they come to you
+	slow := g.Player.Speed <= g.InspectionSpeed()
+	if !slow {
+		g.PoliceTimer -= dt
+	}
 	if slow && nearest < 900 {
 		if g.CarryingContraband() || g.Cmd.Legal > 0 {
 			g.PoliceState = "fight"

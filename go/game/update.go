@@ -433,7 +433,10 @@ func (g *Game) updateEntities(dt float64) {
 			e.Speed = e.MaxSpeed
 		case "police":
 			ax, ay := g.turnTowards(e, toPlayer.Norm(), dt)
-			if distP > 900 {
+			if g.PoliceState == "hail" && g.Player.Speed <= g.InspectionSpeed() {
+				// he stopped: close in and search him instead of circling
+				e.Speed = e.MaxSpeed
+			} else if distP > 900 {
 				e.Speed = e.MaxSpeed
 			} else {
 				e.Speed = e.MaxSpeed * 0.7
