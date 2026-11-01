@@ -97,6 +97,7 @@ var campaignQuests = []Quest{
 	{
 		Title: "THE CONVOY",
 		Kind:  QuestKill, Tag: "CONVOY", Spawn: "boa", Count: 3, Pay: 14000,
+		Talk: "c5_captain",
 		Brief: []string{
 			"WITH THE LIAISON EXPOSED, HELIOS COMBINE",
 			"IS MOVING SOMETHING BIG. THREE HAULERS,",

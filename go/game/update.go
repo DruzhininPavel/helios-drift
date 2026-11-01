@@ -587,6 +587,12 @@ func (g *Game) Buy(idx, qty int) {
 		return
 	}
 	m := &g.Market[idx]
+	// a licence bought off the convoy is a standing arrangement: five per cent
+	// off everything this pilot buys from now on
+	price := m.Price
+	if g.Cmd.Flags["BOUGHT_LICENSE"] {
+		price = int(math.Round(float64(price) * 0.95))
+	}
 	free := cmd.CargoCap - CargoUsed(*cmd)
 	if qty > m.Qty {
 		qty = m.Qty
@@ -594,8 +600,8 @@ func (g *Game) Buy(idx, qty int) {
 	if qty > free {
 		qty = free
 	}
-	if m.Price > 0 {
-		if maxAfford := int(cmd.Cash) / m.Price; qty > maxAfford {
+	if price > 0 {
+		if maxAfford := int(cmd.Cash) / price; qty > maxAfford {
 			qty = maxAfford
 		}
 	}
@@ -603,10 +609,10 @@ func (g *Game) Buy(idx, qty int) {
 		g.Message("CANNOT BUY", "bad")
 		return
 	}
-	cmd.Cash -= float64(qty * m.Price)
+	cmd.Cash -= float64(qty * price)
 	cmd.Cargo[idx] += qty
 	m.Qty -= qty
-	g.Note(LogBuy, m.Name, qty, -float64(qty*m.Price))
+	g.Note(LogBuy, m.Name, qty, -float64(qty*price))
 	g.Message("BOUGHT "+itoa(qty)+"T "+m.Name, "good")
 }
 

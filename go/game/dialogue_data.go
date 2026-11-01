@@ -383,5 +383,60 @@ func init() {
 			OnEnter: []Effect{{Kind: FxSpawn, Key: "NAVY"}},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
+		// ---- chapter five: the convoy that talks first
+		&Node{
+			ID:      "c5_captain",
+			Kind:    "talk",
+			Speaker: "CONVOY CAPTAIN",
+			Lines: []string{
+				"DO YOU KNOW WHAT WE ARE CARRYING?",
+				"NOT CARGO. LICENCES. ABOUT TWO HUNDRED, IN CRATES LIKE THE ONE YOU HAD.",
+				"IF YOU BREAK US OPEN, THESE SPREAD ACROSS THE SYSTEM. FORTY THOUSAND EACH, NO BUYERS, BUT THE PANIC IS REAL.",
+				"EVERYONE TRADING HERE WILL DECIDE TOMORROW THAT LICENCES ARE FINISHED. PRICES HALVE. YOU WILL SELL YOUR OWN CRATE FOR HALF AND BE GLAD, BECAUSE YOU WILL BUY AT A QUARTER.",
+				"OR YOU CAN LET US PASS AND BUY ONE FROM ME AT THE HONEST PRICE. YOUR CHOICE. MY SHIFT ENDS AT EIGHT.",
+			},
+			Options: []Option{
+				{Text: "BREAK THE CONVOY", Next: "c5_break",
+					Do: []Effect{{Kind: FxFlag, Key: "CONVOY_ATTACKED"}}},
+				{Text: "LET THEM PASS", Next: "c5_spared",
+					Do: []Effect{{Kind: FxFlag, Key: "CONVOY_SPARED"}}},
+				{Text: "BUY A LICENCE - 4000", Next: "c5_bought",
+					If: []Cond{{Key: "cash", Op: ">=", N: 4000}},
+					Do: []Effect{{Kind: FxCash, N: -4000}, {Kind: FxFlag, Key: "BOUGHT_LICENSE"}}},
+			},
+		},
+		&Node{
+			ID:      "c5_break",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE FRONT BOA ANSWERS WITH ITS OWN GUNS, LATE AND WIDE.",
+				"THE OTHER TWO TELL THE WHOLE SYSTEM WHERE THEY ARE.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "CONVOY"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c5_spared",
+			Kind:    "msg",
+			Speaker: "CONVOY CAPTAIN",
+			Lines: []string{
+				"THEY WILL NOT THANK YOU AND THEY WILL NOT PAY YOU.",
+				"COOPERATION IS ON THE RECORD. THAT IS WORTH SOMETHING, EVENTUALLY.",
+			},
+			OnEnter: []Effect{{Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c5_bought",
+			Kind:    "msg",
+			Speaker: "CONVOY CAPTAIN",
+			Lines: []string{
+				"FOUR THOUSAND. IT IS A DEBT THAT BELONGS TO THIS STATION, REWRITTEN AS A RIGHT.",
+				"YOU ARE ONE OF OURS NOW. THE MARKET WILL REMEMBER IT.",
+			},
+			OnEnter: []Effect{{Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
 	)
 }
