@@ -4,15 +4,15 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"BY THE DOCK EXIT HANGS THE HIRING BOARD: COURIER RUNS, PASSENGERS, BOUNTIES ON PIRATES. THERE IS WORK FOR ANY TASTE.": "У ВЫХОДА ИЗ ДОКА ВИСИТ ДОСКА НАЙМА: КУРЬЕРСКИЕ РЕЙСЫ, ПАССАЖИРЫ, ЗАКАЗЫ НА ПИРАТОВ. РАБОТЫ ХВАТИТ НА ЛЮБОЙ ВКУС.",
+	"ONE THING TO REMEMBER: THE SHORTER THE NOTICE, THE LONGER IT TAKES TO CLEAN UP AFTER.":                                "ТОЛЬКО ЗАПОМНИ: ЧЕМ КОРОЧЕ ОБЪЯВЛЕНИЕ, ТЕМ ДОЛЬШЕ ПОТОМ РАСХЛЁБЫВАТЬ.",
+	"DO NOT HIT THE STATION AT SPEED.": "НЕ ВЛЕТАЙ В СТАНЦИЮ НА СКОРОСТИ.",
+	"SOME CONTRACTS PAY IN CREDITS. SOME CHANGE YOUR LIFE. THE BOARD DOES NOT SAY WHICH IS WHICH.":                         "ОДНИ КОНТРАКТЫ ПЛАТЯТ КРЕДИТАМИ. ДРУГИЕ МЕНЯЮТ ЖИЗНЬ. ПО ДОСКЕ НЕ ВИДНО, КАКОЙ ИЗ НИХ КАКОЙ.",
 	"YOU ARE A FREE PILOT. THE KESTREL III WAS BOUGHT FROM THE COMBINE ON INSTALMENTS, AND THE COMBINE HOLDS THE DEPOSIT.": "ТЫ ВОЛЬНЫЙ ПИЛОТ. КЕСТРЕЛ III КУПЛЕНА У КОМБИНАТА В РАССРОЧКУ, ЗАЛОГ ДЕРЖИТ ОН ЖЕ.",
 	"THERE IS A HOLE IN THE AFT SHIELD AND NOTHING TO FIX IT WITH. ENOUGH CREDITS FOR TWO JUMPS.":                          "В КОРМОВОМ ЩИТЕ ДЫРА, ЧИНИТЬ НЕ НА ЧТО. ДЕНЕГ ХВАТИТ НА ДВА ПРЫЖКА.",
-	"THE DEBT IS NOT GOING ANYWHERE.":                                                                          "ДОЛГ НИКУДА НЕ ДЕНЕТСЯ.",
-	"THIS IS THE STATION YOU ARE DOCKED AT.":                                                                   "ЭТО СТАНЦИЯ, ГДЕ ТЫ СТОИШЬ.",
-	"BY THE DOCK EXIT HANGS THE HIRING BOARD: COURIER RUNS, PASSENGERS, BOUNTIES ON PIRATES.":                  "У ВЫХОДА ИЗ ДОКА ВИСИТ ДОСКА НАЙМА: КУРЬЕРСКИЕ РЕЙСЫ, ПАССАЖИРЫ, ЗАКАЗЫ НА ПИРАТОВ.",
-	"THE FIRST ROW ON THAT BOARD IS THE STORY CONTRACT. IT PAYS BETTER THAN THE REST AND IT DOES NOT RUN OUT.": "САМАЯ ПЕРВАЯ СТРОКА НА ДОСКЕ - СЮЖЕТНЫЙ КОНТРАКТ. ОН ПЛАТИТ БОЛЬШЕ ОСТАЛЬНЫХ И НЕ КОНЧАЕТСЯ.",
-	"CARRY CARGO WHERE IT IS WORTH MORE. TAKE WORK OFF THE BOARD. WATCH YOUR FUEL AND YOUR DEBT.":              "ВОЗИ ГРУЗ ТУДА, ГДЕ ОН ДОРОЖЕ. БЕРИ РАБОТУ С ДОСКИ. СЛЕДИ ЗА ТОПЛИВОМ И ДОЛГОМ.",
-	"DO NOT HIT THE STATION AT SPEED. THE FIRST RUN IS USUALLY A SIMPLE ONE.":                                  "НЕ ВЛЕТАЙ В СТАНЦИЮ НА СКОРОСТИ. ПЕРВЫЙ РЕЙС ОБЫЧНО ПРОСТОЙ.",
-	"NOBODY WRITES THAT UNLESS THEY ALREADY KNOW IT IS NOT GOING TO BE.":                                       "ТАК ПИШУТ ТОЛЬКО ТОГДА, КОГДА ЗАРАНЕЕ ЗНАЮТ, ЧТО ОН НЕ ПРОСТОЙ.",
+	"THE DEBT IS NOT GOING ANYWHERE.":        "ДОЛГ НИКУДА НЕ ДЕНЕТСЯ.",
+	"THIS IS THE STATION YOU ARE DOCKED AT.": "ЭТО СТАНЦИЯ, ГДЕ ТЫ СТОИШЬ.",
+	"CARRY CARGO WHERE IT IS WORTH MORE. TAKE WORK OFF THE BOARD. WATCH YOUR FUEL AND YOUR DEBT.": "ВОЗИ ГРУЗ ТУДА, ГДЕ ОН ДОРОЖЕ. БЕРИ РАБОТУ С ДОСКИ. СЛЕДИ ЗА ТОПЛИВОМ И ДОЛГОМ.",
 	"ENTER THE STATION": "ВОЙТИ НА СТАНЦИЮ",
 	"BARKEEPER":         "БАРМЕН",
 	"DOCK HAND":         "ДОКЕР",
