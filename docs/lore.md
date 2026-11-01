@@ -70,6 +70,79 @@
 устали и не спрашивают лишнего.
 
 ---
+## Вступление
+
+Три окна подряд при старте новой игры, до первой стыковки. `ESC` пропускает
+остальные. Больше никогда сами не появляются, но лежат в `АРХИВ`.
+
+Порядок обязателен: кто ты, где ты, что делать. Третье окно заканчивается той же
+фразой, с которой начинается сценарий: «простой рейс, в этом и смысл».
+
+### `intro_who`
+
+```
+ТЫ ВОЛЬНЫЙ ПИЛОТ. КЕСТРЕЛ III
+КУПЛЕНА У КОМБИНАТА В РАССРОЧКУ,
+ЗАЛОГ ДЕРЖИТ ОН ЖЕ. В КОРМОВОМ
+ЩИТЕ ДЫРА: ЧИНИТЬ НЕ НА ЧТО.
+ДЕНЕГ ХВАТИТ НА ДВА ПРЫЖКА.
+ДОЛГ НИКУДА НЕ ДЕНЕТСЯ.
+```
+
+```
+YOU ARE A FREE PILOT. THE KESTREL III
+WAS BOUGHT FROM THE COMBINE ON
+INSTALMENTS, AND THE COMBINE HOLDS THE
+DEPOSIT. THERE IS A HOLE IN THE AFT
+SHIELD AND NOTHING TO FIX IT WITH.
+ENOUGH CREDITS FOR TWO JUMPS.
+THE DEBT IS NOT GOING ANYWHERE.
+```
+
+### `intro_where`
+
+```
+ЭТО СТАНЦИЯ, ГДЕ ТЫ СТОИШЬ.
+У ВЫХОДА ИЗ ДОКА ВИСИТ ДОСКА
+НАЙМА: КУРЬЕРСКИЕ РЕЙСЫ,
+ПАССАЖИРЫ, ЗАКАЗЫ НА ПИРАТОВ.
+САМАЯ ПЕРВАЯ СТРОКА НА ДОСКЕ -
+СЮЖЕТНЫЙ КОНТРАКТ. ОН ПЛАТИТ
+БОЛЬШЕ ОСТАЛЬНЫХ И НЕ КОНЧАЕТСЯ.
+```
+
+```
+THIS IS THE STATION YOU ARE DOCKED AT.
+BY THE DOCK EXIT HANGS THE HIRING
+BOARD: COURIER RUNS, PASSENGERS,
+BOUNTIES ON PIRATES. THE FIRST ROW ON
+THAT BOARD IS THE STORY CONTRACT.
+IT PAYS BETTER THAN THE REST AND IT
+DOES NOT RUN OUT.
+```
+
+### `intro_what`
+
+```
+ВОЗИ ГРУЗ ТУДА, ГДЕ ОН ДОРОЖЕ.
+БЕРИ РАБОТУ С ДОСКИ. СЛЕДИ
+ЗА ТОПЛИВОМ И ДОЛГОМ.
+НЕ ВЛЕТАЙ В СТАНЦИЮ НА СКОРОСТИ.
+ПЕРВЫЙ РЕЙС ОБЫЧНО ПРОСТОЙ.
+ТАК ПИШУТ ТОЛЬКО ТОГДА, КОГДА
+ЗАРАНЕЕ ЗНАЮТ, ЧТО ОН НЕ ПРОСТОЙ.
+```
+
+```
+CARRY CARGO WHERE IT IS WORTH MORE.
+TAKE WORK OFF THE BOARD. WATCH YOUR
+FUEL AND YOUR DEBT. DO NOT HIT THE
+STATION AT SPEED. THE FIRST RUN IS
+USUALLY A SIMPLE ONE. NOBODY WRITES
+THAT UNLESS THEY ALREADY KNOW IT IS
+NOT GOING TO BE.
+```
+
 ## Тексты
 
 Ниже - то, что игра показывает окном. Русский вариант и английский, оба в одну ширину: 48 знаков, заглавные, без буквы ё, без тире и без кавычек-ёлочек.
@@ -246,7 +319,7 @@ FORMULA IT DID NOT WRITE.
 ```
 
 ```
-COBRA MK III, SERIAL REMOVED. BOUGHT FROM
+KESTREL III, SERIAL REMOVED. BOUGHT FROM
 THE COMBINE ON INSTALMENTS: TWENTY PER CENT
 NOW, THE REST OUT OF CONTRACT PAY. THE
 DEPOSIT IS HELD BY HELIOS, NOT A BANK. UNTIL

@@ -2133,6 +2133,8 @@ func modeKey(k string) bool {
 		}
 		g.NewGameMode(mode, "")
 		DropSession()
+		// the first thing a new commander sees is who he is
+		g.StartIntro()
 		return true
 	}
 	return true

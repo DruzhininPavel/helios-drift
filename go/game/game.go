@@ -1155,6 +1155,15 @@ func (g *Game) updateDocking(dt float64) {
 	}
 }
 
+// StartIntro opens the prologue: who the pilot is, where he is standing, and
+// what the work looks like. Once per commander, skippable with Escape.
+func (g *Game) StartIntro() {
+	if g.Cmd.Flags["INTRO_SEEN"] || g.Screen == "talk" {
+		return
+	}
+	g.TalkStart("intro_who")
+}
+
 func (g *Game) Launch() {
 	g.EscapeUsed = false
 	g.EnterSystem(g.Cmd.System, "launch", 0, false)

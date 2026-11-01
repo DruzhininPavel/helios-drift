@@ -775,6 +775,42 @@ func init() {
 			},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
+		// ---- the prologue: three screens before the first look at the market
+		&Node{
+			ID:      "intro_who",
+			Kind:    "screen",
+			Speaker: "",
+			Lines: []string{
+				"YOU ARE A FREE PILOT. THE KESTREL III WAS BOUGHT FROM THE COMBINE ON INSTALMENTS, AND THE COMBINE HOLDS THE DEPOSIT.",
+				"THERE IS A HOLE IN THE AFT SHIELD AND NOTHING TO FIX IT WITH. ENOUGH CREDITS FOR TWO JUMPS.",
+				"THE DEBT IS NOT GOING ANYWHERE.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "intro_where"}},
+		},
+		&Node{
+			ID:      "intro_where",
+			Kind:    "screen",
+			Speaker: "",
+			Lines: []string{
+				"THIS IS THE STATION YOU ARE DOCKED AT.",
+				"BY THE DOCK EXIT HANGS THE HIRING BOARD: COURIER RUNS, PASSENGERS, BOUNTIES ON PIRATES.",
+				"THE FIRST ROW ON THAT BOARD IS THE STORY CONTRACT. IT PAYS BETTER THAN THE REST AND IT DOES NOT RUN OUT.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "intro_what"}},
+		},
+		&Node{
+			ID:      "intro_what",
+			Kind:    "screen",
+			Speaker: "",
+			Lines: []string{
+				"CARRY CARGO WHERE IT IS WORTH MORE. TAKE WORK OFF THE BOARD. WATCH YOUR FUEL AND YOUR DEBT.",
+				"DO NOT HIT THE STATION AT SPEED. THE FIRST RUN IS USUALLY A SIMPLE ONE.",
+				"NOBODY WRITES THAT UNLESS THEY ALREADY KNOW IT IS NOT GOING TO BE.",
+			},
+			OnEnter: []Effect{{Kind: FxFlag, Key: "INTRO_SEEN"}},
+			Options: []Option{{Text: "ENTER THE STATION", Next: ""}},
+		},
+
 		// ---- the four faces you keep meeting on stations. No campaign, no
 		// reward: they are here so the sector has people in it.
 		&Node{
