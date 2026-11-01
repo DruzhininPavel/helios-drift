@@ -44,12 +44,15 @@ type Sel struct {
 	Typed               string
 	TalkScroll          int
 	TalkOpt             int
-	PrevState           string
-	PrevScreen          string
-	PadTestFrom         string
-	HasSession          bool
-	SessionState        string
-	SessionScreen       string
+	// MarketMode is "" or "buy"/"sell" while the amount is being chosen.
+	MarketMode    string
+	MarketQty     int
+	PrevState     string
+	PrevScreen    string
+	PadTestFrom   string
+	HasSession    bool
+	SessionState  string
+	SessionScreen string
 }
 
 var S = Sel{ChartCursor: -1}
@@ -1166,12 +1169,20 @@ func dockGuide(fb *render.FB, cam *render.Camera, st *game.Entity, t float64) {
 // drawMessages prints the toast stack. It used to live in the flight view only,
 // so every "not enough cargo space" on a station screen was invisible: the shop
 // and the contract board looked like they were ignoring the key.
-func drawMessages(fb *render.FB, top, max int) {
+func drawMessages(fb *render.FB, top, max int) { drawMessagesWhere(fb, top, max, false) }
+
+// drawMessagesWhere can show refusals only: a station screen does not need a
+// running commentary of everything that went right, the log already has it,
+// but it does need to say why something did not happen.
+func drawMessagesWhere(fb *render.FB, top, max int, onlyBad bool) {
 	g := game.G
 	y := top
 	shown := 0
 	for i := len(g.Messages) - 1; i >= 0 && shown < max; i-- {
 		msg := g.Messages[i]
+		if onlyBad && msg.Kind != "bad" {
+			continue
+		}
 		col := ColYellow
 		if msg.Kind == "bad" {
 			col = ColRed

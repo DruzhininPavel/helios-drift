@@ -50,6 +50,18 @@ func (g *Game) Note(kind, a string, n int, cr float64) {
 	if g.World != nil && g.World.Sys != nil {
 		e.Sys = g.World.Sys.Name
 	}
+	// ten tonnes bought in ten presses is one line in the record, not ten: the
+	// log is a record of what happened, not of which keys were pressed
+	if kind == LogBuy || kind == LogSell || kind == LogFuel || kind == LogMine {
+		for i := len(g.Cmd.Log) - 1; i >= 0 && i >= len(g.Cmd.Log)-3; i-- {
+			last := &g.Cmd.Log[i]
+			if last.Kind == e.Kind && last.A == e.A && last.Sys == e.Sys && last.Day == e.Day {
+				last.N += e.N
+				last.CR += e.CR
+				return
+			}
+		}
+	}
 	g.Cmd.Log = append(g.Cmd.Log, e)
 	if len(g.Cmd.Log) > LogLimit {
 		g.Cmd.Log = g.Cmd.Log[len(g.Cmd.Log)-LogLimit:]

@@ -502,6 +502,19 @@ func runShots() {
 	g.Cmd.Campaign.Active = false
 	g.Cmd.Cash = 3812
 
+	// the market with the amount selector up
+	g.State = "docked"
+	g.Screen = "market"
+	g.Cmd.Boxes = 0
+	g.Cmd.Cargo[0] = 6
+	ui.S.Market = 0
+	ui.S.MarketMode = "buy"
+	ui.S.MarketQty = 10
+	shot("g81-market-amount")
+	ui.S.MarketMode = ""
+	g.Cmd.Cargo[0] = 0
+	g.Screen = "launch"
+
 	// the contract board: the story on top, then offers, then what is running
 	g.State = "docked"
 	g.Screen = "contracts"

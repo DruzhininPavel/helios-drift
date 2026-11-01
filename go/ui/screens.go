@@ -79,7 +79,12 @@ func docked(fb *render.FB) {
 	// the answer to "why did nothing happen" belongs on every screen, not just
 	// in flight - except the contract board, where a running list of toasts
 	// under the description reads like part of the contract
-	if g.Screen != "contracts" {
+	// the market and the board say nothing when a thing works: the log records
+	// it. They still say why something did not happen.
+	switch g.Screen {
+	case "contracts", "market":
+		drawMessagesWhere(fb, 192, 2, true)
+	default:
 		drawMessages(fb, 192, 2)
 	}
 }
@@ -271,10 +276,10 @@ func marketScreen(fb *render.FB) {
 	Hint = "UP/DN  B BUY  S SELL  SHIFT+ 10  ESC"
 	plate(fb, 4, 18, 312, 190, "GALACTIC MARKET")
 	fb.Text("COMMODITY", 12, 30, ColDim, 1)
-	fb.TextR("SELL", 178, 30, ColDim, 1)
-	fb.TextR("BUY", 220, 30, ColDim, 1)
-	fb.TextR("QTY", 254, 30, ColDim, 1)
-	fb.TextR("HOLD", 294, 30, ColDim, 1)
+	fb.TextR(lang.T("SELL"), 150, 30, ColDim, 1)
+	fb.TextR(lang.T("BUY"), 196, 30, ColDim, 1)
+	fb.TextR(lang.T("QTY"), 246, 30, ColDim, 1)
+	fb.TextR(lang.T("HOLD"), 302, 30, ColDim, 1)
 	fb.HLine(10, 310, 37, ColFrame)
 	for i, m := range g.Market {
 		y := 42 + i*8
@@ -295,20 +300,45 @@ func marketScreen(fb *render.FB) {
 		if m.Sell > m.Price {
 			sc = ColGreen
 		}
-		fb.TextR(itoa(m.Sell), 178, y, sc, 1)
+		fb.TextR(itoa(m.Sell), 150, y, sc, 1)
 		pc := ColGreen
 		if sel {
 			pc = ColWhite
 		}
-		fb.TextR(itoa(m.Price), 220, y, pc, 1)
-		fb.TextR(itoa(m.Qty), 254, y, ColDim, 1)
+		fb.TextR(itoa(m.Price), 196, y, pc, 1)
+		fb.TextR(itoa(m.Qty), 246, y, ColDim, 1)
 		have := cmd.Cargo[i]
 		hc := ColDim
 		if have > 0 {
 			hc = ColYellow
 		}
-		fb.TextR(itoa(have), 294, y, hc, 1)
+		fb.TextR(itoa(have), 302, y, hc, 1)
 	}
+	// amount prompt: how many tonnes, before anything is bought or sold
+	if S.MarketMode != "" && S.Market < len(g.Market) {
+		m := g.Market[S.Market]
+		qty := S.MarketQty
+		if qty < 1 {
+			qty = 1
+		}
+		unit, total := m.Price, qty*m.Price
+		maxQty := m.Qty
+		label := lang.T("BUY")
+		if S.MarketMode == "sell" {
+			unit, total = m.Sell, qty*m.Sell
+			maxQty = cmd.Cargo[S.Market]
+			label = lang.T("SELL")
+		}
+		fb.FillRect(60, 130, 260, 178, render.RGB(0x08131f))
+		fb.Rect(60, 130, 260, 178, ColYellow)
+		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 136, ColYellow, 1)
+		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 148, ColGreen, 1)
+		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 160, ColDim, 1)
+		fb.TextC(lang.T("UP/DOWN  10 WITH PAGE  ENTER  ESC"), 160, 170, ColDim, 1)
+		Hint = "UP/DOWN  AMOUNT   PAGE  TEN   ENTER  ESC"
+		return
+	}
+
 	// the crate rides in the hold and the market will not touch it: show it
 	// where a player looks for their cargo, and let him try
 	if cmd.Boxes > 0 {
@@ -322,7 +352,7 @@ func marketScreen(fb *render.FB) {
 			col = ColYellow
 		}
 		fb.Text("CRATE x"+itoa(cmd.Boxes), 20, y, col, 1)
-		fb.TextR(itoa(40000*cmd.Boxes)+" NOM", 294, y, ColDim, 1)
+		fb.TextR(itoa(40000*cmd.Boxes)+" NOM", 302, y, ColDim, 1)
 	}
 	fb.Text("HOLD "+itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 240, 197, ColYellow, 1)
 }
@@ -827,6 +857,38 @@ func dockedKey(k string) bool {
 	}
 	switch g.Screen {
 	case "market":
+		if S.MarketMode != "" {
+			// the amount prompt owns the keys while it is up
+			switch k {
+			case "Escape":
+				S.MarketMode = ""
+			case "ArrowUp":
+				S.MarketQty++
+			case "ArrowDown":
+				S.MarketQty--
+			case "PageUp":
+				S.MarketQty += 10
+			case "PageDown":
+				S.MarketQty -= 10
+			case "Enter":
+				qty := S.MarketQty
+				if qty > 0 && S.Market < len(g.Market) {
+					if S.MarketMode == "sell" {
+						g.Sell(S.Market, qty)
+					} else {
+						g.Buy(S.Market, qty)
+					}
+				}
+				S.MarketMode = ""
+			}
+			if S.MarketQty < 1 {
+				S.MarketQty = 1
+			}
+			if S.MarketQty > 999 {
+				S.MarketQty = 999
+			}
+			return true
+		}
 		switch k {
 		case "ArrowUp":
 			S.Market = (S.Market + marketRows() - 1) % marketRows()
@@ -838,15 +900,10 @@ func dockedKey(k string) bool {
 				g.Message("OWNER IS THE HOLDER", "bad")
 				return true
 			}
-			switch k {
-			case "b":
-				g.Buy(S.Market, 1)
-			case "B":
-				g.Buy(S.Market, 10)
-			case "s":
-				g.Sell(S.Market, 1)
-			case "S":
-				g.Sell(S.Market, 10)
+			if k == "b" || k == "B" {
+				S.MarketMode, S.MarketQty = "buy", 1
+			} else {
+				S.MarketMode, S.MarketQty = "sell", 1
 			}
 		}
 		return true
