@@ -2232,6 +2232,11 @@ var helpPages = []struct {
 		"TAB IS THE ENERGY BOMB: EVERYTHING",
 		"CLOSE TO YOU DIES, INCLUDING YOUR SHIELDS.",
 		"",
+		"WHAT A KILL LEAVES FLOATS: CANISTERS",
+		"OF CARGO, MARKED YELLOW ON THE RADAR.",
+		"A FUEL SCOOP (S) SWALLOWS THEM. WITHOUT",
+		"ONE THEY DAMAGE THE HULL ON IMPACT.",
+		"",
 		"WATCH THE CABIN TEMPERATURE NEAR THE STAR.",
 		"SHIELDS RECHARGE, THE HULL DOES NOT.",
 	}},
@@ -2382,6 +2387,7 @@ func logVisible() []game.LogEntry {
 }
 
 func logScreen(fb *render.FB) {
+	g := game.G
 	plate(fb, 6, 14, 310, 190, "LOG")
 	// filter tabs
 	x := 12
@@ -2398,6 +2404,9 @@ func logScreen(fb *render.FB) {
 	if len(ents) == 0 {
 		fb.Text("NOTHING IN THIS LOG YET", 14, 44, ColDim, 1)
 		Hint = "LEFT/RIGHT FILTER   ESC BACK"
+		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
+			Hint = "LEFT/RIGHT FILTER   L CLOSING NOTICE   ESC BACK"
+		}
 		return
 	}
 	if S.Log < 0 {

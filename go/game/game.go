@@ -119,19 +119,30 @@ type Commander struct {
 	Visited map[string]bool `json:"visited,omitempty"`
 	// PanicDay and PanicSys remember where the convoy was broken, so the market
 	// there can halve its prices for a day. Zero means no panic.
-	PanicDay    int           `json:"panic_day,omitempty"`
-	PanicSys    int           `json:"panic_sys,omitempty"`
-	PanicGalaxy int           `json:"panic_galaxy,omitempty"`
-	Mail        int           `json:"mail"`
-	Ship        string        `json:"ship"`
-	Mode        string        `json:"mode"`
-	Campaign    CampaignState `json:"campaign"`
+	PanicDay    int `json:"panic_day,omitempty"`
+	PanicSys    int `json:"panic_sys,omitempty"`
+	PanicGalaxy int `json:"panic_galaxy,omitempty"`
+	// LicenseGalaxy and LicenseSys remember where the licence off the convoy was
+	// bought: five per cent there, because that is where the pilot became one of
+	// theirs.
+	LicenseGalaxy int `json:"license_galaxy,omitempty"`
+	LicenseSys    int `json:"license_sys,omitempty"`
+	Mail          int `json:"mail"`
+	// LastMeet is the day of the last station conversation, so two dockings on
+	// the same day do not both open one.
+	LastMeet int           `json:"last_meet,omitempty"`
+	Ship     string        `json:"ship"`
+	Mode     string        `json:"mode"`
+	Campaign CampaignState `json:"campaign"`
 }
 
 func NewCommander() Commander {
 	return Commander{
 		Name: "JAMESON", Cash: 100, Fuel: 7, Missiles: 3,
 		Cargo: map[int]int{}, CargoCap: CargoBase, Equip: map[string]bool{},
+		// a commander always has a flags map: every story branch writes to it,
+		// and a nil map here is a crash waiting for the right chapter
+		Flags: map[string]bool{}, Visited: map[string]bool{},
 		Ship: "cobra3", Mode: ModeAdvanced,
 	}
 }
@@ -279,6 +290,9 @@ type Game struct {
 	// answer the hail.
 	PoliceState string
 	PoliceTimer float64
+	// hintedScoop keeps the fuel scoop hint to once a flight.
+	hintedScoop bool
+
 	// HiveWait counts the seconds spent leaving the station's shields up.
 	HiveWait float64
 
@@ -1031,6 +1045,14 @@ func (g *Game) Docked() { g.dockedAt() }
 func (g *Game) dockedAt() {
 	g.Screen = "launch"
 	g.Market = galaxy.MakeMarket(g.World.Sys, g.DockSalt)
+	// an interrupted audit empties the lanes: everything is worth less because
+	// nothing is moving
+	if g.Cmd.Flags["AUDIT_BROKEN"] {
+		for i := range g.Market {
+			g.Market[i].Price = int(float64(g.Market[i].Price) * 0.7)
+			g.Market[i].Sell = int(float64(g.Market[i].Sell) * 0.7)
+		}
+	}
 	// a system whose convoy was broken is in a panic: buyers are gone, sellers
 	// are desperate, and everything halves for a day
 	if g.PanicHere() {
@@ -1136,6 +1158,8 @@ func (g *Game) updateDocking(dt float64) {
 func (g *Game) Launch() {
 	g.EscapeUsed = false
 	g.EnterSystem(g.Cmd.System, "launch", 0, false)
+	// somebody at the counter had something to say on the way out
+	g.meetSomeone()
 }
 
 func (g *Game) Hyperspace(target int) bool {

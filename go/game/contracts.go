@@ -41,6 +41,11 @@ func (g *Game) rollContracts() {
 	}
 	gal := galaxy.Get(g.Cmd.Galaxy)
 	cur := gal.Systems[g.Cmd.System]
+	// an interrupted audit stops movement: nothing is worth delivering to a
+	// station that may not be there next quarter
+	if g.Cmd.Flags["AUDIT_BROKEN"] {
+		return
+	}
 	n := 1 + randInt(3)
 	for i := 0; i < n; i++ {
 		tgt := g.missionTarget()

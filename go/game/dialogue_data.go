@@ -369,6 +369,9 @@ func init() {
 				{Text: "BRING THE COURIER", Next: "c6_arch3",
 					If: []Cond{{Key: "COURIER_ALIVE", Op: "flag"}},
 					Do: []Effect{{Kind: FxFlag, Key: "WITNESS"}}},
+				{Text: "PLAY THE RECORDING", Next: "c6_arch3",
+					If: []Cond{{Key: "COPIED_RECORDER", Op: "flag"}},
+					Do: []Effect{{Kind: FxFlag, Key: "EVIDENCE"}}},
 				{Text: "BRIBE HIM - 2000", Next: "c6_arch3",
 					If: []Cond{{Key: "cash", Op: ">=", N: 2000}},
 					Do: []Effect{{Kind: FxCash, N: -2000}, {Kind: FxFlag, Key: "CLERK_2"}}},
@@ -587,6 +590,22 @@ func init() {
 				"YOU ARE OFFERED COOPERATION. YOU MAY LEAVE. YOU MAY STAY. YOU CANNOT INTERFERE.",
 			},
 			Variants: []LineVariant{
+				{If: []Cond{{Key: "KNOWS_HIVE", Op: "flag"}}, Lines: []string{
+					"YOU ASKED WHAT THE HIVE IS. THIS IS THE ANSWER, IN THE ONLY FORM IT CAN BE GIVEN.",
+					"THERE ARE EIGHTEEN STATIONS IN THIS SECTOR. SEVENTEEN TRADE ON LICENCES THAT BELONG TO US. THE LICENCES HAVE BEEN RESOLD THREE TIMES. THE DEBT IS THREE HUNDRED AND EIGHTY BILLION.",
+					"IT CANNOT CONTINUE IN THIS SHAPE. AN AUDIT WILL CLOSE SEVENTEEN STATIONS AND RECOUNT THE DEBT FROM ZERO. IT WILL TAKE FORTY-TWO YEARS.",
+					"THIS IS NOT A PUNISHMENT. IT IS THE ONLY WAY TO RESTORE THE BALANCE WITHOUT DESTROYING PEOPLE.",
+				}},
+				{If: []Cond{{Key: "KNOWS_BOX", Op: "flag"}}, Lines: []string{
+					"YOU ASKED WHAT WAS IN THE CRATE. IT WAS THIS: A SIGNAL, AND AN ACCOUNT THAT HAS BEEN OPEN FOR EIGHTY YEARS.",
+					"SEVENTEEN STATIONS TRADE ON OUR LICENCES. THE DEBT IS THREE HUNDRED AND EIGHTY BILLION. AN AUDIT WILL CLOSE THEM AND RECOUNT FROM ZERO.",
+					"YOU ARE OFFERED COOPERATION. YOU MAY LEAVE. YOU MAY STAY. YOU CANNOT INTERFERE.",
+				}},
+				{If: []Cond{{Key: "ASKED_PRICE", Op: "flag"}}, Lines: []string{
+					"YOU ASKED WHAT YOU WOULD BE PAID. YOU WERE PAID THREE THOUSAND FOUR HUNDRED FOR DESTROYING A MAN WHO WAS ALREADY DEAD.",
+					"THE SAME ACCOUNTING CLOSES SEVENTEEN STATIONS. THE DEBT IS THREE HUNDRED AND EIGHTY BILLION.",
+					"YOU MAY LEAVE. YOU MAY STAY. YOU CANNOT INTERFERE.",
+				}},
 				{If: []Cond{{Key: "MET_AUDITOR", Op: "flag"}}, Lines: []string{
 					"YOUR REQUEST FOR A HEARING IS ACCEPTED.",
 					"AN AUDITOR IS PRESENT. THE AUDIT IS NO LONGER AUTOMATIC: IT IS A NEGOTIATION.",
@@ -679,10 +698,18 @@ func init() {
 				"I CAN LEAVE. THEN THE SEAL LEAVES WITH ME AND THE SECTOR HAS NO LICENCES AT ALL. THAT IS CHAOS, BUT HONEST.",
 				"OR YOU CAN KILL ME AND TAKE IT BY FORCE. THE SAME RESULT AS THE FIRST, WITHOUT A SIGNATURE AND WITHOUT CONSENT. HARDER TO RUN.",
 			},
+			Variants: []LineVariant{
+				{If: []Cond{{Key: "FORGED", Op: "flag"}}, Lines: []string{
+					"YOU FORGED A SIGNATURE IN THE ARCHIVE. THE CLERK WROTE IT DOWN. IT TOOK THEM FOUR DAYS TO MATCH THE HAND.",
+					"SO THERE IS NO DEAL AND NO SIGNATURE. THERE IS ONLY WHAT YOU CAME HERE WITH.",
+				}},
+			},
 			Options: []Option{
 				{Text: "TAKE THE SEAL", Next: "c8_combine",
+					If: []Cond{{Key: "FORGED", Op: "!flag"}},
 					Do: []Effect{{Kind: FxEnding, S: "combine"}}},
 				{Text: "LET HIM GO", Next: "c8_chaos",
+					If: []Cond{{Key: "FORGED", Op: "!flag"}},
 					Do: []Effect{{Kind: FxEnding, S: "chaos"}}},
 				{Text: "KILL HIM AND TAKE IT", Next: "c8_kill",
 					Do: []Effect{{Kind: FxFlag, Key: "DIRECTOR_DEAD"}}},
@@ -745,6 +772,104 @@ func init() {
 				"THE STATIONS TAKE THE SEAL AND LOCK IT IN A SHARED SAFE WITH EIGHTEEN KEYS.",
 				"THE RULES ARE WRITTEN BY THE PEOPLE WHO LIVE UNDER THEM.",
 				"THE COMBINE DOES NOT DISAPPEAR. IT EXISTS AS A DEBTOR, AND EVERY MEETING BEGINS WITH ITS ACCOUNTS READ ALOUD.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		// ---- the four faces you keep meeting on stations. No campaign, no
+		// reward: they are here so the sector has people in it.
+		&Node{
+			ID:      "a1_bar",
+			Kind:    "talk",
+			Speaker: "BARKEEPER",
+			Lines: []string{
+				"YOU AGAIN. SAME SEAT, SAME ORDER, SAME FACE.",
+				"HALF THE PILOTS WHO DRINK HERE ARE WAITING FOR A CONVOY THAT ALREADY LEFT. THE OTHER HALF ARE WAITING FOR THE COMBINE TO NOTICE THEM.",
+				"I HAVE BEEN POURING FOR ELEVEN YEARS AND I HAVE NEVER SEEN A LICENCE. NOT ONE. THEY EXIST ON PAPER, IN AN OFFICE, SOMEWHERE I WILL NEVER GO.",
+			},
+			Options: []Option{
+				{Text: "BUY HER A DRINK - 50", Next: "a1_deep",
+					If: []Cond{{Key: "cash", Op: ">=", N: 50}},
+					Do: []Effect{{Kind: FxCash, N: -50}, {Kind: FxFlag, Key: "MET_BAR"}}},
+				{Text: "LEAVE", Next: "", Do: []Effect{{Kind: FxFlag, Key: "MET_BAR"}}},
+			},
+		},
+		&Node{
+			ID:      "a1_deep",
+			Kind:    "talk",
+			Speaker: "BARKEEPER",
+			Lines: []string{
+				"SIT. SINCE YOU ARE PAYING.",
+				"THE OLD PILOTS SAY THE SECTOR USED TO HAVE EIGHTY STATIONS. NOW THERE ARE EIGHTEEN. NOBODY BOMBED THEM. THEY WERE CLOSED, ONE PAPER AT A TIME, BY PEOPLE WHO NEVER CAME HERE.",
+				"IF YOU EVER FIND OUT WHO SIGNS THOSE PAPERS, DO NOT TELL ME. I WOULD HAVE TO DO SOMETHING ABOUT IT, AND I HAVE A BAR.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "a2_dock",
+			Kind:    "talk",
+			Speaker: "DOCK HAND",
+			Lines: []string{
+				"CAREFUL ON THE APPROACH. THE SLOT IS NOT WHERE THE LIGHT SAYS IT IS, AND IT HAS NOT BEEN FOR TWO YEARS.",
+				"THEY KEEP PATCHING THE OUTSIDE AND NEVER THE INSIDE. THAT IS THE WHOLE COMBINE, IF YOU WANT IT IN ONE SENTENCE.",
+				"A SHIP CAME IN LAST WEEK WITH A CRATE THAT HUMMED. I DID NOT ASK. I DO NOT ASK ANY MORE.",
+			},
+			Options: []Option{
+				{Text: "ASK ABOUT THE PRICES", Next: "a2_ans", Do: []Effect{{Kind: FxFlag, Key: "MET_DOCK"}}},
+				{Text: "LEAVE", Next: "", Do: []Effect{{Kind: FxFlag, Key: "MET_DOCK"}}},
+			},
+		},
+		&Node{
+			ID:      "a2_ans",
+			Kind:    "talk",
+			Speaker: "DOCK HAND",
+			Lines: []string{
+				"PRICES? PRICES ARE A RUMOUR WITH A NUMBER ATTACHED.",
+				"ONE SYSTEM HAS NO WATER AND PAYS FORTY FOR IT. THE NEXT SYSTEM DUMPS WATER INTO THE SUN BECAUSE THE HOLD IS TOO SMALL TO KEEP IT.",
+				"NOBODY IS LYING TO YOU. THAT IS JUST WHAT A MAP LOOKS LIKE WHEN NOBODY AGREES ON ANYTHING.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "a3_nurse",
+			Kind:    "talk",
+			Speaker: "CLINIC NURSE",
+			Lines: []string{
+				"IF YOU ARE HERE FOR THE FREE CLINIC, IT IS THE DOOR PAST THE CRATES.",
+				"WE TREAT PILOTS, DOCKERS AND THE OCCASIONAL PASSENGER WHO WAS NOT TOLD WHERE THEY WERE GOING.",
+				"THE COMBINE PAYS FOR THE SUPPLIES. THAT IS THE ONLY REASON THE DOOR IS STILL OPEN, AND EVERYONE HERE KNOWS IT.",
+			},
+			Variants: []LineVariant{
+				{If: []Cond{{Key: "HAS_SEAL", Op: "flag"}}, Lines: []string{
+					"YOU ARE THE ONE WHO BROUGHT THE HUMMING CRATE.",
+					"I SIGNED FOR IT. I DO NOT KNOW WHAT IT WAS. I SIGNED BECAUSE THE ALTERNATIVE WAS THAT IT SAT IN THE CORRIDOR.",
+					"IF IT EVER COMES BACK, BRING IT TO ME FIRST.",
+				}},
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "", Do: []Effect{{Kind: FxFlag, Key: "MET_NURSE"}}}},
+		},
+		&Node{
+			ID:      "a4_old",
+			Kind:    "talk",
+			Speaker: "OLD PILOT",
+			Lines: []string{
+				"YOU FLY LIKE SOMEONE WHO LEARNED ON A COURIER RUN AND NEVER GOT A SECOND LESSON.",
+				"NO INSULT. I LEARNED THE SAME WAY.",
+				"I FLEW FOR THE COMBINE FOR NINE YEARS. THEN THEY REASSIGNED MY ROUTE AND I REALISED I HAD BEEN DELIVERING THE SAME THREE CRATES IN A CIRCLE FOR NINE YEARS.",
+				"SO I STOPPED. THEY DID NOT NOTICE FOR FOUR MONTHS.",
+			},
+			Options: []Option{
+				{Text: "ASK ABOUT HIM", Next: "a4_ans", Do: []Effect{{Kind: FxFlag, Key: "MET_OLD"}}},
+				{Text: "LEAVE", Next: "", Do: []Effect{{Kind: FxFlag, Key: "MET_OLD"}}},
+			},
+		},
+		&Node{
+			ID:      "a4_ans",
+			Kind:    "talk",
+			Speaker: "OLD PILOT",
+			Lines: []string{
+				"NOT MUCH TO TELL. NO FAMILY ON ANY STATION, NO DEBTS WORTH COLLECTING.",
+				"I KEEP A LOG OF EVERY SYSTEM I HAVE LANDED IN. FOUR HUNDRED AND SIXTY ENTRIES. I HAVE READ IT TWICE AND IT IS THE SAME DAY EVERY TIME.",
+				"IF YOU FIND SOMETHING WORTH WRITING DOWN, WRITE IT DOWN. THAT IS THE ONLY ADVICE I HAVE AND IT IS FREE.",
 			},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},

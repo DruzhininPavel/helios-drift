@@ -317,6 +317,14 @@ func (g *Game) updateEntities(dt float64) {
 		}
 
 		if e.Kind == "canister" || e.Kind == "capsule" || e.Kind == "plate" {
+			// a canister drifting past without a scoop fitted is a lesson worth
+			// teaching once, not a wall to be discovered by crashing into it
+			if !g.Cmd.Equip["fuelscoop"] && !g.hintedScoop {
+				if p.Pos.Sub(e.Pos).Len() < 320 {
+					g.hintedScoop = true
+					g.Message("FIT A FUEL SCOOP TO COLLECT CARGO", "info")
+				}
+			}
 			e.Pos = e.Pos.Add(fwd.Mul(e.Speed * dt))
 			e.Mat = e.Mat.Mul(render.RotY(0.4 * dt))
 			dc := p.Pos.Sub(e.Pos).Len()
@@ -592,7 +600,7 @@ func (g *Game) Buy(idx, qty int) {
 	// a licence bought off the convoy is a standing arrangement: five per cent
 	// off everything this pilot buys from now on
 	price := m.Price
-	if g.Cmd.Flags["BOUGHT_LICENSE"] {
+	if g.LicensedHere() {
 		price = int(math.Round(float64(price) * 0.95))
 	}
 	free := cmd.CargoCap - CargoUsed(*cmd)

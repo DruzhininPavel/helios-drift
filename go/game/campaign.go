@@ -570,3 +570,53 @@ func (g *Game) StartEnding(kind string) {
 	g.Message("THE CAMPAIGN IS OVER", "good")
 	g.Note(LogDone, "ENDING: "+kind, 0, 0)
 }
+
+// LicensedHere reports the five per cent that comes with buying a licence off
+// the convoy - only on the station where it was bought.
+func (g *Game) LicensedHere() bool {
+	if !g.Cmd.Flags["BOUGHT_LICENSE"] {
+		return false
+	}
+	return g.Cmd.LicenseSys == g.Cmd.System && g.Cmd.LicenseGalaxy == g.Cmd.Galaxy
+}
+
+// acquaintanceNodes are the four people a pilot keeps running into. Each is met
+// once per commander, at a station, and none of them has anything to do with the
+// campaign: they are the sector's furniture, and furniture has stories.
+var acquaintanceNodes = []struct {
+	Node string
+	Flag string
+}{
+	{"a1_bar", "MET_BAR"},
+	{"a2_dock", "MET_DOCK"},
+	{"a3_nurse", "MET_NURSE"},
+	{"a4_old", "MET_OLD"},
+}
+
+// meetSomeone fires a station conversation now and then, so landing somewhere is
+// not only a market. Classic mode stays silent: a 1984 commander had no small
+// talk.
+func (g *Game) meetSomeone() {
+	if g.Classic() || g.Screen == "talk" || g.Cmd.Ending != "" {
+		return
+	}
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	var open []string
+	for _, a := range acquaintanceNodes {
+		if !g.Cmd.Flags[a.Flag] {
+			open = append(open, a.Node)
+		}
+	}
+	if len(open) == 0 {
+		return
+	}
+	// one in three dockings, and never twice in a row
+	if randFloat() > 0.34 || g.Cmd.LastMeet == g.Cmd.Day {
+		return
+	}
+	pick := open[randInt(len(open))]
+	g.Cmd.LastMeet = g.Cmd.Day
+	g.TalkStart(pick)
+}

@@ -68,6 +68,12 @@ func (g *Game) LoadSlot(slot int) bool {
 	if g.Cmd.Equip == nil {
 		g.Cmd.Equip = map[string]bool{}
 	}
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	if g.Cmd.Visited == nil {
+		g.Cmd.Visited = map[string]bool{}
+	}
 	if g.Cmd.Ship == "" {
 		g.Cmd.Ship = "cobra3"
 	}

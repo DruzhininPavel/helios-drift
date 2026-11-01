@@ -156,6 +156,11 @@ func (g *Game) apply(e Effect) {
 	switch e.Kind {
 	case FxFlag:
 		cmd.Flags[e.Key] = true
+		if e.Key == "BOUGHT_LICENSE" {
+			// remember where the licence was bought: the discount is local
+			cmd.LicenseSys = cmd.System
+			cmd.LicenseGalaxy = cmd.Galaxy
+		}
 	case FxUnflag:
 		delete(cmd.Flags, e.Key)
 	case FxCash:
@@ -185,8 +190,22 @@ func (g *Game) apply(e Effect) {
 		g.advanceCampaign()
 	case FxSpawn:
 		if e.Key == "PIRATES" {
-			// the four who were waiting for the shields to drop
+			// the four who were waiting for the shields to drop. One of them
+			// takes payment: if the pilot paid the ambush off in chapter two,
+			// that one turns away instead of shooting.
 			g.SpawnPirates(4)
+			if g.Cmd.Flags["PAID_PERMIT"] {
+				for i := len(g.World.Entities) - 1; i >= 0; i-- {
+					e := g.World.Entities[i]
+					if e.Behaviour == "pirate" {
+						e.Behaviour = "depart"
+						e.Hostile = false
+						break
+					}
+				}
+				g.Message("ONE OF THEM TURNS AWAY", "info")
+				g.Note(LogPirate, "SPARED", 0, 0)
+			}
 			break
 		}
 		g.spawnQuestGroup(e.Key)
