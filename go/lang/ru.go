@@ -4,9 +4,16 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"PRIVATE":                             "ПРИВАТНЫЙ",
-	"PRIVATE CONTRACT.":                   "ПРИВАТНЫЙ КОНТРАКТ.",
-	"PRIVATE CONTRACT. THE COMPANY PAYS.": "ПРИВАТНЫЙ КОНТРАКТ. ПЛАТИТ КОНТОРА.",
+	"ERASE?":                         "СТЕРЕТЬ?",
+	"PRESS ENTER AGAIN TO OVERWRITE": "ENTER ЕЩЁ РАЗ - ПЕРЕЗАПИСАТЬ",
+	"PRESS DEL AGAIN TO ERASE THIS COMMANDER": "DEL ЕЩЁ РАЗ - СТЕРЕТЬ ПИЛОТА",
+	"COMMANDER ERASED":                        "ПИЛОТ СТЁРТ",
+	"ERASE FAILED":                            "НЕ УДАЛОСЬ СТЕРЕТЬ",
+	"COMMANDER SAVED":                         "ПИЛОТ СОХРАНЁН",
+	"SLOT EMPTY":                              "СЛОТ ПУСТ",
+	"PRIVATE":                                 "ПРИВАТНЫЙ",
+	"PRIVATE CONTRACT.":                       "ПРИВАТНЫЙ КОНТРАКТ.",
+	"PRIVATE CONTRACT. THE COMPANY PAYS.":     "ПРИВАТНЫЙ КОНТРАКТ. ПЛАТИТ КОНТОРА.",
 	"BY THE DOCK EXIT HANGS THE HIRING BOARD: COURIER RUNS, PASSENGERS, BOUNTIES ON PIRATES. THERE IS WORK FOR ANY TASTE.": "У ВЫХОДА ИЗ ДОКА ВИСИТ ДОСКА НАЙМА: КУРЬЕРСКИЕ РЕЙСЫ, ПАССАЖИРЫ, ЗАКАЗЫ НА ПИРАТОВ. РАБОТЫ ХВАТИТ НА ЛЮБОЙ ВКУС.",
 	"ONE THING TO REMEMBER: THE SHORTER THE NOTICE, THE LONGER IT TAKES TO CLEAN UP AFTER.":                                "ТОЛЬКО ЗАПОМНИ: ЧЕМ КОРОЧЕ ОБЪЯВЛЕНИЕ, ТЕМ ДОЛЬШЕ ПОТОМ РАСХЛЁБЫВАТЬ.",
 	"DO NOT HIT THE STATION AT SPEED.": "НЕ ВЛЕТАЙ В СТАНЦИЮ НА СКОРОСТИ.",
@@ -556,7 +563,6 @@ var ru = map[string]string{
 	"TRADE IN":                   "ЗАЧЁТ",
 	"EN":                         "ЭН",
 	"SHIP":                       "КОРАБЛЬ",
-	"SLOT EMPTY":                 "СЛОТ ПУСТ",
 	"PASSENGERS":                 "ПАССАЖИРЫ",
 	"MAIL":                       "ПОЧТА",
 	"DAYS":                       "ДН",
@@ -569,7 +575,6 @@ var ru = map[string]string{
 	"NOT ENOUGH CREDITS":         "НЕ ХВАТАЕТ КРЕДИТОВ",
 	"YOU ARE ALREADY FLYING ONE": "У ВАС УЖЕ ТАКОЙ КОРАБЛЬ",
 	"SELL CARGO FIRST":           "СНАЧАЛА ПРОДАЙТЕ ГРУЗ",
-	"COMMANDER SAVED":            "ПИЛОТ СОХРАНЁН",
 
 	"CONTROLS":             "УПРАВЛЕНИЕ",
 	"RESET DEFAULTS":       "СБРОС ПО УМОЛЧАНИЮ",

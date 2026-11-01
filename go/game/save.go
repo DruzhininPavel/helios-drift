@@ -128,3 +128,13 @@ func (g *Game) Save() bool { return g.SaveSlot(0) }
 
 // Load reads the first slot.
 func (g *Game) Load() bool { return g.LoadSlot(0) }
+
+// DeleteSlot removes a commander from a slot. The file is moved aside rather than
+// destroyed, so a wrong press is recoverable until the next save writes over it.
+func DeleteSlot(slot int) bool {
+	p := savePath(slot)
+	if !SlotExists(slot) {
+		return false
+	}
+	return os.Rename(p, p+".deleted") == nil
+}

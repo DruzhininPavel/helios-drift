@@ -1643,7 +1643,6 @@ func openSlots(save bool) {
 }
 
 func slotsScreen(fb *render.FB) {
-	g := game.G
 	title := "LOAD COMMANDER"
 	if S.SlotSave {
 		title = "SAVE COMMANDER"
@@ -1665,16 +1664,17 @@ func slotsScreen(fb *render.FB) {
 		}
 		if sel {
 			col = ColYellow
+			if S.SlotConfirm && ok {
+				label = itoa(i+1) + "  " + lang.T("ERASE?") + "  " + name
+				col = ColRed
+			}
 		}
 		fb.Text(clip(label, 38), 46, y, col, 1)
 	}
 	if S.SlotSave {
-		Hint = "UP/DOWN   ENTER SAVE   ESC BACK"
+		Hint = "UP/DOWN   ENTER SAVE   DEL ERASE   ESC BACK"
 	} else {
-		Hint = "UP/DOWN   ENTER LOAD   ESC BACK"
-		if g.State == "title" {
-			Hint = "UP/DOWN   ENTER LOAD   ESC BACK"
-		}
+		Hint = "UP/DOWN   ENTER LOAD   DEL ERASE   ESC BACK"
 	}
 }
 
@@ -1682,6 +1682,10 @@ func slotsKey(k string) bool {
 	g := game.G
 	switch k {
 	case "Escape":
+		if S.SlotConfirm {
+			S.SlotConfirm = false
+			return true
+		}
 		if g.State == "title" {
 			g.Screen = "launch"
 			S.Title = 0
@@ -1691,12 +1695,40 @@ func slotsKey(k string) bool {
 		return true
 	case "ArrowUp":
 		S.Slot = (S.Slot + game.Slots - 1) % game.Slots
+		S.SlotConfirm = false
 		return true
 	case "ArrowDown":
 		S.Slot = (S.Slot + 1) % game.Slots
+		S.SlotConfirm = false
+		return true
+	case "Delete", "Backspace":
+		// the same two steps: ask, then erase
+		if !game.SlotExists(S.Slot) {
+			g.Message("SLOT EMPTY", "bad")
+			return true
+		}
+		if !S.SlotConfirm {
+			S.SlotConfirm = true
+			g.Message("PRESS DEL AGAIN TO ERASE THIS COMMANDER", "bad")
+			return true
+		}
+		S.SlotConfirm = false
+		if game.DeleteSlot(S.Slot) {
+			g.Message("COMMANDER ERASED", "good")
+		} else {
+			g.Message("ERASE FAILED", "bad")
+		}
 		return true
 	case "Enter":
 		if S.SlotSave {
+			// writing over somebody's commander is a decision, not a keystroke:
+			// the first Enter asks, the second does it
+			if game.SlotExists(S.Slot) && !S.SlotConfirm {
+				S.SlotConfirm = true
+				g.Message("PRESS ENTER AGAIN TO OVERWRITE", "bad")
+				return true
+			}
+			S.SlotConfirm = false
 			if g.SaveSlot(S.Slot) {
 				g.Message("COMMANDER SAVED", "good")
 				g.Screen = "launch"

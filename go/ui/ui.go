@@ -51,6 +51,9 @@ type Sel struct {
 	ContractScroll int
 	// ClosingScroll is the page of the closing notice being read.
 	ClosingScroll int
+	// SlotConfirm is set while the save screen waits for a second Enter to
+	// overwrite, or a second Delete to erase.
+	SlotConfirm   bool
 	PrevState     string
 	PrevScreen    string
 	PadTestFrom   string
