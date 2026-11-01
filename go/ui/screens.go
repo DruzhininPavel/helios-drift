@@ -1356,12 +1356,12 @@ func storyWhat() []string {
 		}
 	}
 	if g.Cmd.Campaign.Active {
-		out := []string{lang.T("STORY CONTRACT.")}
+		out := []string{lang.T("PRIVATE CONTRACT.")}
 		out = append(out, wrapText(para, 48)...)
 		out = append(out, g.CampaignStatus())
 		return out
 	}
-	out := []string{lang.T("STORY CONTRACT. THE COMPANY PAYS.")}
+	out := []string{lang.T("PRIVATE CONTRACT. THE COMPANY PAYS.")}
 	out = append(out, wrapText(para, 48)...)
 	if q.Pay > 0 {
 		out = append(out, lang.T("PAYS")+" "+itoa(q.Pay)+" CR")
@@ -1401,11 +1401,14 @@ func contractsScreen(fb *render.FB) {
 				col = ColGreen
 			}
 		case "story":
-			label = lang.T("STORY") + ": " + lang.T(g.CampaignQuest().Title)
+			label = lang.T("PRIVATE") + ": " + lang.T(g.CampaignQuest().Title)
 			if g.Cmd.Campaign.Active {
 				mark = "*"
 				col = ColGreen
 			} else {
+				// an open private order: the only row on the board that asks to
+				// be taken
+				mark = "!"
 				col = ColYellow
 			}
 		case "active":
@@ -2176,14 +2179,14 @@ func journalScreen(fb *render.FB) {
 		fb.HLine(16, 300, y, ColFrame)
 		y += 8
 	} else if ms := g.MissionStatus(); ms != "" {
-		fb.Text("STORY CONTRACT", 16, y, ColDim, 1)
+		fb.Text("PRIVATE CONTRACT", 16, y, ColDim, 1)
 		y += 11
 		fb.Text(clip(ms, 46), 16, y, ColGreen, 1)
 		y += 10
 		fb.Text("PAYS "+itoa(g.Cmd.Mission.Pay)+" CR", 16, y, ColDim, 1)
 		y += 12
 	} else {
-		fb.Text("STORY CONTRACT", 16, y, ColDim, 1)
+		fb.Text("PRIVATE CONTRACT", 16, y, ColDim, 1)
 		y += 11
 		fb.Text("NONE ACTIVE", 16, y, render.RGB(0x2d4a5c), 1)
 		y += 12
