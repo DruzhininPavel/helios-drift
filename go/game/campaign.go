@@ -8,6 +8,7 @@ import (
 	"heliosdrift/galaxy"
 	"heliosdrift/lang"
 	"heliosdrift/models"
+	"sort"
 )
 
 // TalkVariant picks a different opening for a stage when its conditions hold.
@@ -360,6 +361,24 @@ func (g *Game) campaignKill(tag string) {
 	} else {
 		g.Message("STAGE COMPLETE", "good")
 	}
+	// killing the courier puts a price on the pilot's hull: the board is not
+	// shown, but the sky gets busier
+	if tag == "COURIER" && g.Cmd.Flags["COURIER_DEAD"] {
+		g.Message("BOUNTY POSTED: 20000 ON YOUR HULL", "bad")
+		g.Note(LogKill, "BOUNTY", 20000, 0)
+	}
+	// a broken convoy floods the local market and leaves crates in the debris
+	if tag == "CONVOY" && g.Cmd.Flags["CONVOY_ATTACKED"] {
+		g.startPanic()
+		if g.Cmd.Boxes < 3 {
+			g.Cmd.Boxes += 3
+			if g.Cmd.Boxes > 3 {
+				g.Cmd.Boxes = 3
+			}
+			g.Message("3 CRATES RECOVERED FROM THE WRECKAGE", "good")
+			g.Note(LogEquip, "CRATES", 3, 0)
+		}
+	}
 	// the wreck paid for a burned recorder: the company does not say thank you,
 	// it just takes your name off one list and puts it on another
 	if tag == "HULK" && g.Cmd.Flags["BURNED_RECORDER"] {
@@ -405,3 +424,100 @@ func (g *Game) campaignDock() {
 // SpawnMissionGroupForTest exposes the stage spawn to the UI tests: the screens
 // have to survive whatever the campaign puts in the sky.
 func (g *Game) SpawnMissionGroupForTest(tag string) { g.spawnQuestGroup(tag) }
+
+// PanicHere reports whether this system is in the day-long panic that follows a
+// broken convoy: prices halve, and the station knows why.
+func (g *Game) PanicHere() bool {
+	if !g.Cmd.Flags["PANIC_MARKET"] {
+		return false
+	}
+	if g.Cmd.PanicSys != g.Cmd.System || g.Cmd.PanicGalaxy != g.Cmd.Galaxy {
+		return false
+	}
+	return g.Cmd.Day-g.Cmd.PanicDay <= 1
+}
+
+// startPanic marks the system for the day: the convoy did not arrive, and
+// everyone who bought a licence on credit now wants to be paid before the rumour
+// becomes a fact.
+func (g *Game) startPanic() {
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	g.Cmd.Flags["PANIC_MARKET"] = true
+	g.Cmd.PanicDay = g.Cmd.Day
+	g.Cmd.PanicSys = g.Cmd.System
+	g.Cmd.PanicGalaxy = g.Cmd.Galaxy
+	g.Note(LogVisit, "PANIC", 0, 0)
+	g.Message("MARKET PANIC - PRICES HALVED FOR A DAY", "bad")
+}
+
+// dangerNow scales the chance of a pirate wave: a price on the pilot's hull
+// draws them out of the rocks, and an interrupted audit empties the lanes.
+func (g *Game) dangerNow(base float64) float64 {
+	if g.Cmd.Flags["COURIER_DEAD"] {
+		base *= 1.6
+	}
+	if g.Cmd.Flags["AUDIT_BROKEN"] {
+		base *= 1.3
+	}
+	return base
+}
+
+// ClosingStations is the list of eighteen stations the combine intends to close.
+// It is generated from the galaxy so it is the same list every time the pilot
+// reads it, and it never changes: that is the point of a notice.
+func (g *Game) ClosingStations() []string {
+	gal := galaxy.Get(0)
+	idx := make([]int, 0, len(gal.Systems))
+	for i := range gal.Systems {
+		idx = append(idx, i)
+	}
+	// order by a hash of the name, not by position: the list should look picked
+	// by an office, not by a map
+	sort.Slice(idx, func(a, b int) bool {
+		return nameHash(gal.Systems[idx[a]].Name) < nameHash(gal.Systems[idx[b]].Name)
+	})
+	if len(idx) > 18 {
+		idx = idx[:18]
+	}
+	out := make([]string, 0, len(idx))
+	for _, i := range idx {
+		out = append(out, gal.Systems[i].Name)
+	}
+	return out
+}
+
+// nameHash is a small FNV-1a: enough to shuffle a list of names into an order
+// that does not follow the map.
+func nameHash(s string) uint32 {
+	var h uint32 = 2166136261
+	for i := 0; i < len(s); i++ {
+		h ^= uint32(s[i])
+		h *= 16777619
+	}
+	return h
+}
+
+// updateBroadcast counts the audience of the courier's show: it climbs while he
+// is alive and talking, and stops when the chapter does.
+func (g *Game) updateBroadcast(dt float64) {
+	if g.Cmd.Campaign.Active && g.Cmd.Campaign.Stage == 3 {
+		onAir := false
+		for _, e := range g.World.Entities {
+			if e.CampaignTag == "COURIER" && !e.Dead {
+				onAir = true
+			}
+		}
+		if onAir || g.Talk == "c4_broadcast" || g.Talk == "c4_offer" {
+			g.Viewers += dt * 46
+			return
+		}
+	}
+	if g.Viewers > 0 {
+		g.Viewers -= dt * 900
+		if g.Viewers < 0 {
+			g.Viewers = 0
+		}
+	}
+}

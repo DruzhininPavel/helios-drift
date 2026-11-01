@@ -49,12 +49,14 @@ type Sel struct {
 	MarketQty  int
 	// ContractScroll is how far down the briefing is scrolled.
 	ContractScroll int
-	PrevState      string
-	PrevScreen     string
-	PadTestFrom    string
-	HasSession     bool
-	SessionState   string
-	SessionScreen  string
+	// ClosingScroll is the page of the closing notice being read.
+	ClosingScroll int
+	PrevState     string
+	PrevScreen    string
+	PadTestFrom   string
+	HasSession    bool
+	SessionState  string
+	SessionScreen string
 }
 
 var S = Sel{ChartCursor: -1}
@@ -588,6 +590,10 @@ func flight(fb *render.FB, dt float64) {
 	cockpit(fb, g.Cmd.Ship)
 	crosshair(fb, 160, 75)
 
+	// the courier's audience, in the corner where a broadcast would put it
+	if g.Viewers >= 1 {
+		fb.TextR(lang.T("WATCHING")+" "+itoa(int(g.Viewers)), 306, 196, ColDim, 1)
+	}
 	// what the police want, said plainly, for as long as they want it
 	if g.PoliceState == "hail" {
 		// say the numbers, not a fraction: nobody counts quarters of a hull

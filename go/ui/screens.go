@@ -65,8 +65,8 @@ func docked(fb *render.FB) {
 		contractsScreen(fb)
 	case "journal":
 		journalScreen(fb)
-	case "log":
-		logScreen(fb)
+	case "closing":
+		closingScreen(fb)
 	case "talk":
 		talkScreen(fb)
 	case "shipyard":
@@ -802,6 +802,9 @@ func dockedKey(k string) bool {
 			g.Screen = "launch"
 		}
 		return true
+	}
+	if g.Screen == "closing" {
+		return closingKey(k)
 	}
 	if g.Screen == "log" {
 		return logKey(k)
@@ -2455,12 +2458,62 @@ func logScreen(fb *render.FB) {
 	Hint = "UP/DOWN SCROLL   LEFT/RIGHT FILTER   ESC BACK"
 }
 
+// closingScreen is the notice the courier sold or gave: eighteen stations and
+// nothing to do about it. No buttons, no actions - that is deliberate.
+func closingScreen(fb *render.FB) {
+	g := game.G
+	plate(fb, 6, 14, 310, 190, lang.T("STATIONS TO BE CLOSED"))
+	list := g.ClosingStations()
+	if len(list) == 0 {
+		fb.Text(lang.T("NOTHING"), 14, 30, ColDim, 1)
+		Hint = "ESC BACK"
+		return
+	}
+	const perPage = 9
+	if S.ClosingScroll < 0 {
+		S.ClosingScroll = 0
+	}
+	if S.ClosingScroll > len(list)-1 {
+		S.ClosingScroll = len(list) - 1
+	}
+	y := 32
+	for i := S.ClosingScroll; i < len(list) && i < S.ClosingScroll+perPage; i++ {
+		fb.Text(itoa(i+1), 14, y, ColDim, 1)
+		fb.TextRaw(list[i], 32, y, ColText, 1)
+		y += 12
+	}
+	fb.TextRaw(lang.T("CLOSING NOTICE. NO ACTION CAN BE TAKEN."), 12, 176, ColDim, 1)
+	Hint = "UP/DOWN   ESC BACK"
+}
+
+func closingKey(k string) bool {
+	switch k {
+	case "Escape":
+		game.G.Screen = "log"
+	case "ArrowUp":
+		S.ClosingScroll--
+	case "ArrowDown":
+		S.ClosingScroll++
+	case "PageUp":
+		S.ClosingScroll -= 9
+	case "PageDown":
+		S.ClosingScroll += 9
+	}
+	return true
+}
+
 func logKey(k string) bool {
 	g := game.G
 	n := len(logVisible())
 	switch k {
 	case "Escape":
 		g.Screen = "launch"
+	case "l", "L":
+		// the list is a page of the log, not a menu item: it is not a thing to do
+		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
+			g.Screen = "closing"
+			S.ClosingScroll = 0
+		}
 	case "ArrowUp":
 		S.Log--
 		if S.Log < 0 {

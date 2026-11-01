@@ -4,6 +4,7 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"WATCHING": "СМОТРЯТ",
 	"POLICE INSPECTION - HOLD STILL, THEY ARE COMING": "ДОСМОТР: СТОЙ, ОНИ ПОДХОДЯТ",
 	"POLICE INSPECTION - SLOW TO":                     "ДОСМОТР: СБРОСЬ ДО",
 	"YOU ARE AT":                                      "У ТЕБЯ",
@@ -53,7 +54,7 @@ var ru = map[string]string{
 	"YOU ARE ONE OF OURS NOW. THE MARKET WILL REMEMBER IT.":                           "ТЕПЕРЬ ТЫ СВОЙ. РЫНОК ЭТО ЗАПОМНИТ.",
 	// ---- chapter four, the courier on air
 	"COURIER": "КУРЬЕР",
-	"GOOD EVENING, LADIES AND GENTLEMEN. YOU ARE WATCHING SIX DAYS, THE SHOW ABOUT PEOPLE WHO CARRY PAPERS WHERE NOBODY WANTS THEM.":  "ДОБРЫЙ ДЕНЬ, ДАМЫ И ГОСПОДА. ВЫ СМОТРИТЕ «ШЕСТЬ ДНЕЙ» - ПЕРЕДАЧУ О ЛЮДЯХ, КОТОРЫЕ ВОЗЯТ БУМАГИ ТАМ, ГДЕ ИХ НЕ ЖДУТ.",
+	"GOOD EVENING, LADIES AND GENTLEMEN. YOU ARE WATCHING SIX DAYS, THE SHOW ABOUT PEOPLE WHO CARRY PAPERS WHERE NOBODY WANTS THEM.":  "ДОБРЫЙ ДЕНЬ, ДАМЫ И ГОСПОДА. ВЫ СМОТРИТЕ ШЕСТЬ ДНЕЙ - ПЕРЕДАЧУ О ЛЮДЯХ, КОТОРЫЕ ВОЗЯТ БУМАГИ ТАМ, ГДЕ ИХ НЕ ЖДУТ.",
 	"WE HAVE A GUEST TONIGHT. YOU CAN SEE HIM ALREADY, COMING IN ON THE RIGHT.":                                                       "СЕГОДНЯ У НАС ГОСТЬ. ВЫ ЕГО УЖЕ ВИДИТЕ, ОН ЗАХОДИТ СПРАВА.",
 	"BETS ARE TAKEN UNTIL THE FIRST HIT. THOSE BACKING THE GUEST ARE SMART. THOSE BACKING ME ARE PATRIOTS.":                           "СТАВКИ ПРИНИМАЮТСЯ ДО ПЕРВОГО ПОПАДАНИЯ. КТО СТАВИТ НА ГОСТЯ - ТОТ УМНЫЙ. КТО СТАВИТ НА МЕНЯ - ТОТ ПАТРИОТ.",
 	"AND NOW THE SECOND HALF, WHERE I STOP TALKING AT THE AUDIENCE AND TALK TO YOU.":                                                  "А ТЕПЕРЬ ВТОРАЯ ПОЛОВИНА, ГДЕ Я ПЕРЕСТАЮ ГОВОРИТЬ С ЗАЛОМ И ГОВОРЮ С ТОБОЙ.",
@@ -72,6 +73,14 @@ var ru = map[string]string{
 	"THE REST YOU WILL WISH YOU HAD WRITTEN DOWN.":                                                          "ОСТАЛЬНЫЕ БУДЕШЬ ЖАЛЕТЬ, ЧТО НЕ ЗАПИСАЛ.",
 	"THE BROADCAST DOES NOT STOP WHEN THE GUEST FIRES. IT GETS LOUDER.":                                     "ТРАНСЛЯЦИЯ НЕ ПРЕКРАЩАЕТСЯ, КОГДА ГОСТЬ СТРЕЛЯЕТ. ОНА СТАНОВИТСЯ ГРОМЧЕ.",
 	"HE TURNS BROADSIDE AND WAITS FOR YOU TO BE THE ONE WHO SHOT FIRST.":                                    "ОН РАЗВОРАЧИВАЕТСЯ БОРТОМ И ЖДЁТ, ЧТОБЫ ПЕРВЫМ ВЫСТРЕЛИЛ ТЫ.",
+	"STATIONS TO BE CLOSED":                   "СТАНЦИИ ПОД ЗАКРЫТИЕ",
+	"CLOSING NOTICE. NO ACTION CAN BE TAKEN.": "УВЕДОМЛЕНИЕ. СДЕЛАТЬ С ЭТИМ НЕЛЬЗЯ НИЧЕГО.",
+	"NOTHING":                                "ПУСТО",
+	"MARKET PANIC - PRICES HALVED FOR A DAY": "РЫНОК: ПАНИКА - ЦЕНЫ ВДВОЕ НА СУТКИ",
+	"3 CRATES RECOVERED FROM THE WRECKAGE":   "3 ЯЩИКА ПОДОБРАНО ИЗ ОБЛОМКОВ",
+	"BOUNTY POSTED: 20000 ON YOUR HULL":      "НАЗНАЧЕНА НАГРАДА 20000 ЗА ТВОЙ БОРТ",
+	"PANIC":                                  "ПАНИКА",
+	"CRATES":                                 "ЯЩИКИ",
 	// ---- chapter three, the wreck
 	"EXECUTED CORRECTLY. THAT IS RARE.": "ИСПОЛНЕНО КОРРЕКТНО. ЭТО РЕДКОСТЬ.",
 	"CLEAN WORK":                        "ЧИСТАЯ РАБОТА",

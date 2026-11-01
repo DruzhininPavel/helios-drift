@@ -162,6 +162,7 @@ func (g *Game) Update(dt float64) {
 	}
 
 	g.updatePolice(dt)
+	g.updateBroadcast(dt)
 
 	// ---- station (none in witchspace)
 	if st := w.Station; st != nil {
@@ -212,7 +213,7 @@ func (g *Game) Update(dt float64) {
 		case g.CarryingContraband() && g.countBehaviour("police") < 2 && randFloat() < 0.55:
 			// contraband in the hold makes the police much more interested
 			g.spawnPolice(1)
-		case randFloat() < danger*0.7 && g.countBehaviour("pirate") < 4:
+		case randFloat() < g.dangerNow(danger)*0.7 && g.countBehaviour("pirate") < 4:
 			g.SpawnPirates(1 + randInt(2))
 		case cmd.Legal >= 100 && g.countBehaviour("police") < 3 && randFloat() < 0.5:
 			g.spawnPolice(1)

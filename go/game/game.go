@@ -116,11 +116,16 @@ type Commander struct {
 	Ending   string          `json:"ending,omitempty"` // combine | chaos | council
 	ViperClk int             `json:"viperclk,omitempty"`
 	// Visited keys are "galaxy:system". A system is worth a log line once.
-	Visited  map[string]bool `json:"visited,omitempty"`
-	Mail     int             `json:"mail"`
-	Ship     string          `json:"ship"`
-	Mode     string          `json:"mode"`
-	Campaign CampaignState   `json:"campaign"`
+	Visited map[string]bool `json:"visited,omitempty"`
+	// PanicDay and PanicSys remember where the convoy was broken, so the market
+	// there can halve its prices for a day. Zero means no panic.
+	PanicDay    int           `json:"panic_day,omitempty"`
+	PanicSys    int           `json:"panic_sys,omitempty"`
+	PanicGalaxy int           `json:"panic_galaxy,omitempty"`
+	Mail        int           `json:"mail"`
+	Ship        string        `json:"ship"`
+	Mode        string        `json:"mode"`
+	Campaign    CampaignState `json:"campaign"`
 }
 
 func NewCommander() Commander {
@@ -274,6 +279,9 @@ type Game struct {
 	// answer the hail.
 	PoliceState string
 	PoliceTimer float64
+	// Viewers is the audience of the courier's broadcast. It only grows while he
+	// is on air, and it is the one new piece of interface the campaign adds.
+	Viewers float64
 	// Talk is the dialogue node on screen, "" when nobody is talking, and
 	// TalkBack is the screen to return to when it closes.
 	Talk     string
@@ -1013,6 +1021,14 @@ func (g *Game) Docked() { g.dockedAt() }
 func (g *Game) dockedAt() {
 	g.Screen = "launch"
 	g.Market = galaxy.MakeMarket(g.World.Sys, g.DockSalt)
+	// a system whose convoy was broken is in a panic: buyers are gone, sellers
+	// are desperate, and everything halves for a day
+	if g.PanicHere() {
+		for i := range g.Market {
+			g.Market[i].Price = int(float64(g.Market[i].Price) * 0.5)
+			g.Market[i].Sell = int(float64(g.Market[i].Sell) * 0.5)
+		}
+	}
 	if g.World != nil && g.World.Hermit {
 		// a rock hermit has no competition and knows it
 		for i := range g.Market {
