@@ -821,9 +821,7 @@ func dockedKey(k string) bool {
 		return true
 	}
 	if g.Screen == "journal" {
-		if k == "Escape" {
-			g.Screen = "launch"
-		}
+		journalKey(k)
 		return true
 	}
 	if g.Screen == "ending" {
@@ -2119,6 +2117,12 @@ func QuitToTitle() {
 	S.HasSession = g.State != "title"
 	S.SessionState = g.State
 	S.SessionScreen = g.Screen
+	if g.State == "docked" {
+		// a station sub-screen is not a place to come back to: the journal, the
+		// market and the rest are pages, and coming back into a page looks
+		// exactly like the game hanging
+		S.SessionScreen = "launch"
+	}
 	g.Overlay = ""
 	g.Screen = "launch"
 	g.In = game.InputState{}
@@ -2214,10 +2218,34 @@ func openJournal() {
 	g.Screen = "journal"
 }
 
+// journalKey leaves the journal with Escape, Enter or the back button, and
+// scrolls it if the page is longer than the panel.
+func journalKey(k string) bool {
+	g := game.G
+	switch k {
+	case "Escape", "Enter", "Backspace":
+		g.Screen = "launch"
+	case "ArrowUp":
+		S.JournalScroll--
+	case "ArrowDown":
+		S.JournalScroll++
+	case "PageUp":
+		S.JournalScroll -= 8
+	case "PageDown":
+		S.JournalScroll += 8
+	}
+	if S.JournalScroll < 0 {
+		S.JournalScroll = 0
+	}
+	return true
+}
+
 func journalScreen(fb *render.FB) {
 	g := game.G
 	plate(fb, 8, 16, 304, 182, "JOURNAL")
-	y := 32
+	// the page scrolls instead of overflowing the panel
+	off := S.JournalScroll * 10
+	y := 32 - off
 	if !g.Classic() {
 		c := &g.Cmd.Campaign
 		fb.Text("CAMPAIGN", 16, y, ColDim, 1)
