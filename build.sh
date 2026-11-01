@@ -56,6 +56,11 @@ if [ "$(uname -s)" = "Darwin" ]; then
 	# bsdtar on macOS otherwise writes xattr headers GNU tar warns about
 	COPYFILE_DISABLE=1 tar --no-mac-metadata -czf HeliosDrift-linux-x86_64.tar.gz -C pkg-linux .
 	COPYFILE_DISABLE=1 zip -qry HeliosDrift-macos-arm64.zip HeliosDrift.app
+	# the folder holds an app the player double-clicks; keep it identical to the
+	# build, because a stale copy there once meant a whole evening of bug reports
+	# against a build from three days ago
+	rm -rf ../HeliosDrift.app
+	cp -R HeliosDrift.app ../HeliosDrift.app
 else
 	tar czf HeliosDrift-linux-x86_64.tar.gz -C pkg-linux .
 	find HeliosDrift.app -type f | xargs chmod 644
