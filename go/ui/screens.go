@@ -329,13 +329,13 @@ func marketScreen(fb *render.FB) {
 			maxQty = cmd.Cargo[S.Market]
 			label = lang.T("SELL")
 		}
-		fb.FillRect(60, 130, 260, 178, render.RGB(0x08131f))
-		fb.Rect(60, 130, 260, 178, ColYellow)
-		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 136, ColYellow, 1)
-		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 148, ColGreen, 1)
-		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 160, ColDim, 1)
-		fb.TextC(lang.T("UP/DOWN  10 WITH PAGE  ENTER  ESC"), 160, 170, ColDim, 1)
-		Hint = "UP/DOWN  AMOUNT   PAGE  TEN   ENTER  ESC"
+		fb.FillRect(52, 128, 268, 180, render.RGB(0x08131f))
+		fb.Rect(52, 128, 268, 180, ColYellow)
+		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 134, ColYellow, 1)
+		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 146, ColGreen, 1)
+		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 158, ColDim, 1)
+		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 168, ColDim, 1)
+		Hint = "UP/DOWN  AMOUNT   ENTER  ESC"
 		return
 	}
 
@@ -866,10 +866,6 @@ func dockedKey(k string) bool {
 				S.MarketQty++
 			case "ArrowDown":
 				S.MarketQty--
-			case "PageUp":
-				S.MarketQty += 10
-			case "PageDown":
-				S.MarketQty -= 10
 			case "Enter":
 				qty := S.MarketQty
 				if qty > 0 && S.Market < len(g.Market) {

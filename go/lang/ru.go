@@ -4,8 +4,8 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"MAX":                               "МАКС",
-	"UP/DOWN  10 WITH PAGE  ENTER  ESC": "ВВЕРХ/ВНИЗ  10 СТРАНИЦЕЙ  ENTER  ESC",
+	"MAX":                 "МАКС",
+	"UP/DOWN  ENTER  ESC": "ВВЕРХ/ВНИЗ  ENTER  ESC",
 	"UP/DOWN  AMOUNT   PAGE  TEN   ENTER  ESC": "ВВЕРХ/ВНИЗ СКОЛЬКО  СТРАНИЦА ДЕСЯТЬ  ENTER  ESC",
 	// ---- the contract board
 	"STORY":                                   "ИСТОРИЯ",
