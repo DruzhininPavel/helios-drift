@@ -41,6 +41,9 @@ func footer(fb *render.FB) {
 	fb.FillRect(0, 211, 319, 223, render.RGB(0x08131f))
 	fb.HLine(0, 319, 211, ColFrame)
 	fb.TextC(Hint, 160, 215, ColDim, 1)
+	// the build number is here so a screenshot says which build it is; tonight
+	// was spent fixing a version from three days ago
+	fb.TextR(game.Version, 316, 215, render.RGB(0x1d3646), 1)
 }
 
 func docked(fb *render.FB) {
@@ -187,10 +190,9 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD", "LOG")
 	}
-	if game.G.Cmd.Mission.Kind != "" || len(game.G.Cmd.Contracts) > 0 {
-		// what the pilot has taken on, in one place; it used to be appended
-		// after the way out, and the diplomat insertion below then cut the list
-		// in the wrong place
+	if !game.G.Classic() {
+		// always, not only when there is work: the row is how a pilot asks
+		// "where am I in all this", and a missing row reads as a missing feature
 		items = append(items, "JOURNAL")
 	}
 	if game.G.PardonAvailable() {
@@ -2494,7 +2496,8 @@ func logScreen(fb *render.FB) {
 	}
 	ents := logVisible()
 	if len(ents) == 0 {
-		fb.Text("NOTHING IN THIS LOG YET", 14, 44, ColDim, 1)
+		fb.Text(lang.T("THE LOG IS EMPTY"), 14, 44, ColText, 1)
+		fb.Text(lang.T("EVERY TRADE, KILL AND JUMP IS WRITTEN HERE"), 14, 56, ColDim, 1)
 		Hint = "LEFT/RIGHT FILTER   ESC BACK"
 		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
 			Hint = "LEFT/RIGHT FILTER   L CLOSING NOTICE   ESC BACK"

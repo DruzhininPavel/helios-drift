@@ -5,6 +5,7 @@ import (
 
 	"heliosdrift/game"
 	"heliosdrift/lang"
+	"heliosdrift/render"
 )
 
 // Opening the journal and coming back must land on the station menu, not back
@@ -54,5 +55,33 @@ func TestJournalEnterLeaves(t *testing.T) {
 	Key("Enter")
 	if g.Screen != "launch" {
 		t.Fatalf("Enter left the game in %q", g.Screen)
+	}
+}
+
+// The summary row is always offered, and an empty log says so instead of looking
+// like a broken screen.
+func TestJournalRowAndEmptyLog(t *testing.T) {
+	lang.Set("ru")
+	defer lang.Set("en")
+	g := game.New()
+	g.NewGame("JROW")
+	g.State = "docked"
+	g.Screen = "launch"
+	found := false
+	for _, it := range menuItems() {
+		if it == "JOURNAL" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("no summary row with nothing taken on")
+	}
+	if len(g.Cmd.Log) != 0 {
+		t.Fatalf("%d entries in a fresh log", len(g.Cmd.Log))
+	}
+	g.Screen = "log"
+	Draw(render.NewFB(320, 224), 1.0/60.0)
+	if Hint == "" {
+		t.Fatal("the empty log says nothing at all")
 	}
 }

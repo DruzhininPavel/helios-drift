@@ -4,6 +4,8 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"THE LOG IS EMPTY":                           "ЖУРНАЛ ПУСТ",
+	"EVERY TRADE, KILL AND JUMP IS WRITTEN HERE": "КАЖДАЯ СДЕЛКА, БОЙ И ПРЫЖОК ПИШУТСЯ СЮДА",
 	"ERASE?":                         "СТЕРЕТЬ?",
 	"PRESS ENTER AGAIN TO OVERWRITE": "ENTER ЕЩЁ РАЗ - ПЕРЕЗАПИСАТЬ",
 	"PRESS DEL AGAIN TO ERASE THIS COMMANDER": "DEL ЕЩЁ РАЗ - СТЕРЕТЬ ПИЛОТА",
