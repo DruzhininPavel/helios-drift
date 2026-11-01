@@ -68,6 +68,8 @@ func docked(fb *render.FB) {
 		contractsScreen(fb)
 	case "journal":
 		journalScreen(fb)
+	case "log":
+		logScreen(fb)
 	case "closing":
 		closingScreen(fb)
 	case "ending":
