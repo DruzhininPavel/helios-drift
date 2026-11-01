@@ -13,8 +13,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -53,7 +55,7 @@ func newApp() *App {
 	return a
 }
 
-func (a *App) Update() error {
+func (a *App) updateOnce() error {
 	g := game.G
 	dt := 1.0 / 60.0
 
@@ -232,7 +234,7 @@ func (a *App) Update() error {
 	return nil
 }
 
-func (a *App) Draw(screen *ebiten.Image) {
+func (a *App) drawOnce(screen *ebiten.Image) {
 	sw, sh := screen.Bounds().Dx(), screen.Bounds().Dy()
 	scale := math.Min(float64(sw)/ScreenW, float64(sh)/ScreenH)
 	if scale < 1 {
@@ -859,6 +861,101 @@ func runSim() {
 	fmt.Println("save:", g.Save(), "exists:", game.SaveExists())
 	g.Cmd.Cash = 0
 	fmt.Println("load:", g.Load(), "cash:", g.Cmd.Cash, "cargo:", g.Cmd.Cargo, "state:", g.State)
+}
+
+// ---- crash guard -----------------------------------------------------------
+//
+// A panic inside a frame used to close the window and take the run with it, and
+// nothing was written anywhere, so a crash could not even be reported. Now the
+// frame is caught, the stack and the state go to ~/Library/Logs/HeliosDrift, the
+// game is written to a crash save, and play continues: three crashes in a row
+// and the window closes, because by then the state is not to be trusted.
+
+var frameCrashes int
+
+func crashDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "."
+	}
+	dir := filepath.Join(home, "Library", "Logs", "HeliosDrift")
+	os.MkdirAll(dir, 0o755)
+	return dir
+}
+
+func logCrash(where string, r any) {
+	ts := time.Now().Format("20060102-150405")
+	path := filepath.Join(crashDir(), "crash-"+ts+".log")
+	for n := 2; ; n++ {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			break
+		}
+		path = filepath.Join(crashDir(), fmt.Sprintf("crash-%s-%d.log", ts, n))
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "HELIOS DRIFT crash\n")
+	fmt.Fprintf(&b, "when:   %s\n", time.Now().Format(time.RFC3339))
+	fmt.Fprintf(&b, "build:  %s\n", game.Version)
+	fmt.Fprintf(&b, "where:  %s\n", where)
+	fmt.Fprintf(&b, "panic:  %v\n\n", r)
+	b.Write(debug.Stack())
+	if g := game.G; g != nil {
+		fmt.Fprintf(&b, "\nstate: screen=%q state=%q overlay=%q talk=%q\n",
+			g.Screen, g.State, g.Overlay, g.Talk)
+		fmt.Fprintf(&b, "cash=%.0f day=%d sys=%d galaxy=%d campaign=%d active=%v entities=%d\n",
+			g.Cmd.Cash, g.Cmd.Day, g.Cmd.System, g.Cmd.Galaxy,
+			g.Cmd.Campaign.Stage, g.Cmd.Campaign.Active, len(g.World.Entities))
+	}
+	os.WriteFile(path, []byte(b.String()), 0o644)
+	fmt.Fprintf(os.Stderr, "crash in %s: %v (see %s)\n", where, r, path)
+}
+
+// guardFrame runs one frame, catching a panic so the window survives long
+// enough for the player to read the message and save.
+func guardFrame(where string, fn func()) (fatal bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			frameCrashes++
+			logCrash(where, r)
+			if g := game.G; g != nil {
+				saveCrashCopy(g)
+			}
+			if frameCrashes >= 3 {
+				fatal = true
+			}
+		}
+	}()
+	fn()
+	return false
+}
+
+// saveCrashCopy writes the run somewhere the player has not saved over.
+func saveCrashCopy(g *game.Game) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	if data, err := json.Marshal(g.Cmd); err == nil {
+		os.WriteFile(filepath.Join(home, ".heliosdrift-crash.json"), data, 0o644)
+	}
+}
+
+// Update is the frame's brain, wrapped so a bug cannot take the window.
+func (a *App) Update() error {
+	fatal := guardFrame("update", func() {
+		if err := a.updateOnce(); err != nil {
+			panic(err)
+		}
+	})
+	if fatal {
+		return fmt.Errorf("three frames crashed in a row: %s", crashDir())
+	}
+	return nil
+}
+
+// Draw is the frame's face, wrapped for the same reason.
+func (a *App) Draw(screen *ebiten.Image) {
+	guardFrame("draw", func() { a.drawOnce(screen) })
 }
 
 func main() {

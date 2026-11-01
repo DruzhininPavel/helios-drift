@@ -398,3 +398,7 @@ func (g *Game) campaignDock() {
 	c.Stage++
 	g.Message("DELIVERED  +"+itoa(q.Pay)+" CR", "good")
 }
+
+// SpawnMissionGroupForTest exposes the stage spawn to the UI tests: the screens
+// have to survive whatever the campaign puts in the sky.
+func (g *Game) SpawnMissionGroupForTest(tag string) { g.spawnQuestGroup(tag) }
