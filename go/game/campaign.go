@@ -108,6 +108,7 @@ var campaignQuests = []Quest{
 	{
 		Title: "FRAMED",
 		Kind:  QuestKill, Tag: "NAVY", Spawn: "viper", Count: 2, Pay: 12000,
+		Talk: "c6_brief",
 		Brief: []string{
 			"THEY HAVE PUT YOUR NAME ON THE CONVOY",
 			"MASSACRE. NAVY VIPERS ARE ON YOUR TAIL",

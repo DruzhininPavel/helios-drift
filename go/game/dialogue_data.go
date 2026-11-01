@@ -298,5 +298,90 @@ func init() {
 				Do:   []Effect{{Kind: FxSpawn, Key: "HULK"}},
 			}},
 		},
+		// ---- chapter six: framed, and the clerk with the cabinet
+		&Node{
+			ID:      "c6_brief",
+			Kind:    "talk",
+			Speaker: "",
+			Lines: []string{
+				"YOUR NAME IS IN THE REPORT. THREE FREIGHTERS, TWENTY-SIX CREW, INTENT.",
+				"TWO NAVY VIPERS ARE ON YOUR TAIL AND YOUR RECORD IS ALREADY DIRTY.",
+				"THEY WILL ASK ONCE, BY PROTOCOL. THE ANSWER IS YOURS.",
+			},
+			Variants: []LineVariant{
+				{If: []Cond{{Key: "CONVOY_SPARED", Op: "flag"}}, Lines: []string{
+					"THE CONVOY CONFIRMED YOU DID NOT ATTACK THEM.",
+					"THE NAVY IS NOT AFTER YOU. IT IS AFTER THE PAPERS.",
+					"YOU ARE SUMMONED TO THE ARCHIVE. ATTEND.",
+				}},
+			},
+			Options: []Option{
+				{Text: "SHOW THE PAPERS", Next: "c6_papers",
+					If: []Cond{{Key: "papers", Op: ">=", N: 1}}},
+				{Text: "SURRENDER", Next: "c6_surrendered"},
+				{Text: "FIGHT THEM", Next: "c6_fight"},
+			},
+		},
+		&Node{
+			ID:      "c6_papers",
+			Kind:    "talk",
+			Speaker: "NAVY",
+			Lines: []string{
+				"THESE ARE NOT PAPERS. THESE ARE RECEIPTS.",
+				"BUT THE SHIP IN YOUR LOG MATCHES A CRATE THAT WENT OUT SIX DAYS AGO.",
+				"GO TO THE ARCHIVE. ASK FOR THE SECOND DRAWER.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "c6_archive"}},
+		},
+		&Node{
+			ID:      "c6_archive",
+			Kind:    "screen",
+			Speaker: "CLERK",
+			Lines: []string{
+				"LISTEN, I DO NOT CARE WHAT YOU HAD ON YOU. I NEED A FORM.",
+				"WITHOUT A FORM I CANNOT OPEN THE CABINET. WITH A FORM I CAN, BUT THE CABINET IS LOCKED AND THE KEY IS WITH THE CHIEF.",
+				"I CAN WRITE THE FORM FOR YOU. IT IS NOT STRICTLY LEGAL. THREE HUNDRED.",
+			},
+			Options: []Option{
+				{Text: "PAY 300", Next: "c6_end",
+					If: []Cond{{Key: "cash", Op: ">=", N: 300}},
+					Do: []Effect{{Kind: FxCash, N: -300}, {Kind: FxFlag, Key: "GOT_FORM"}}},
+				{Text: "NO", Next: "c6_end"},
+			},
+		},
+		&Node{
+			ID:      "c6_end",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THREE FOLDERS IN THE CABINET. YOURS IS THE SECOND FROM THE BOTTOM.",
+				"IT IS THINNER THAN THE OTHERS.",
+			},
+			OnEnter: []Effect{{Kind: FxPapers, N: -1}, {Kind: FxCash, N: 6000}, {Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c6_surrendered",
+			Kind:    "msg",
+			Speaker: "NAVY",
+			Lines: []string{
+				"YOU ARE NOT ARRESTED. YOU ARE RECORDED.",
+				"THE HOLD IS EMPTIED, THE PAPERS ARE TAKEN, AND THE FILE SAYS YOU COOPERATED.",
+				"THE COMPANY WILL BE IN TOUCH.",
+			},
+			OnEnter: []Effect{{Kind: FxQuest}, {Kind: FxWanted, N: 150}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c6_fight",
+			Kind:    "msg",
+			Speaker: "NAVY",
+			Lines: []string{
+				"THE SECOND VIPER IS ALREADY BEHIND YOU.",
+				"THEY DO NOT MISS TWICE.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "NAVY"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
 	)
 }

@@ -93,7 +93,7 @@ func docked(fb *render.FB) {
 func stationMenu(fb *render.FB) {
 	g := game.G
 	cmd := g.Cmd
-	Hint = "1-8 SELECT   UP/DOWN   F REFUEL   ENTER CONFIRM"
+	Hint = "UP/DOWN   ENTER CONFIRM   F REFUEL   Q MAIN MENU"
 
 	// left: commander sheet
 	plate(fb, 8, 16, 152, 188, "COMMANDER "+cmd.Name)
@@ -829,6 +829,11 @@ func dockedKey(k string) bool {
 			g.Screen = "launch"
 			return true
 		}
+		return true
+	}
+	if k == "q" || k == "Q" {
+		// the station has no pause, so Q is the way out to the title
+		QuitToTitle()
 		return true
 	}
 	if k == "Escape" {
