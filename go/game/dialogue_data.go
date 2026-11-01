@@ -438,5 +438,73 @@ func init() {
 			OnEnter: []Effect{{Kind: FxQuest}},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
+		// ---- chapter four: the courier goes on air
+		&Node{
+			ID:      "c4_broadcast",
+			Kind:    "talk",
+			Speaker: "COURIER",
+			Lines: []string{
+				"GOOD EVENING, LADIES AND GENTLEMEN. YOU ARE WATCHING SIX DAYS, THE SHOW ABOUT PEOPLE WHO CARRY PAPERS WHERE NOBODY WANTS THEM.",
+				"WE HAVE A GUEST TONIGHT. YOU CAN SEE HIM ALREADY, COMING IN ON THE RIGHT.",
+				"BETS ARE TAKEN UNTIL THE FIRST HIT. THOSE BACKING THE GUEST ARE SMART. THOSE BACKING ME ARE PATRIOTS.",
+				"AND NOW THE SECOND HALF, WHERE I STOP TALKING AT THE AUDIENCE AND TALK TO YOU.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "c4_offer"}},
+		},
+		&Node{
+			ID:      "c4_offer",
+			Kind:    "talk",
+			Speaker: "COURIER",
+			Lines: []string{
+				"YOU FLY BETTER THAN I THOUGHT. THAT IS GOOD. I NEED PEOPLE.",
+				"ON BOARD I HAVE A LIST. NOT COORDINATES. EIGHTEEN STATIONS THAT CLOSE THIS QUARTER. PEOPLE LIVE THERE AND THEY DO NOT KNOW YET.",
+				"I CAN GIVE IT. I CAN SELL IT. OR I CAN LET YOU READ IT AND WALK - AND THEN YOU KNOW, AND THE COMPANY DOES NOT.",
+				"ONE CATCH. IF I WALK, THE BROADCAST SAYS YOU LOST. YOUR HULL NUMBER GOES OUT. THAT IS NOT GOOD FOR A MAN IN YOUR TRADE.",
+			},
+			Options: []Option{
+				{Text: "BUY THE LIST - 7000", Next: "c4_bought",
+					If: []Cond{{Key: "cash", Op: ">=", N: 7000}},
+					Do: []Effect{{Kind: FxCash, N: -7000}, {Kind: FxFlag, Key: "COURIER_ALIVE"}}},
+				{Text: "TAKE THE LIST AND KILL", Next: "c4_kill",
+					Do: []Effect{{Kind: FxFlag, Key: "COURIER_DEAD"}}},
+				{Text: "READ IT AND LET HIM GO", Next: "c4_read",
+					Do: []Effect{{Kind: FxFlag, Key: "READ_LIST"}, {Kind: FxFlag, Key: "COURIER_ALIVE"}}},
+			},
+		},
+		&Node{
+			ID:      "c4_bought",
+			Kind:    "msg",
+			Speaker: "COURIER",
+			Lines: []string{
+				"SEVEN THOUSAND. HE PAID, FOLKS. REMEMBER THAT WHEN THE REST OF YOU ARE STILL ARGUING ABOUT THE PRICE.",
+				"THE LIST IS YOURS. EIGHTEEN STATIONS, FOUR OF THEM PLACES YOU HAVE ALREADY BEEN.",
+				"AND THE HOUSE WILL REMEMBER YOU BOUGHT IT. THAT IS THE PART YOU PAID FOR.",
+			},
+			OnEnter: []Effect{{Kind: FxFlag, Key: "HAS_LIST"}, {Kind: FxWanted, N: 120}, {Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c4_read",
+			Kind:    "msg",
+			Speaker: "COURIER",
+			Lines: []string{
+				"READ IT. NO COPY, NO PRICE, NO HULL NUMBER.",
+				"QUIET HARBOUR. NINTH DOCK. FREE TRADE. THOSE THREE YOU WILL REMEMBER.",
+				"THE REST YOU WILL WISH YOU HAD WRITTEN DOWN.",
+			},
+			OnEnter: []Effect{{Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c4_kill",
+			Kind:    "msg",
+			Speaker: "COURIER",
+			Lines: []string{
+				"THE BROADCAST DOES NOT STOP WHEN THE GUEST FIRES. IT GETS LOUDER.",
+				"HE TURNS BROADSIDE AND WAITS FOR YOU TO BE THE ONE WHO SHOT FIRST.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "COURIER"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
 	)
 }

@@ -14,7 +14,7 @@ func answerTalk(g *Game) {
 		pick := -1
 		for vi, idx := range g.VisibleOptions(n) {
 			switch n.Options[idx].Text {
-			case "FIGHT THEM", "FIRE ON THE WRECK":
+			case "FIGHT THEM", "FIRE ON THE WRECK", "TAKE THE LIST AND KILL", "BREAK THE CONVOY":
 				pick = vi
 			}
 			if pick >= 0 {

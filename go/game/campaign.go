@@ -85,7 +85,8 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "THE COURIER",
-		Kind:  QuestKill, Tag: "COURIER", Spawn: "cobra1", Count: 1, Pay: 9000,
+		Kind:  QuestKill, Tag: "COURIER", Spawn: "cobra1", Count: 1, Pay: 5200,
+		Talk: "c4_broadcast",
 		Brief: []string{
 			"THE BOX NAMED A NAVY LIAISON SELLING",
 			"JUMP COORDINATES. HIS COURIER RUNS THE",
