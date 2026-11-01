@@ -4,9 +4,15 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"MAX":                 "МАКС",
-	"UP/DOWN  ENTER  ESC": "ВВЕРХ/ВНИЗ  ENTER  ESC",
-	"UP/DOWN  AMOUNT   PAGE  TEN   ENTER  ESC": "ВВЕРХ/ВНИЗ СКОЛЬКО  СТРАНИЦА ДЕСЯТЬ  ENTER  ESC",
+	"POLICE HAIL - CUT SPEED TO 25% FOR INSPECTION": "ПОЛИЦИЯ: СБРОСЬ СКОРОСТЬ ДО 25% ДЛЯ ДОСМОТРА",
+	"POLICE INSPECTION - CUT SPEED TO 25%":          "ДОСМОТР: СБРОСЬ СКОРОСТЬ ДО 25%",
+	"INSPECTION CLEARED":                            "ДОСМОТР ПРОЙДЕН",
+	"CONTRABAND ABOARD - YOU ARE UNDER ARREST":      "КОНТРАБАНДА НА БОРТУ - ВЫ АРЕСТОВАНЫ",
+	"YOU IGNORED THE HAIL":                          "ВЫ ПРОИГНОРИРОВАЛИ ТРЕБОВАНИЕ",
+	"YOU FIRED ON THE POLICE":                       "ВЫ ОТКРЫЛИ ОГОНЬ ПО ПОЛИЦИИ",
+	"MAX":                                           "МАКС",
+	"UP/DOWN  ENTER  ESC":                           "ВВЕРХ/ВНИЗ  ENTER  ESC",
+	"UP/DOWN  AMOUNT   PAGE  TEN   ENTER  ESC":      "ВВЕРХ/ВНИЗ СКОЛЬКО  СТРАНИЦА ДЕСЯТЬ  ENTER  ESC",
 	// ---- the contract board
 	"STORY":                                   "ИСТОРИЯ",
 	"STORY CONTRACT. THE COMPANY PAYS.":       "СЮЖЕТНЫЙ КОНТРАКТ. ПЛАТИТ КОНТОРА.",

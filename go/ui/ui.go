@@ -586,6 +586,10 @@ func flight(fb *render.FB, dt float64) {
 	cockpit(fb, g.Cmd.Ship)
 	crosshair(fb, 160, 75)
 
+	// what the police want, said plainly, for as long as they want it
+	if g.PoliceState == "hail" {
+		fb.TextC(lang.T("POLICE INSPECTION - CUT SPEED TO 25%"), 160, 112, ColYellow, 1)
+	}
 	drawMessages(fb, 6, 4)
 
 	hud(fb)

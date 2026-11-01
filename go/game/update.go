@@ -161,6 +161,8 @@ func (g *Game) Update(dt float64) {
 		}
 	}
 
+	g.updatePolice(dt)
+
 	// ---- station (none in witchspace)
 	if st := w.Station; st != nil {
 		st.Mat = st.Mat.Mul(render.RotY(0.05 * dt))
@@ -437,6 +439,10 @@ func (g *Game) updateEntities(dt float64) {
 				e.Speed = e.MaxSpeed * 0.7
 			}
 			e.Cooldown -= dt
+			// a hail is not an attack: they only shoot once they are hostile
+			if !e.Hostile {
+				break
+			}
 			if e.Cooldown <= 0 && distP < 3500 && math.Abs(ax) < 0.2 && math.Abs(ay) < 0.2 {
 				e.Cooldown = e.FireRate * randRange(0.8, 1.5)
 				if randFloat() < math.Max(0.25, 1.05-distP/5200) {

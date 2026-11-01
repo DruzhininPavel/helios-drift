@@ -269,6 +269,11 @@ type Game struct {
 	LastDamageReason string
 	// CheatShield ignores fire and debris for testing; collisions still kill.
 	CheatShield bool
+	// PoliceState is "" none, "hail" a stop for inspection, "fight" an
+	// arrest that turned into shooting. PoliceTimer counts the seconds left to
+	// answer the hail.
+	PoliceState string
+	PoliceTimer float64
 	// Talk is the dialogue node on screen, "" when nobody is talking, and
 	// TalkBack is the screen to return to when it closes.
 	Talk     string
@@ -540,11 +545,23 @@ func (g *Game) SpawnTraffic(n int) {
 	}
 }
 
+// PoliceHail starts an inspection stop: the vipers hail and hold their fire
+// until the pilot either slows down to be searched or gives them a reason.
+func (g *Game) PoliceHail() {
+	if g.PoliceState != "" {
+		return
+	}
+	g.PoliceState = "hail"
+	g.PoliceTimer = 12
+	g.Message("POLICE HAIL - CUT SPEED TO 25% FOR INSPECTION", "info")
+}
+
 func (g *Game) spawnPolice(n int) {
 	if !g.notedPolice {
 		g.Note(LogPolice, "", n, 0)
 		g.notedPolice = true
 	}
+	g.PoliceHail()
 	for i := 0; i < n; i++ {
 		g.World.Entities = append(g.World.Entities, g.spawnAtDistance("viper", randRange(4000, 7000), "police"))
 	}
@@ -666,6 +683,10 @@ func (g *Game) HitEntity(e *Entity, dmg float64, source string) {
 	}
 	if e.Kind == "station" {
 		return
+	}
+	if e.Behaviour == "police" && source == "laser" && g.PoliceState == "hail" {
+		g.PoliceState = "fight"
+		g.Message("YOU FIRED ON THE POLICE", "bad")
 	}
 	if e.Shield > 0 {
 		e.Shield -= dmg
@@ -1252,4 +1273,57 @@ func (g *Game) ShieldMax() float64 {
 		max += 80
 	}
 	return max
+}
+
+// updatePolice runs the inspection stop: hail, inspect, or open fire.
+func (g *Game) updatePolice(dt float64) {
+	if g.PoliceState == "" || g.World == nil {
+		return
+	}
+	var police []*Entity
+	nearest := math.Inf(1)
+	for _, e := range g.World.Entities {
+		if e.Behaviour != "police" || e.Dead {
+			continue
+		}
+		police = append(police, e)
+		if d := e.Pos.Sub(g.Player.Pos).Len(); d < nearest {
+			nearest = d
+		}
+	}
+	if len(police) == 0 {
+		g.PoliceState = ""
+		return
+	}
+	if g.PoliceState != "hail" {
+		return
+	}
+	g.PoliceTimer -= dt
+	slow := g.Player.Speed <= g.Ship().Speed*0.25
+	if slow && nearest < 900 {
+		if g.CarryingContraband() || g.Cmd.Legal > 0 {
+			g.PoliceState = "fight"
+			for _, e := range police {
+				e.Hostile = true
+			}
+			g.Message("CONTRABAND ABOARD - YOU ARE UNDER ARREST", "bad")
+			g.Emit("warning")
+			return
+		}
+		// clean pilot: they look, they leave
+		g.PoliceState = ""
+		for _, e := range police {
+			e.Hostile = false
+			e.Behaviour = "flee"
+		}
+		g.Message("INSPECTION CLEARED", "good")
+		return
+	}
+	if g.PoliceTimer <= 0 {
+		g.PoliceState = "fight"
+		for _, e := range police {
+			e.Hostile = true
+		}
+		g.Message("YOU IGNORED THE HAIL", "bad")
+	}
 }
