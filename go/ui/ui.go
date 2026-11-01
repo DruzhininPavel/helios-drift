@@ -45,14 +45,16 @@ type Sel struct {
 	TalkScroll          int
 	TalkOpt             int
 	// MarketMode is "" or "buy"/"sell" while the amount is being chosen.
-	MarketMode    string
-	MarketQty     int
-	PrevState     string
-	PrevScreen    string
-	PadTestFrom   string
-	HasSession    bool
-	SessionState  string
-	SessionScreen string
+	MarketMode string
+	MarketQty  int
+	// ContractScroll is how far down the briefing is scrolled.
+	ContractScroll int
+	PrevState      string
+	PrevScreen     string
+	PadTestFrom    string
+	HasSession     bool
+	SessionState   string
+	SessionScreen  string
 }
 
 var S = Sel{ChartCursor: -1}

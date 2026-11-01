@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -1335,24 +1336,20 @@ func contractWhat(c game.Contract) []string {
 func storyWhat() []string {
 	g := game.G
 	q := g.CampaignQuest()
+	para := ""
+	for _, ln := range q.Brief {
+		if ln != "" {
+			para += lang.T(ln) + " "
+		}
+	}
 	if g.Cmd.Campaign.Active {
 		out := []string{lang.T("STORY CONTRACT.")}
-		for _, ln := range q.Brief {
-			if ln == "" {
-				continue
-			}
-			out = append(out, wrapText(lang.T(ln), 46)...)
-		}
+		out = append(out, wrapText(para, 48)...)
 		out = append(out, g.CampaignStatus())
 		return out
 	}
 	out := []string{lang.T("STORY CONTRACT. THE COMPANY PAYS.")}
-	for _, ln := range q.Brief {
-		if ln == "" {
-			continue
-		}
-		out = append(out, wrapText(lang.T(ln), 46)...)
-	}
+	out = append(out, wrapText(para, 48)...)
 	if q.Pay > 0 {
 		out = append(out, lang.T("PAYS")+" "+itoa(q.Pay)+" CR")
 	}
@@ -1411,8 +1408,13 @@ func contractsScreen(fb *render.FB) {
 		fb.TextRaw(clip(label, 45), 20, y, col, 1)
 		y += 10
 	}
-	// description of whatever is under the cursor
-	fb.HLine(10, 306, 118, render.RGB(0x1b3348))
+	// description of whatever is under the cursor: it takes the room the list
+	// leaves, so a short board shows a long briefing
+	descTop := y + 8
+	if descTop < 70 {
+		descTop = 70
+	}
+	fb.HLine(10, 306, descTop-6, render.RGB(0x1b3348))
 	var lines []string
 	switch rows[S.Contract].kind {
 	case "offer":
@@ -1422,13 +1424,27 @@ func contractsScreen(fb *render.FB) {
 	case "story":
 		lines = storyWhat()
 	}
-	dy := 124
-	for _, ln := range lines {
-		if dy > 176 {
-			break
-		}
-		fb.TextRaw(ln, 12, dy, ColText, 1)
-		dy += 9
+	// the last row belongs to the status line
+	const statusY = 180
+	const lineH = 9
+	maxLines := (statusY - 4 - descTop) / lineH
+	if maxLines < 1 {
+		maxLines = 1
+	}
+	if S.ContractScroll > len(lines)-maxLines {
+		S.ContractScroll = len(lines) - maxLines
+	}
+	if S.ContractScroll < 0 {
+		S.ContractScroll = 0
+	}
+	dy := descTop
+	for i := S.ContractScroll; i < len(lines) && i < S.ContractScroll+maxLines; i++ {
+		fb.TextRaw(lines[i], 12, dy, ColText, 1)
+		dy += lineH
+	}
+	if len(lines) > maxLines {
+		// say there is more, and which part of it you are looking at
+		fb.TextR(itoa(S.ContractScroll+1)+"/"+itoa(len(lines)-maxLines+1), 300, descTop, ColDim, 1)
 	}
 	// and its status, right under the description
 	var status string
@@ -1448,7 +1464,7 @@ func contractsScreen(fb *render.FB) {
 	case "active":
 		status = lang.T("CONTRACT ACCEPTED")
 	}
-	fb.TextRaw(status, 12, 180, ColYellow, 1)
+	fb.TextRaw(status, 12, statusY, ColYellow, 1)
 	Hint = "UP/DOWN SELECT   ENTER ACCEPT   ESC BACK"
 }
 
@@ -1460,15 +1476,23 @@ func contractsKey(k string) bool {
 	case "Escape":
 		g.Screen = "launch"
 		return true
-	case "ArrowUp":
-		if n > 0 {
-			S.Contract = (S.Contract + n - 1) % n
-		}
-		return true
 	case "ArrowDown":
 		if n > 0 {
 			S.Contract = (S.Contract + 1) % n
+			S.ContractScroll = 0
 		}
+		return true
+	case "ArrowUp":
+		if n > 0 {
+			S.Contract = (S.Contract + n - 1) % n
+			S.ContractScroll = 0
+		}
+		return true
+	case "PageDown":
+		S.ContractScroll++
+		return true
+	case "PageUp":
+		S.ContractScroll--
 		return true
 	case "Enter":
 		if n == 0 || S.Contract >= n {
@@ -2483,7 +2507,9 @@ func wrapText(src string, width int) []string {
 				line = w
 				continue
 			}
-			if len(line)+1+len(w) <= width {
+			// width is in characters: Russian is two bytes each, and counting
+			// bytes wrapped every line at half the panel
+			if utf8.RuneCountInString(line)+1+utf8.RuneCountInString(w) <= width {
 				line += " " + w
 			} else {
 				out = append(out, line)

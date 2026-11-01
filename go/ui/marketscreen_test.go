@@ -2,6 +2,7 @@ package ui
 
 import (
 	"testing"
+	"unicode/utf8"
 
 	"heliosdrift/game"
 	"heliosdrift/lang"
@@ -91,5 +92,22 @@ func TestEscapeClosesThePromptOnly(t *testing.T) {
 	Key("Escape")
 	if g.Screen != "launch" {
 		t.Fatalf("second Escape: screen %q", g.Screen)
+	}
+}
+
+// Russian must wrap by characters, not bytes: two bytes per letter wrapped
+// every line at half the panel and bunched the text against the left edge.
+func TestWrapCountsCharactersNotBytes(t *testing.T) {
+	src := "ИХ КОРАБЛЬ УПАЛ, НО БОРТОВОЙ САМОПИСЕЦ УЦЕЛЕЛ. НАЙДИ ОБЛОМКИ И СОЖГИ."
+	lines := wrapText(src, 30)
+	for _, ln := range lines {
+		if utf8.RuneCountInString(ln) > 30 {
+			t.Fatalf("%q is %d characters", ln, utf8.RuneCountInString(ln))
+		}
+	}
+	// and the lines actually use the width they were given
+	if utf8.RuneCountInString(lines[0]) < 20 {
+		t.Fatalf("first line is %q, only %d characters wide",
+			lines[0], utf8.RuneCountInString(lines[0]))
 	}
 }

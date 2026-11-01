@@ -537,9 +537,12 @@ func runShots() {
 	// the contract board: the story on top, then offers, then what is running
 	g.State = "docked"
 	g.Screen = "contracts"
-	g.Cmd.Campaign.Stage = 0
+	// chapter three has the longest briefing on the board, which is the point:
+	// the description has to wrap and, if need be, scroll
+	g.Cmd.Campaign.Stage = 2
 	g.Cmd.Campaign.Active = false
 	ui.S.Contract = 0
+	ui.S.ContractScroll = 0
 	shot("g80-contracts")
 	g.Screen = "launch"
 
