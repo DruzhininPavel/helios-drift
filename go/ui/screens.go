@@ -2704,9 +2704,9 @@ func talkScreen(fb *render.FB) {
 		}
 		fb.Text(itoa(i+1)+"  "+lang.T(n.Options[idx].Text), 14, oy, col, 1)
 	}
-	Hint = "1-" + itoa(len(opts)) + " CHOOSE"
+	Hint = "UP/DOWN SELECT   ENTER CHOOSE   ESC BACK"
 	if scrolling {
-		Hint = "UP/DOWN SCROLL   " + Hint
+		Hint = "PGUP/PGDN SCROLL   " + Hint
 	}
 }
 
@@ -2717,8 +2717,11 @@ func talkKey(k string) bool {
 		g.EndTalk()
 		return true
 	}
-	// the same maths as the screen: answers pinned low, text above them
 	opts := g.VisibleOptions(n)
+	if S.TalkOpt >= len(opts) {
+		S.TalkOpt = 0
+	}
+	// the same maths as the screen: answers pinned low, text above them
 	const lineH = 10
 	visible := (186 - len(opts)*11 - 6 - 32) / lineH
 	if visible < 3 {
@@ -2732,19 +2735,29 @@ func talkKey(k string) bool {
 	if maxTop < 0 {
 		maxTop = 0
 	}
+	choose := func(i int) {
+		if i < 0 || i >= len(opts) {
+			return
+		}
+		// TalkChoose counts visible answers, not the raw option index
+		g.TalkChoose(i)
+		S.TalkScroll = 0
+		S.TalkOpt = 0
+	}
 	switch k {
 	case "Escape":
 		g.EndTalk()
 	case "ArrowUp":
-		S.TalkScroll--
-		if S.TalkScroll < 0 {
-			S.TalkScroll = 0
+		// arrows walk the answers; the text scrolls with the page keys
+		if len(opts) > 0 {
+			S.TalkOpt = (S.TalkOpt + len(opts) - 1) % len(opts)
 		}
 	case "ArrowDown":
-		S.TalkScroll++
-		if S.TalkScroll > maxTop {
-			S.TalkScroll = maxTop
+		if len(opts) > 0 {
+			S.TalkOpt = (S.TalkOpt + 1) % len(opts)
 		}
+	case "Enter", " ":
+		choose(S.TalkOpt)
 	case "PageUp":
 		S.TalkScroll -= visible
 		if S.TalkScroll < 0 {
@@ -2757,9 +2770,7 @@ func talkKey(k string) bool {
 		}
 	default:
 		if len(k) == 1 && k[0] >= '1' && k[0] <= '9' {
-			g.TalkChoose(int(k[0] - '1'))
-			S.TalkScroll = 0
-			S.TalkOpt = 0
+			choose(int(k[0] - '1'))
 		}
 	}
 	return true
