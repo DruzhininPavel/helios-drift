@@ -253,19 +253,21 @@ func TestCampaignScreen(t *testing.T) {
 	if !game.G.CampaignOffer() {
 		t.Fatal("advanced has no campaign stage to offer")
 	}
-	Key("9") // MISSION row hotkey
+	// the story is one of the contracts now: open the board and take it there
 	found := false
 	for _, it := range menuItems() {
-		if it == "MISSION" {
+		if it == "CONTRACTS" {
 			found = true
 		}
 	}
 	if !found {
-		t.Fatal("menu lost the MISSION row")
+		t.Fatal("menu lost the CONTRACTS row that carries the story")
 	}
-	openMission()
-	if game.G.Screen != "mission" {
-		t.Fatalf("screen = %q", game.G.Screen)
+	game.G.Screen = "contracts"
+	S.Contract = 0
+	rows := boardRows()
+	if len(rows) == 0 || rows[0].kind != "story" {
+		t.Fatalf("board does not lead with the story: %+v", rows)
 	}
 	Key("Enter")
 	if !game.G.Cmd.Campaign.Active {

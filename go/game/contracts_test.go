@@ -31,8 +31,13 @@ func TestCourierContract(t *testing.T) {
 	if g.Cmd.Cargo[0] != 3 {
 		t.Fatalf("cargo = %d, want 3", g.Cmd.Cargo[0])
 	}
-	if len(g.Offers) != 0 {
-		t.Fatal("offer still on the board")
+	// the offer stays where it was, marked taken: a row must not jump out
+	// from under the cursor into another list
+	if len(g.Offers) != 1 || !g.Offers[0].Taken {
+		t.Fatal("the accepted offer left the board instead of being marked")
+	}
+	if len(g.Cmd.Contracts) != 1 {
+		t.Fatalf("%d contracts running, want 1", len(g.Cmd.Contracts))
 	}
 
 	cash := g.Cmd.Cash

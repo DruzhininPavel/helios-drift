@@ -77,8 +77,11 @@ func docked(fb *render.FB) {
 	}
 	footer(fb)
 	// the answer to "why did nothing happen" belongs on every screen, not just
-	// in flight
-	drawMessages(fb, 192, 2)
+	// in flight - except the contract board, where a running list of toasts
+	// under the description reads like part of the contract
+	if g.Screen != "contracts" {
+		drawMessages(fb, 192, 2)
+	}
 }
 
 func stationMenu(fb *render.FB) {
@@ -168,15 +171,14 @@ func menuItems() []string {
 	// more thing to buy
 	items = append(items, "GALACTIC CHART",
 		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER")
-	if game.G.MissionOffer() != "" || game.G.Cmd.Mission.Kind != "" ||
-		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active {
-		items = append(items, "MISSION")
-	}
 	if !game.G.Classic() {
 		// the log is a modern comfort: a 1984 commander keeps his own notes
 		items = append(items, "LOG")
 	}
-	if !game.G.Classic() && (len(game.G.Offers) > 0 || len(game.G.Cmd.Contracts) > 0) {
+	// one board for everything you can take on: jobs, the story, and what is
+	// already running. There is no separate mission screen any more
+	if !game.G.Classic() && (len(game.G.Offers) > 0 || len(game.G.Cmd.Contracts) > 0 ||
+		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active) {
 		items = append(items, "CONTRACTS")
 	}
 	if game.G.Cmd.Mission.Kind != "" || len(game.G.Cmd.Contracts) > 0 {
@@ -1207,53 +1209,215 @@ func openContracts() {
 	S.Contract = 0
 }
 
+// boardRow is one line of the contract board: an offer taken or not, the
+// story job when there is one, or a contract still running from another
+// station.
+type boardRow struct {
+	kind string // offer | story | active
+	idx  int
+}
+
+func sameContract(a, b game.Contract) bool {
+	return a.Kind == b.Kind && a.Good == b.Good && a.System == b.System &&
+		a.Galaxy == b.Galaxy && a.Pay == b.Pay && a.Qty == b.Qty
+}
+
+func boardRows() []boardRow {
+	g := game.G
+	var rows []boardRow
+	// the story leads: it is the one job that is not a number
+	if g.CampaignOffer() || g.Cmd.Campaign.Active {
+		rows = append(rows, boardRow{"story", 0})
+	}
+	for i := range g.Offers {
+		rows = append(rows, boardRow{"offer", i})
+	}
+	for i, c := range g.Cmd.Contracts {
+		dup := false
+		for _, o := range g.Offers {
+			if o.Taken && sameContract(o, c) {
+				dup = true
+			}
+		}
+		if !dup {
+			rows = append(rows, boardRow{"active", i})
+		}
+	}
+	return rows
+}
+
+// contractWhat is the description template: what the job actually asks for.
+func contractWhat(c game.Contract) []string {
+	sys := galaxy.Get(c.Galaxy).Systems[c.System].Name
+	good := galaxy.Commodities[c.Good].Name
+	days := itoa(maxInt(0, c.Due-game.G.Cmd.Day))
+	switch c.Kind {
+	case game.ContractCourier:
+		return []string{
+			lang.T("TAKE THIS CARGO TO ANOTHER STATION."),
+			lang.T("CARGO") + ": " + lang.T(good) + " X" + itoa(c.Qty) + " T",
+			lang.T("DESTINATION") + ": " + sys,
+			lang.T("THE CARGO IS ALREADY ABOARD."),
+			lang.T("DAYS LEFT") + ": " + days,
+		}
+	case game.ContractSmuggle:
+		return []string{
+			lang.T("MOVE THIS CARGO WITHOUT BEING SEARCHED."),
+			lang.T("CARGO") + ": " + lang.T(good) + " X" + itoa(c.Qty) + " T",
+			lang.T("DESTINATION") + ": " + sys,
+			lang.T("POLICE MAY STOP YOU ON THE WAY."),
+			lang.T("DAYS LEFT") + ": " + days,
+		}
+	case game.ContractPassenger:
+		return []string{
+			lang.T("TAKE PASSENGERS TO ANOTHER STATION."),
+			lang.T("PASSENGERS") + ": " + itoa(c.Qty),
+			lang.T("DESTINATION") + ": " + sys,
+			lang.T("THEY TAKE HOLD SPACE AND THEY COMPLAIN."),
+			lang.T("DAYS LEFT") + ": " + days,
+		}
+	case game.ContractMail:
+		return []string{
+			lang.T("CARRY SEALED POST TO ANOTHER STATION."),
+			lang.T("MAIL") + ": " + itoa(c.Qty) + " T",
+			lang.T("DESTINATION") + ": " + sys,
+			lang.T("DAYS LEFT") + ": " + days,
+		}
+	}
+	return []string{
+		lang.T("CLEAR HOSTILES IN ONE SYSTEM."),
+		lang.T("TARGET") + ": " + itoa(c.Qty) + " " + lang.T("SHIPS"),
+		lang.T("SYSTEM") + ": " + sys,
+		lang.T("PROGRESS") + ": " + itoa(c.Done) + "/" + itoa(c.Qty),
+		lang.T("DAYS LEFT") + ": " + days,
+	}
+}
+
+// storyWhat is the story job in the same shape, so one board reads one way.
+func storyWhat() []string {
+	g := game.G
+	q := g.CampaignQuest()
+	if g.Cmd.Campaign.Active {
+		out := []string{lang.T("STORY CONTRACT.")}
+		for _, ln := range q.Brief {
+			if ln == "" {
+				continue
+			}
+			out = append(out, wrapText(lang.T(ln), 46)...)
+		}
+		out = append(out, g.CampaignStatus())
+		return out
+	}
+	out := []string{lang.T("STORY CONTRACT. THE COMPANY PAYS.")}
+	for _, ln := range q.Brief {
+		if ln == "" {
+			continue
+		}
+		out = append(out, wrapText(lang.T(ln), 46)...)
+	}
+	if q.Pay > 0 {
+		out = append(out, lang.T("PAYS")+" "+itoa(q.Pay)+" CR")
+	}
+	return out
+}
+
 func contractsScreen(fb *render.FB) {
 	g := game.G
-	cmd := &g.Cmd
-	plate(fb, 8, 20, 304, 176, "CONTRACTS")
-	y := 36
-	fb.Text("AVAILABLE", 16, y, ColDim, 1)
-	y += 12
-	if len(g.Offers) == 0 {
-		fb.Text("NONE RIGHT NOW", 16, y, render.RGB(0x2d4a5c), 1)
-		y += 12
+	plate(fb, 6, 14, 310, 172, "")
+	rows := boardRows()
+	if len(rows) == 0 {
+		fb.Text(lang.T("NO CONTRACTS ON THE BOARD"), 14, 30, ColDim, 1)
+		Hint = "ESC BACK"
+		return
 	}
-	for i, c := range g.Offers {
+	if S.Contract >= len(rows) {
+		S.Contract = len(rows) - 1
+	}
+	// the list never reorders itself: an accepted offer stays where it was and
+	// only gains a marker
+	y := 26
+	for i, r := range rows {
 		sel := S.Contract == i
 		if sel {
-			fb.FillRect(12, y-2, 300, y+8, render.RGB(0x12384f))
-			fb.FillRect(12, y-2, 15, y+8, ColYellow)
+			fb.FillRect(10, y-2, 306, y+8, render.RGB(0x12384f))
 		}
+		mark := " "
 		col := ColText
+		var label string
+		switch r.kind {
+		case "offer":
+			c := g.Offers[r.idx]
+			label = g.ContractLabel(c)
+			if c.Taken {
+				mark = "*"
+				col = ColGreen
+			}
+		case "story":
+			label = lang.T("STORY") + ": " + lang.T(g.CampaignQuest().Title)
+			if g.Cmd.Campaign.Active {
+				mark = "*"
+				col = ColGreen
+			} else {
+				col = ColYellow
+			}
+		case "active":
+			c := g.Cmd.Contracts[r.idx]
+			label = g.ContractLabel(c)
+			mark = "*"
+			col = ColGreen
+		}
 		if sel {
 			col = ColYellow
 		}
-		fb.Text(clip(g.ContractLabel(c), 47), 18, y, col, 1)
-		y += 11
+		fb.Text(mark, 12, y, ColGreen, 1)
+		fb.TextRaw(clip(label, 45), 20, y, col, 1)
+		y += 10
 	}
-	y += 4
-	fb.HLine(16, 300, y, render.RGB(0x1b3348))
-	y += 8
-	fb.Text("ACCEPTED", 16, y, ColDim, 1)
-	y += 12
-	if len(cmd.Contracts) == 0 {
-		fb.Text("NONE", 16, y, render.RGB(0x2d4a5c), 1)
-	} else {
-		for _, c := range cmd.Contracts {
-			fb.Text(clip(g.ContractLabel(c), 47), 16, y, ColGreen, 1)
-			y += 10
+	// description of whatever is under the cursor
+	fb.HLine(10, 306, 118, render.RGB(0x1b3348))
+	var lines []string
+	switch rows[S.Contract].kind {
+	case "offer":
+		lines = contractWhat(g.Offers[rows[S.Contract].idx])
+	case "active":
+		lines = contractWhat(g.Cmd.Contracts[rows[S.Contract].idx])
+	case "story":
+		lines = storyWhat()
+	}
+	dy := 124
+	for _, ln := range lines {
+		if dy > 176 {
+			break
 		}
+		fb.TextRaw(ln, 12, dy, ColText, 1)
+		dy += 9
 	}
-	if len(g.Offers) > 0 {
-		Hint = "UP/DOWN SELECT   ENTER ACCEPT   ESC BACK"
-	} else {
-		Hint = "ESC BACK"
+	// and its status, right under the description
+	var status string
+	switch rows[S.Contract].kind {
+	case "offer":
+		if g.Offers[rows[S.Contract].idx].Taken {
+			status = lang.T("CONTRACT ACCEPTED")
+		} else {
+			status = lang.T("ENTER ACCEPT")
+		}
+	case "story":
+		if g.Cmd.Campaign.Active {
+			status = lang.T("CONTRACT ACCEPTED")
+		} else {
+			status = lang.T("ENTER ACCEPT")
+		}
+	case "active":
+		status = lang.T("CONTRACT ACCEPTED")
 	}
+	fb.TextRaw(status, 12, 180, ColYellow, 1)
+	Hint = "UP/DOWN SELECT   ENTER ACCEPT   ESC BACK"
 }
 
 func contractsKey(k string) bool {
 	g := game.G
-	n := len(g.Offers)
+	rows := boardRows()
+	n := len(rows)
 	switch k {
 	case "Escape":
 		g.Screen = "launch"
@@ -1269,9 +1433,19 @@ func contractsKey(k string) bool {
 		}
 		return true
 	case "Enter":
-		g.AcceptOffer(S.Contract)
-		if len(g.Offers) == 0 {
-			S.Contract = 0
+		if n == 0 || S.Contract >= n {
+			return true
+		}
+		switch rows[S.Contract].kind {
+		case "offer":
+			// the row index is not the offer index: the story row sits first
+			if idx := rows[S.Contract].idx; !g.Offers[idx].Taken {
+				g.AcceptOffer(idx)
+			}
+		case "story":
+			if !g.Cmd.Campaign.Active {
+				g.AcceptCampaign()
+			}
 		}
 		return true
 	}

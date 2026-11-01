@@ -17,6 +17,9 @@ type Contract struct {
 	Pay    int    `json:"pay"`
 	Done   int    `json:"done"`
 	Due    int    `json:"due"`
+	// Taken marks a board offer already accepted: it stays where it is, with a
+	// marker, instead of moving to another list under the player's cursor.
+	Taken bool `json:"-"`
 }
 
 const (
@@ -147,7 +150,7 @@ func (g *Game) AcceptOffer(i int) bool {
 		g.Cmd.Mail += c.Qty
 	}
 	g.Cmd.Contracts = append(g.Cmd.Contracts, c)
-	g.Offers = append(g.Offers[:i], g.Offers[i+1:]...)
+	g.Offers[i].Taken = true
 	g.Note(LogJob, g.ContractLabel(c), c.Qty, float64(c.Pay))
 	g.Message("CONTRACT ACCEPTED", "good")
 	return true

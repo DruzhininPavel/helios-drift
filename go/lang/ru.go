@@ -4,6 +4,25 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	// ---- the contract board
+	"STORY":                                   "ИСТОРИЯ",
+	"STORY CONTRACT. THE COMPANY PAYS.":       "СЮЖЕТНЫЙ КОНТРАКТ. ПЛАТИТ КОНТОРА.",
+	"STORY CONTRACT.":                         "СЮЖЕТНЫЙ КОНТРАКТ.",
+	"TAKE THIS CARGO TO ANOTHER STATION.":     "ДОСТАВЬ ЭТОТ ГРУЗ НА ДРУГУЮ СТАНЦИЮ.",
+	"MOVE THIS CARGO WITHOUT BEING SEARCHED.": "ПРОВЕЗИ ГРУЗ, НЕ ПОПАВШИСЬ НА ОБЫСК.",
+	"TAKE PASSENGERS TO ANOTHER STATION.":     "ДОСТАВЬ ПАССАЖИРОВ НА ДРУГУЮ СТАНЦИЮ.",
+	"CARRY SEALED POST TO ANOTHER STATION.":   "ДОСТАВЬ ЗАПЕЧАТАННУЮ ПОЧТУ НА ДРУГУЮ СТАНЦИЮ.",
+	"CLEAR HOSTILES IN ONE SYSTEM.":           "ОЧИСТИ СИСТЕМУ ОТ ВРАГОВ.",
+	"THE CARGO IS ALREADY ABOARD.":            "ГРУЗ УЖЕ В ТРЮМЕ.",
+	"POLICE MAY STOP YOU ON THE WAY.":         "ПОЛИЦИЯ МОЖЕТ ОСТАНОВИТЬ В ПУТИ.",
+	"THEY TAKE HOLD SPACE AND THEY COMPLAIN.": "ОНИ ЗАНИМАЮТ ТРЮМ И ЖАЛУЮТСЯ.",
+	"DESTINATION":                             "КУДА",
+	"DAYS LEFT":                               "ДНЕЙ ОСТАЛОСЬ",
+	"TARGET":                                  "ЦЕЛЬ",
+	"SYSTEM":                                  "СИСТЕМА",
+	"PROGRESS":                                "СДЕЛАНО",
+	"SHIPS":                                   "КОРАБЛЕЙ",
+	"ENTER ACCEPT":                            "ENTER ПРИНЯТЬ",
 	// ---- chapter two, the collectors
 	"COLLECTOR LEADER":                   "КОМАНДИР ЗАСАДЫ",
 	"COMPANY":                            "КОНТОРА",

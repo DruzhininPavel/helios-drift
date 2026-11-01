@@ -502,6 +502,15 @@ func runShots() {
 	g.Cmd.Campaign.Active = false
 	g.Cmd.Cash = 3812
 
+	// the contract board: the story on top, then offers, then what is running
+	g.State = "docked"
+	g.Screen = "contracts"
+	g.Cmd.Campaign.Stage = 0
+	g.Cmd.Campaign.Active = false
+	ui.S.Contract = 0
+	shot("g80-contracts")
+	g.Screen = "launch"
+
 	// the market with a crate in the hold: it sits under the commodities and
 	// cannot be sold
 	g.State = "docked"
