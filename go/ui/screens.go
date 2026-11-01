@@ -41,9 +41,6 @@ func footer(fb *render.FB) {
 	fb.FillRect(0, 211, 319, 223, render.RGB(0x08131f))
 	fb.HLine(0, 319, 211, ColFrame)
 	fb.TextC(Hint, 160, 215, ColDim, 1)
-	// the build number sits in the free corner: the hint is centred, and the
-	// right side of the footer collided with it
-	fb.Text(game.Version, 3, 215, render.RGB(0x24414f), 1)
 }
 
 func docked(fb *render.FB) {
@@ -1185,6 +1182,8 @@ func settingsScreen(fb *render.FB) {
 		}
 	}
 	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 176, ColDim, 1)
+	// the build belongs where you go looking for it, not over the play field
+	fb.TextC(game.Version, 160, 184, render.RGB(0x24414f), 1)
 	Hint = "UP/DOWN  LEFT/RIGHT  ENTER  ESC"
 }
 
