@@ -28,7 +28,20 @@ func (t *Trader) TalkChoice(g *game.Game) int {
 	if t.Talk > 0 {
 		return t.Talk
 	}
-	return 0
+	n := game.DialogueNode(g.Talk)
+	if n == nil {
+		return 0
+	}
+	// the story now offers answers that close a stage without a fee; a trader
+	// paid by the hull takes the one that reaches ships soonest
+	vis := g.VisibleOptions(n)
+	best, bestDepth := 0, 99
+	for i, idx := range vis {
+		if d := spawnDepth(n.Options[idx].Next, 6); d < bestDepth {
+			best, bestDepth = i, d
+		}
+	}
+	return best
 }
 
 type Trader struct {
@@ -714,7 +727,7 @@ func (t *Trader) takeWork(g *game.Game, frame int) []Event {
 			}
 		}
 	}
-	if g.CampaignOffer() {
+	if g.CampaignOffer() && !t.TradeOnly {
 		ev = append(ev, Event{Kind: "campaign"})
 		if q := g.CampaignQuest(); q.Kind == "deliver" {
 			t.questGood = q.Good
@@ -829,4 +842,33 @@ func (t *Trader) gearBudget(g *game.Game) float64 {
 		return left
 	}
 	return g.Cmd.Cash
+}
+
+// spawnDepth is how many nodes away the nearest fight is. A branch that never
+// reaches one is 99.
+func spawnDepth(id string, depth int) int {
+	if id == "" || depth < 0 {
+		return 99
+	}
+	n := game.DialogueNode(id)
+	if n == nil {
+		return 99
+	}
+	for _, e := range n.OnEnter {
+		if e.Kind == game.FxSpawn {
+			return 0
+		}
+	}
+	best := 99
+	for _, o := range n.Options {
+		for _, e := range o.Do {
+			if e.Kind == game.FxSpawn && best > 1 {
+				best = 1
+			}
+		}
+		if d := spawnDepth(o.Next, depth-1); d+1 < best {
+			best = d + 1
+		}
+	}
+	return best
 }

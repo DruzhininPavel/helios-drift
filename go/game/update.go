@@ -163,6 +163,7 @@ func (g *Game) Update(dt float64) {
 
 	g.updatePolice(dt)
 	g.updateBroadcast(dt)
+	g.updateHive(dt)
 
 	// ---- station (none in witchspace)
 	if st := w.Station; st != nil {

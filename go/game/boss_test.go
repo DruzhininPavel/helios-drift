@@ -20,6 +20,8 @@ func TestFlagshipNeedsRealGuns(t *testing.T) {
 		g.Cmd.Campaign.Target = g.Cmd.System
 		g.Cmd.Campaign.Galaxy = g.Cmd.Galaxy
 		g.campaignArrive()
+		// the flagship is only called to the field once the director is told no
+		answerTalk(g)
 
 		var boss *Entity
 		escorts := 0

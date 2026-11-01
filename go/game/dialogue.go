@@ -180,10 +180,15 @@ func (g *Game) apply(e Effect) {
 	case FxAudit:
 		cmd.Audit = e.S
 	case FxEnding:
-		cmd.Ending = e.S
+		g.StartEnding(e.S)
 	case FxQuest:
 		g.advanceCampaign()
 	case FxSpawn:
+		if e.Key == "PIRATES" {
+			// the four who were waiting for the shields to drop
+			g.SpawnPirates(4)
+			break
+		}
 		g.spawnQuestGroup(e.Key)
 	}
 }
@@ -248,6 +253,11 @@ func (g *Game) EndTalk() {
 	g.TalkBack = ""
 	if g.Screen == "" && g.State == "docked" {
 		g.Screen = "launch"
+	}
+	// a conversation that settled the campaign ends on the last page, not in the
+	// cockpit
+	if g.Cmd.Ending != "" {
+		g.Screen = "ending"
 	}
 }
 

@@ -123,6 +123,7 @@ var campaignQuests = []Quest{
 	{
 		Title: "THE HIVE",
 		Kind:  QuestKill, Tag: "MOTHER", Spawn: "thargoid", Count: 1, Pay: 25000,
+		Talk: "c7_hive",
 		Brief: []string{
 			"THE ARTEFACT IN THAT CONVOY WAS NOT",
 			"CARGO. IT WAS A CALL, AND SOMETHING",
@@ -134,6 +135,7 @@ var campaignQuests = []Quest{
 	{
 		Title: "THE FLAGSHIP",
 		Kind:  QuestKill, Tag: "FLAGSHIP", Spawn: "anaconda", Count: 1, Pay: 50000,
+		Talk: "c8_director",
 		Brief: []string{
 			"HELIOS COMBINE IS RUNNING. THEIR FLAGSHIP",
 			"IS LOADED AND ALREADY CLEARED TO JUMP.",
@@ -361,6 +363,15 @@ func (g *Game) campaignKill(tag string) {
 	} else {
 		g.Message("STAGE COMPLETE", "good")
 	}
+	// an audit that ends in an explosion does not end: it breaks
+	if tag == "MOTHER" && g.Cmd.Flags["HIVE_ATTACKED"] {
+		if g.Cmd.Flags == nil {
+			g.Cmd.Flags = map[string]bool{}
+		}
+		g.Cmd.Flags["AUDIT_BROKEN"] = true
+		g.Message("AUDIT INTERRUPTED", "bad")
+		g.Note(LogKill, "AUDIT", 0, 0)
+	}
 	// killing the courier puts a price on the pilot's hull: the board is not
 	// shown, but the sky gets busier
 	if tag == "COURIER" && g.Cmd.Flags["COURIER_DEAD"] {
@@ -387,9 +398,14 @@ func (g *Game) campaignKill(tag string) {
 		g.Note(LogDone, "CLEAN WORK", c.Stage, 0)
 	}
 	if c.Stage >= CampaignTotal() {
-		g.Message("HELIOS COMBINE IS FINISHED", "good")
+		// the last stage has no "well done": it has three ways to end, and with
+		// the director dead nobody countersigns the seal but the pilot
 		g.Cmd.Cash += 25000
-		g.Cmd.Legal = 0
+		if g.Cmd.Flags["DIRECTOR_DEAD"] {
+			g.TalkStart("c8_after")
+			return
+		}
+		g.StartEnding("combine")
 	}
 }
 
@@ -520,4 +536,37 @@ func (g *Game) updateBroadcast(dt float64) {
 			g.Viewers = 0
 		}
 	}
+}
+
+// updateHive runs the waiting game: with the shields left up the mothership
+// cannot be touched, so after ten minutes the field falls on its own and the
+// chapter continues - a stalemate is not a failure state.
+func (g *Game) updateHive(dt float64) {
+	if !g.Cmd.Campaign.Active || g.Cmd.Campaign.Stage != 6 {
+		return
+	}
+	if !g.Cmd.Flags["SHIELDS_UP"] || g.Cmd.Flags["SHIELDS_CUT"] {
+		return
+	}
+	g.HiveWait += dt
+	if g.HiveWait > 600 {
+		if g.Cmd.Flags == nil {
+			g.Cmd.Flags = map[string]bool{}
+		}
+		g.Cmd.Flags["SHIELDS_CUT"] = true
+		g.Message("THE MOTHERSHIP POWERS DOWN AND THE FIELD FALLS", "info")
+	}
+}
+
+// StartEnding closes the campaign on one of three notes: who holds the seal when
+// the shooting stops.
+func (g *Game) StartEnding(kind string) {
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	g.Cmd.Ending = kind
+	g.Cmd.Campaign.Active = false
+	g.Cmd.Campaign.Stage = CampaignTotal()
+	g.Message("THE CAMPAIGN IS OVER", "good")
+	g.Note(LogDone, "ENDING: "+kind, 0, 0)
 }

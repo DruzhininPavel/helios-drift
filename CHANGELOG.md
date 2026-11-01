@@ -1,5 +1,19 @@
 ## Unreleased
 
+- Chapter seven: the hive speaks, once and at length. Killing it means cutting the
+  station's shields first - until then nothing reaches it - and four pirates were
+  waiting for exactly that. Leave the shields up and the field falls on its own
+  after ten minutes rather than the chapter failing.
+- The third way through chapter seven, if you asked for an auditor in chapter six:
+  show the copy or the recording and the closure becomes a rewriting.
+- Chapter eight: three answers from the director and three endings - COMBINE,
+  CHAOS, COUNCIL - the last only if the courier is alive to bring the copies.
+- Breaking the convoy floods the local market for a day and leaves three crates in
+  the debris. Killing the courier posts a bounty that shows up as more pirates.
+  The courier's broadcast has an audience counter, and his list is a page of the log.
+- Chapter six keeps all three archives, with the receipt, the courier as witness,
+  a bribe, a forgery or the mining rig opening the second one.
+
 - Chapter three: the wreck, the roster and the menu. Arriving at the black-box
   system opens a conversation instead of a fight: the empty racks, the board
   with 37 names, the beeping recorder (copy it or burn it), the appendix that

@@ -67,6 +67,8 @@ func docked(fb *render.FB) {
 		journalScreen(fb)
 	case "closing":
 		closingScreen(fb)
+	case "ending":
+		endingScreen(fb)
 	case "talk":
 		talkScreen(fb)
 	case "shipyard":
@@ -802,6 +804,9 @@ func dockedKey(k string) bool {
 			g.Screen = "launch"
 		}
 		return true
+	}
+	if g.Screen == "ending" {
+		return endingKey(k)
 	}
 	if g.Screen == "closing" {
 		return closingKey(k)
@@ -2498,6 +2503,53 @@ func closingKey(k string) bool {
 		S.ClosingScroll -= 9
 	case "PageDown":
 		S.ClosingScroll += 9
+	}
+	return true
+}
+
+// endingScreen is the last page: what the sector looks like once the pilot holds
+// the seal, or does not.
+func endingScreen(fb *render.FB) {
+	g := game.G
+	plate(fb, 6, 14, 310, 190, "")
+	title, body, last := endingText(g.Cmd.Ending)
+	y := 34
+	for _, ln := range wrapText(title, 46) {
+		fb.TextRaw(ln, 16, y, ColYellow, 1)
+		y += 12
+	}
+	y += 8
+	for _, ln := range wrapText(body, 48) {
+		fb.TextRaw(ln, 16, y, ColText, 1)
+		y += 10
+	}
+	for _, ln := range wrapText(last, 48) {
+		fb.TextRaw(ln, 16, 168, ColGreen, 1)
+		y += 10
+	}
+	Hint = "ENTER MAIN MENU"
+}
+
+func endingText(kind string) (title, body, last string) {
+	switch kind {
+	case "chaos":
+		return lang.T("CHAOS"),
+			lang.T("THERE ARE NO LICENCES IN THE SECTOR, NO COMBINE AND NO ORDER. PRICES ON ONE STATION ARE TWICE THOSE ON THE NEXT AND NOBODY KNOWS WHY. CARRYING CARGO PAYS AND IS FRIGHTENING. WITHIN A YEAR SOMEONE PROPOSES THAT EVERYONE AGREE ON THE RULES - AND IT IS NOT YOU."),
+			lang.T("TRADE RESUMED. NO LICENCES REQUIRED.")
+	case "council":
+		return lang.T("COUNCIL"),
+			lang.T("THE STATIONS TAKE THE SEAL AND LOCK IT IN A SHARED SAFE WITH EIGHTEEN KEYS. RULES ARE WRITTEN BY THE PEOPLE WHO LIVE UNDER THEM. THE COMBINE EXISTS AS A DEBTOR, AND EVERY MEETING OPENS WITH ITS ACCOUNTS READ ALOUD. IT IS DULL, AND IT WORKS."),
+			lang.T("QUORUM PRESENT. THE FIRST QUESTION IS OPEN.")
+	}
+	return lang.T("COMBINE"),
+		lang.T("A MONTH LATER YOU SIT IN THE SAME CHAIR WITH THE SAME BOOK AND SIGN THE FIRST PAPER. IT CLOSES THREE STATIONS WHOSE DEBT IS NOT SERVICED. YOU SIGN IT BECAUSE THE BALANCE HAS TO BE SETTLED, AND BECAUSE NOW IT IS YOUR BALANCE."),
+		lang.T("YOUR LICENCE IS VALID. PLEASE CONTINUE.")
+}
+
+func endingKey(k string) bool {
+	switch k {
+	case "Enter", "Escape", " ":
+		QuitToTitle()
 	}
 	return true
 }

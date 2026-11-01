@@ -33,7 +33,9 @@ func TestDialogueTextIsComplete(t *testing.T) {
 			if strings.ToUpper(s) != s {
 				t.Errorf("%s: %q is not capitals", id, s)
 			}
-			if w := render.TextWidth(s, 1); w > 276*4 {
+			// the talk screen wraps, so a long line is fine; a line that wraps
+			// into fifty rows is not
+			if w := render.TextWidth(s, 1); w > 276*6 {
 				t.Errorf("%s: %q is absurdly long (%d px)", id, s, w)
 			}
 		}

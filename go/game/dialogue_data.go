@@ -574,5 +574,179 @@ func init() {
 			OnEnter: []Effect{{Kind: FxSpawn, Key: "COURIER"}},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
+		// ---- chapter seven: the hive speaks once, and at length
+		&Node{
+			ID:      "c7_hive",
+			Kind:    "talk",
+			Speaker: "HIVE",
+			Lines: []string{
+				"YOU CAN HEAR THIS SIGNAL. IT IS NOT A WEAPON.",
+				"THERE ARE EIGHTEEN STATIONS IN THIS SECTOR. SEVENTEEN TRADE ON LICENCES THAT BELONG TO US. THE LICENCES HAVE BEEN RESOLD THREE TIMES. THE DEBT IS THREE HUNDRED AND EIGHTY BILLION.",
+				"IT CANNOT CONTINUE IN THIS SHAPE. AN AUDIT WILL CLOSE SEVENTEEN STATIONS AND RECOUNT THE DEBT FROM ZERO. IT WILL TAKE FORTY-TWO YEARS. ALL THAT TIME, MOVEMENT IN THE SECTOR WILL BE STOPPED.",
+				"THIS IS NOT A PUNISHMENT. IT IS THE ONLY WAY TO RESTORE THE BALANCE WITHOUT DESTROYING PEOPLE.",
+				"YOU ARE OFFERED COOPERATION. YOU MAY LEAVE. YOU MAY STAY. YOU CANNOT INTERFERE.",
+			},
+			Variants: []LineVariant{
+				{If: []Cond{{Key: "MET_AUDITOR", Op: "flag"}}, Lines: []string{
+					"YOUR REQUEST FOR A HEARING IS ACCEPTED.",
+					"AN AUDITOR IS PRESENT. THE AUDIT IS NO LONGER AUTOMATIC: IT IS A NEGOTIATION.",
+					"OPEN THE CHANNEL AND SHOW WHAT YOU HAVE, OR DO NOT.",
+				}},
+			},
+			Options: []Option{
+				{Text: "OPEN THE CHANNEL", Next: "c7_channel",
+					If: []Cond{{Key: "MET_AUDITOR", Op: "flag"}}},
+				{Text: "KILL IT", Next: "c7_shields",
+					Do: []Effect{{Kind: FxFlag, Key: "HIVE_ATTACKED"}}},
+				{Text: "LEAVE", Next: "c7_shields"},
+			},
+		},
+		&Node{
+			ID:      "c7_channel",
+			Kind:    "talk",
+			Speaker: "HIVE",
+			Lines: []string{
+				"THE AUDITOR IS LISTENING. SHOW IT SOMETHING THAT IS NOT A CLAIM.",
+			},
+			Options: []Option{
+				{Text: "PRESENT THE COPY", Next: "c7_reform",
+					If: []Cond{{Key: "HAS_COPY", Op: "flag"}}},
+				{Text: "PRESENT THE RECORDING", Next: "c7_reform",
+					If: []Cond{{Key: "COPIED_RECORDER", Op: "flag"}}},
+				{Text: "NOTHING TO SHOW", Next: "c7_shields"},
+			},
+		},
+		&Node{
+			ID:      "c7_reform",
+			Kind:    "msg",
+			Speaker: "HIVE",
+			Lines: []string{
+				"THE DOCUMENT IS ACCEPTED. THIS IS NOT A CLOSURE. IT IS A REWRITING.",
+				"SEVENTEEN STATIONS GO TO DIRECT CONTRACTS. THE DEBT IS WRITTEN OFF. THE COMBINE LOSES THE LICENCES.",
+				"FORTY-TWO YEARS OF STAGNATION ARE CANCELLED.",
+			},
+			OnEnter: []Effect{{Kind: FxFlag, Key: "AUDIT_REFORMED"}, {Kind: FxQuest}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c7_shields",
+			Kind:    "talk",
+			Speaker: "",
+			Lines: []string{
+				"THE MOTHERSHIP SITS IN A FIELD THAT IS FED BY THE STATION'S SHIELDS. NOTHING YOU CARRY CAN REACH IT.",
+				"FOUR DRONES ORBIT IT AND WAIT FOR YOU TO SHOOT FIRST.",
+				"THE STATION HAS TWO HUNDRED PEOPLE IN IT AND ONE BREAKER.",
+			},
+			Options: []Option{
+				{Text: "CUT THE STATION SHIELDS", Next: "c7_cut",
+					Do: []Effect{{Kind: FxFlag, Key: "SHIELDS_CUT"}, {Kind: FxWanted, N: 300}}},
+				{Text: "LEAVE THE SHIELDS UP", Next: "c7_wait",
+					Do: []Effect{{Kind: FxFlag, Key: "SHIELDS_UP"}}},
+			},
+		},
+		&Node{
+			ID:      "c7_cut",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE FIELD GOES DARK. THE MOTHERSHIP IS NAKED AND THE STATION IS NAKED WITH IT.",
+				"FOUR PIRATES WERE WAITING FOR EXACTLY THIS.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "MOTHER"}, {Kind: FxSpawn, Key: "PIRATES"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c7_wait",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE FIELD STAYS UP. THE MOTHERSHIP WAITS, PATIENTLY, THE WAY A COUNTER WAITS.",
+				"FOUR DRONES COME OUT INSTEAD. THEY STILL DO NOT FIRE FIRST.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "MOTHER"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		// ---- chapter eight: the director, and the last three answers
+		&Node{
+			ID:      "c8_director",
+			Kind:    "talk",
+			Speaker: "DIRECTOR",
+			Lines: []string{
+				"YOU KILLED MY PEOPLE. THAT WAS WORK. I AM NOT COMPLAINING.",
+				"YOU CAME FOR ME BECAUSE YOU THINK I AM THE COMBINE. I AM NOT THE COMBINE. I AM THE LAST MAN WHO STILL SIGNS PAPERS.",
+				"THIS IS THE MASTER SEAL. IT IS EXPENSIVE BECAUSE WITH IT YOU CAN LICENSE TRADE. ALL OF IT. IN THIS SECTOR.",
+				"I CAN GIVE IT TO YOU. YOU BECOME THE COMBINE - WITH THE DEBTS, THE RIGHTS AND THE OBLIGATIONS. IT IS A GOOD JOB. YOU WILL LIKE IT.",
+				"I CAN LEAVE. THEN THE SEAL LEAVES WITH ME AND THE SECTOR HAS NO LICENCES AT ALL. THAT IS CHAOS, BUT HONEST.",
+				"OR YOU CAN KILL ME AND TAKE IT BY FORCE. THE SAME RESULT AS THE FIRST, WITHOUT A SIGNATURE AND WITHOUT CONSENT. HARDER TO RUN.",
+			},
+			Options: []Option{
+				{Text: "TAKE THE SEAL", Next: "c8_combine",
+					Do: []Effect{{Kind: FxEnding, S: "combine"}}},
+				{Text: "LET HIM GO", Next: "c8_chaos",
+					Do: []Effect{{Kind: FxEnding, S: "chaos"}}},
+				{Text: "KILL HIM AND TAKE IT", Next: "c8_kill",
+					Do: []Effect{{Kind: FxFlag, Key: "DIRECTOR_DEAD"}}},
+			},
+		},
+		&Node{
+			ID:      "c8_kill",
+			Kind:    "msg",
+			Speaker: "DIRECTOR",
+			Lines: []string{
+				"HE DOES NOT REACH FOR ANYTHING. HE PUTS THE BOOK DOWN AND WAITS.",
+				"THE FLAGSHIP IS STILL LOADED AND STILL READY TO JUMP. ITS TWO ESCORTS HAVE ALREADY TURNED.",
+			},
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "FLAGSHIP"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c8_after",
+			Kind:    "talk",
+			Speaker: "",
+			Lines: []string{
+				"THE ANAKONDA IS A FIELD OF PLATES. THE SEAL IS IN YOUR HAND AND IT IS HEAVIER THAN IT LOOKS.",
+				"NOBODY IS COMING TO COUNTERSIGN IT. THAT PART IS UP TO YOU.",
+			},
+			Options: []Option{
+				{Text: "KEEP IT", Next: "c8_combine",
+					Do: []Effect{{Kind: FxEnding, S: "combine"}}},
+				{Text: "GIVE IT TO THE STATIONS", Next: "c8_council",
+					If: []Cond{{Key: "COURIER_ALIVE", Op: "flag"}},
+					Do: []Effect{{Kind: FxEnding, S: "council"}}},
+			},
+		},
+		&Node{
+			ID:      "c8_combine",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"A MONTH LATER YOU SIT IN THE SAME CHAIR WITH THE SAME BOOK IN YOUR HANDS AND SIGN THE FIRST PAPER.",
+				"THE PAPER IS ABOUT CLOSING THREE STATIONS WHOSE DEBT IS NOT SERVICED.",
+				"YOU SIGN IT, BECAUSE THE BALANCE HAS TO BE SETTLED, AND BECAUSE NOW IT IS YOUR BALANCE.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c8_chaos",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE FLAGSHIP TURNS INTO THE CORRIDOR AND IS GONE. THE SEAL GOES WITH IT.",
+				"WITHIN THE HOUR NO STATION IN THE SECTOR IS LICENSED.",
+				"PRICES ON ONE STATION ARE TWICE THOSE ON THE NEXT AND NOBODY KNOWS WHY. TRADING IS PROFITABLE AND FRIGHTENING.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "c8_council",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE STATIONS TAKE THE SEAL AND LOCK IT IN A SHARED SAFE WITH EIGHTEEN KEYS.",
+				"THE RULES ARE WRITTEN BY THE PEOPLE WHO LIVE UNDER THEM.",
+				"THE COMBINE DOES NOT DISAPPEAR. IT EXISTS AS A DEBTOR, AND EVERY MEETING BEGINS WITH ITS ACCOUNTS READ ALOUD.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
 	)
 }

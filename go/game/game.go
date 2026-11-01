@@ -279,6 +279,9 @@ type Game struct {
 	// answer the hail.
 	PoliceState string
 	PoliceTimer float64
+	// HiveWait counts the seconds spent leaving the station's shields up.
+	HiveWait float64
+
 	// Viewers is the audience of the courier's broadcast. It only grows while he
 	// is on air, and it is the one new piece of interface the campaign adds.
 	Viewers float64
@@ -685,6 +688,13 @@ func (g *Game) FireLaser() {
 }
 
 func (g *Game) HitEntity(e *Entity, dmg float64, source string) {
+	// the mothership sits behind the station's shields: nothing reaches it while
+	// that field is up, and the game says so instead of absorbing the damage
+	if e.CampaignTag == "MOTHER" && g.Cmd.Flags["SHIELDS_UP"] && !g.Cmd.Flags["SHIELDS_CUT"] {
+		g.Message("THE FIELD HOLDS - CUT THE STATION SHIELDS", "bad")
+		g.Emit("hit")
+		return
+	}
 	if e.Kind == "missile" {
 		g.removeEntity(e)
 		return

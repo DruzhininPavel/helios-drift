@@ -504,6 +504,22 @@ func runShots() {
 	g.Cmd.Campaign.Active = false
 	g.Cmd.Cash = 3812
 
+	// the closing notice and the last page
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	g.Cmd.Flags["HAS_LIST"] = true
+	g.State = "docked"
+	g.Screen = "closing"
+	ui.S.ClosingScroll = 0
+	shot("g84-closing-notice")
+	delete(g.Cmd.Flags, "HAS_LIST")
+	g.Screen = "ending"
+	g.Cmd.Ending = "combine"
+	shot("g85-ending")
+	g.Cmd.Ending = ""
+	g.Screen = "launch"
+
 	// chapter three: the roster on the wreck
 	g.State = "flight"
 	g.Cmd.Campaign.Stage = 2
