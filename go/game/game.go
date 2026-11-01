@@ -3,8 +3,10 @@
 package game
 
 import (
+	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"heliosdrift/galaxy"
 	"heliosdrift/models"
@@ -1393,4 +1395,21 @@ func (g *Game) updatePolice(dt float64) {
 		}
 		g.Message("YOU IGNORED THE HAIL", "bad")
 	}
+}
+
+// DumpState writes what the game thinks it is doing. It exists because a screen
+// that does not appear cannot be argued with from a screenshot alone.
+func (g *Game) DumpState(note string) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "when:   %s\n", time.Now().Format(time.RFC3339))
+	fmt.Fprintf(&b, "build:  %s\n", Version)
+	fmt.Fprintf(&b, "note:   %s\n\n", note)
+	fmt.Fprintf(&b, "state:  %q\nscreen: %q\noverlay:%q\ntalk:   %q\n",
+		g.State, g.Screen, g.Overlay, g.Talk)
+	fmt.Fprintf(&b, "system: %d galaxy: %d day: %d cash: %.0f\n",
+		g.Cmd.System, g.Cmd.Galaxy, g.Cmd.Day, g.Cmd.Cash)
+	fmt.Fprintf(&b, "contracts: %d  offers: %d  log: %d  campaign: %d active=%v\n",
+		len(g.Cmd.Contracts), len(g.Offers), len(g.Cmd.Log),
+		g.Cmd.Campaign.Stage, g.Cmd.Campaign.Active)
+	return b.String()
 }

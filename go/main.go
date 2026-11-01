@@ -75,6 +75,15 @@ func (a *App) updateOnce() error {
 		return nil
 	}
 
+	// F12 writes what the game thinks it is doing: a screen that will not open
+	// cannot be argued with from a screenshot alone
+	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
+		path := filepath.Join(crashDir(), "state-"+time.Now().Format("20060102-150405")+".log")
+		dump := game.G.DumpState("F12") + fmt.Sprintf("capturing: %v\nsettings: %d\nmenu: %d\n", ui.IsCapturing(), ui.S.Settings, ui.S.Menu)
+		os.WriteFile(path, []byte(dump), 0o644)
+		game.G.Message("STATE WRITTEN TO LOGS", "info")
+	}
+
 	// Testing cheats, deliberately awkward to hit by accident: control plus
 	// M adds credits, control plus G turns off damage from guns, missiles and
 	// debris. Ramming a station still kills. The frame ends here so the same

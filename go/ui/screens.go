@@ -41,9 +41,9 @@ func footer(fb *render.FB) {
 	fb.FillRect(0, 211, 319, 223, render.RGB(0x08131f))
 	fb.HLine(0, 319, 211, ColFrame)
 	fb.TextC(Hint, 160, 215, ColDim, 1)
-	// the build number is here so a screenshot says which build it is; tonight
-	// was spent fixing a version from three days ago
-	fb.TextR(game.Version, 316, 215, render.RGB(0x1d3646), 1)
+	// the build number sits in the free corner: the hint is centred, and the
+	// right side of the footer collided with it
+	fb.Text(game.Version, 3, 215, render.RGB(0x24414f), 1)
 }
 
 func docked(fb *render.FB) {
