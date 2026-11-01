@@ -185,6 +185,7 @@ var ru = map[string]string{
 	"GALACTIC CHART":   "КАРТА ГАЛАКТИКИ",
 	"GALAXY":           "ГАЛАКТИКА",
 	"COMMANDER STATUS": "СТАТУС",
+	"LEAVE STATION":    "ВЫЛЕТ СО СТАНЦИИ",
 	"LAUNCH":           "СТАРТ",
 	"SAVE COMMANDER":   "СОХРАНИТЬ",
 	"REFUEL  [F]":      "ЗАПРАВКА [F]",

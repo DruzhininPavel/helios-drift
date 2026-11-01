@@ -168,29 +168,31 @@ func stationMenu(fb *render.FB) {
 
 // menuItems is the station service list, in hotkey order.
 func menuItems() []string {
-	items := []string{"BUY / SELL CARGO", "EQUIP SHIP"}
-	if !game.G.Classic() {
-		items = append(items, "SHIPYARD")
-	}
-	// settings live on the title screen: on the station board they read as one
-	// more thing to buy
-	items = append(items, "GALACTIC CHART",
-		"COMMANDER STATUS", "LAUNCH", "SAVE COMMANDER")
-	if !game.G.Classic() {
-		// the log is a modern comfort: a 1984 commander keeps his own notes
-		items = append(items, "LOG")
-	}
-	// one board for everything you can take on: jobs, the story, and what is
-	// already running. There is no separate mission screen any more
+	// The sheet first, because that is what a pilot checks on arrival; trade,
+	// then work, then the ship. The chart sits second from the bottom - it is a
+	// map, not a service - and the way out is always the last row.
+	items := []string{"COMMANDER STATUS", "BUY / SELL CARGO"}
 	if !game.G.Classic() && (len(game.G.Offers) > 0 || len(game.G.Cmd.Contracts) > 0 ||
 		game.G.CampaignOffer() || game.G.Cmd.Campaign.Active) {
 		items = append(items, "CONTRACTS")
 	}
+	items = append(items, "EQUIP SHIP")
+	if game.G.Classic() && (game.G.MissionOffer() != "" || game.G.Cmd.Mission.Kind != "") {
+		// the 1984 build has no contract board: its two story jobs get a row
+		items = append(items, "MISSION")
+	}
+	if !game.G.Classic() {
+		items = append(items, "SHIPYARD", "LOG")
+	}
+	items = append(items, "SAVE COMMANDER", "GALACTIC CHART", "LEAVE STATION")
 	if game.G.Cmd.Mission.Kind != "" || len(game.G.Cmd.Contracts) > 0 {
 		items = append(items, "JOURNAL")
 	}
 	if game.G.PardonAvailable() {
-		items = append(items, "DIPLOMAT")
+		// a service, so it sits with the others, and never below the way out
+		out := append([]string{}, items[:len(items)-3]...)
+		out = append(out, "DIPLOMAT")
+		items = append(out, items[len(items)-3:]...)
 	}
 	return items
 }
@@ -741,42 +743,17 @@ func dockedKey(k string) bool {
 		case "f":
 			g.Refuel()
 			return true
-		case "1":
-			g.Screen = "market"
-			S.MarketMode = ""
-			return true
-		case "2":
-			g.Screen = "equip"
-			return true
-		case "3":
-			if g.Classic() {
-				g.Screen = "chart"
-			} else {
-				g.Screen = "shipyard"
-				S.Ship = 0
+		case "1", "2", "3", "4", "5", "6", "7", "8", "9", "0":
+			// a hotkey means "this row, confirmed": the digit on screen is the
+			// digit that works, whatever order the services are in
+			n := 10
+			if k != "0" {
+				n = int(k[0] - '0')
 			}
-			return true
-		case "4":
-			g.Screen = "chart"
-			S.ChartCursor = g.Cmd.System
-			return true
-		case "5":
-			g.Screen = "status"
-			return true
-		case "6":
-			g.Launch()
-			return true
-		case "7":
-			openSlots(true)
-			return true
-		case "8":
-			OpenSettings()
-			return true
-		case "9":
-			openMission()
-			return true
-		case "0":
-			openContracts()
+			if items := menuItems(); n <= len(items) {
+				S.Menu = n - 1
+				return dockedKey("Enter")
+			}
 			return true
 		case "Enter":
 			it := menuItems()
@@ -797,7 +774,7 @@ func dockedKey(k string) bool {
 			case "SHIPYARD":
 				g.Screen = "shipyard"
 				S.Ship = 0
-			case "LAUNCH":
+			case "LEAVE STATION":
 				g.Launch()
 			case "SAVE COMMANDER":
 				openSlots(true)

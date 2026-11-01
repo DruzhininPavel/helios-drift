@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strconv"
 	"testing"
 
 	"heliosdrift/game"
@@ -127,7 +128,13 @@ func TestMissionScreenFromMenu(t *testing.T) {
 	game.G.Cmd.Kills = 40
 	game.G.DockedForShots()
 
-	Key("9")
+	idx := 0
+	for i, it := range menuItems() {
+		if it == "MISSION" {
+			idx = i
+		}
+	}
+	Key(strconv.Itoa(idx + 1))
 	if game.G.Screen != "mission" {
 		t.Fatalf("screen = %q, want mission", game.G.Screen)
 	}
