@@ -12,6 +12,10 @@ import (
 // A frame that panics must not take the window with it: the stack goes to a
 // log, the run goes to a crash save, and the frame is skipped.
 func TestCrashGuardCatchesAFrameAndWritesTheLog(t *testing.T) {
+	crashDirOverride = t.TempDir()
+	defer func() { crashDirOverride = "" }()
+	os.Setenv("HOME", crashDirOverride) // keep the crash save out of the real home
+	defer os.Unsetenv("HOME")
 	game.G = game.New()
 	game.G.NewGame("GUARD")
 	before := listCrashes(t)

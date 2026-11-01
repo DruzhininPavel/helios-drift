@@ -111,3 +111,66 @@ func TestWrapCountsCharactersNotBytes(t *testing.T) {
 			lines[0], utf8.RuneCountInString(lines[0]))
 	}
 }
+
+// The amount prompt cannot offer more than the station has or the hold carries.
+func TestAmountIsCappedByReality(t *testing.T) {
+	lang.Set("en")
+	defer lang.Set("ru")
+	g := game.New()
+	g.NewGame("CAP")
+	g.State = "docked"
+	g.Screen = "market"
+	g.Cmd.Cash = 100000
+	g.Cmd.CargoCap = 20
+	g.Market[0].Qty = 3
+	g.Market[0].Price = 10
+	S.Market = 0
+
+	Key("b")
+	if S.MarketMode != "buy" {
+		t.Fatal("the prompt did not open")
+	}
+	for i := 0; i < 10; i++ {
+		Key("ArrowUp")
+	}
+	if S.MarketQty != 3 {
+		t.Fatalf("cursor reached %d with three tonnes in stock", S.MarketQty)
+	}
+	g.Talk = ""
+	S.MarketMode = ""
+
+	// and selling stops at what is aboard
+	g.Cmd.Cargo[0] = 2
+	Key("s")
+	for i := 0; i < 10; i++ {
+		Key("ArrowUp")
+	}
+	if S.MarketQty != 2 {
+		t.Fatalf("cursor reached %d with two tonnes aboard", S.MarketQty)
+	}
+
+	// with an empty hold there is nothing to put on the prompt at all
+	g.Cmd.Cargo[0] = 0
+	S.MarketMode = ""
+	Key("s")
+	if S.MarketMode != "" {
+		t.Fatal("the sell prompt opened with an empty hold")
+	}
+}
+
+// Q leaves the station for the title from every station screen, including the
+// menu, which answers every key it is given.
+func TestQGoesToTheTitleFromTheStation(t *testing.T) {
+	lang.Set("en")
+	defer lang.Set("ru")
+	for _, screen := range []string{"launch", "market", "equip", "status", "chart"} {
+		g := game.New()
+		g.NewGame("QTEST")
+		g.State = "docked"
+		g.Screen = screen
+		Key("q")
+		if g.State != "title" {
+			t.Fatalf("Q on %q left the game in %q", screen, g.State)
+		}
+	}
+}

@@ -322,16 +322,29 @@ func marketScreen(fb *render.FB) {
 	// amount prompt: how many tonnes, before anything is bought or sold
 	if S.MarketMode != "" && S.Market < len(g.Market) {
 		m := g.Market[S.Market]
+		selling := S.MarketMode == "sell"
+		maxQty := marketMax(S.Market, selling)
+		if maxQty < 1 {
+			// nothing to sell, nothing to buy: do not open the prompt at all
+			S.MarketMode = ""
+			if selling {
+				g.Message("NOTHING TO SELL", "bad")
+			} else {
+				g.Message("CANNOT BUY", "bad")
+			}
+		}
 		qty := S.MarketQty
+		if qty > maxQty {
+			qty = maxQty
+			S.MarketQty = qty
+		}
 		if qty < 1 {
 			qty = 1
 		}
 		unit, total := m.Price, qty*m.Price
-		maxQty := m.Qty
 		label := lang.T("BUY")
-		if S.MarketMode == "sell" {
+		if selling {
 			unit, total = m.Sell, qty*m.Sell
-			maxQty = cmd.Cargo[S.Market]
 			label = lang.T("SELL")
 		}
 		fb.FillRect(52, 128, 268, 180, render.RGB(0x08131f))
@@ -733,6 +746,13 @@ func Key(k string) bool {
 
 func dockedKey(k string) bool {
 	g := game.G
+	// The station has no pause, so Q is the way out to the title. It has to be
+	// checked before the screens, because each of them answers every key it is
+	// given and would swallow the Q.
+	if k == "q" || k == "Q" {
+		QuitToTitle()
+		return true
+	}
 	if g.Screen == "launch" {
 		switch k {
 		case "ArrowUp":
@@ -839,11 +859,6 @@ func dockedKey(k string) bool {
 		}
 		return true
 	}
-	if k == "q" || k == "Q" {
-		// the station has no pause, so Q is the way out to the title
-		QuitToTitle()
-		return true
-	}
 	if k == "Escape" {
 		// the amount prompt is a layer of its own: Escape closes it and stays
 		// in the market, so a purchase can be called off
@@ -876,11 +891,13 @@ func dockedKey(k string) bool {
 				}
 				S.MarketMode = ""
 			}
+			if max := marketMax(S.Market, S.MarketMode == "sell"); max > 0 {
+				if S.MarketQty > max {
+					S.MarketQty = max
+				}
+			}
 			if S.MarketQty < 1 {
 				S.MarketQty = 1
-			}
-			if S.MarketQty > 999 {
-				S.MarketQty = 999
 			}
 			return true
 		}
@@ -895,10 +912,19 @@ func dockedKey(k string) bool {
 				g.Message("OWNER IS THE HOLDER", "bad")
 				return true
 			}
-			if k == "b" || k == "B" {
-				S.MarketMode, S.MarketQty = "buy", 1
-			} else {
+			selling := !(k == "b" || k == "B")
+			if max := marketMax(S.Market, selling); max < 1 {
+				if selling {
+					g.Message("NOTHING TO SELL", "bad")
+				} else {
+					g.Message("CANNOT BUY", "bad")
+				}
+				return true
+			}
+			if selling {
 				S.MarketMode, S.MarketQty = "sell", 1
+			} else {
+				S.MarketMode, S.MarketQty = "buy", 1
 			}
 		}
 		return true
@@ -2778,6 +2804,37 @@ func talkKey(k string) bool {
 
 // marketRows is how many lines the market list has: the commodities plus the
 // crate when one is aboard.
+
+// marketMax is the most the pilot can buy or sell right now: the stock for a
+// purchase (also limited by the hold and the wallet), what is aboard for a sale.
+func marketMax(idx int, sell bool) int {
+	g := game.G
+	if idx < 0 || idx >= len(g.Market) {
+		return 0
+	}
+	m := g.Market[idx]
+	if sell {
+		return g.Cmd.Cargo[idx]
+	}
+	max := m.Qty
+	if free := g.Cmd.CargoCap - game.CargoUsed(g.Cmd); free < max {
+		max = free
+	}
+	price := m.Price
+	if g.LicensedHere() {
+		price = int(float64(price) * 0.95)
+	}
+	if price > 0 {
+		if afford := int(g.Cmd.Cash) / price; afford < max {
+			max = afford
+		}
+	}
+	if max < 0 {
+		max = 0
+	}
+	return max
+}
+
 func marketRows() int {
 	n := len(game.G.Market)
 	if game.G.Cmd.Boxes > 0 {

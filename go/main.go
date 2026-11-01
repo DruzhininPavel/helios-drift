@@ -889,7 +889,13 @@ func runSim() {
 
 var frameCrashes int
 
+// crashDirOverride keeps test crashes out of the player's log folder.
+var crashDirOverride string
+
 func crashDir() string {
+	if crashDirOverride != "" {
+		return crashDirOverride
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "."
@@ -958,15 +964,15 @@ func saveCrashCopy(g *game.Game) {
 
 // Update is the frame's brain, wrapped so a bug cannot take the window.
 func (a *App) Update() error {
-	fatal := guardFrame("update", func() {
-		if err := a.updateOnce(); err != nil {
-			panic(err)
-		}
-	})
-	if fatal {
+	// An error coming back from the frame is not a crash: this is how the game
+	// asks to close. Panicking on it - as this wrapper first did - meant QUIT
+	// became a "crash", the window stayed open, and leaving took three presses.
+	var out error
+	tooMany := guardFrame("update", func() { out = a.updateOnce() })
+	if tooMany {
 		return fmt.Errorf("three frames crashed in a row: %s", crashDir())
 	}
-	return nil
+	return out
 }
 
 // Draw is the frame's face, wrapped for the same reason.
