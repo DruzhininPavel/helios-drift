@@ -2,6 +2,32 @@ package game
 
 import "testing"
 
+// answerTalk presses through a conversation until it closes, choosing the
+// option that puts ships in the sky when there is one.
+func answerTalk(g *Game) {
+	for i := 0; i < 12 && g.Screen == "talk"; i++ {
+		n := DialogueNode(g.Talk)
+		if n == nil {
+			g.EndTalk()
+			return
+		}
+		pick := -1
+		for vi, idx := range g.VisibleOptions(n) {
+			switch n.Options[idx].Text {
+			case "FIGHT THEM", "FIRE ON THE WRECK":
+				pick = vi
+			}
+			if pick >= 0 {
+				break
+			}
+		}
+		if pick < 0 {
+			pick = 0
+		}
+		g.TalkChoose(pick)
+	}
+}
+
 func newGameMode(mode string) *Game {
 	g := New()
 	g.NewGameMode(mode, "TEST")
@@ -151,19 +177,9 @@ func TestCampaignChain(t *testing.T) {
 				g.TalkChoose(0)
 			}
 		case QuestKill:
-			// a stage can open with a conversation: answer it, and if the
-			// answer is a fight the contacts appear
-			if n := DialogueNode(g.Talk); g.Screen == "talk" && n != nil {
-				for vi, idx := range g.VisibleOptions(n) {
-					if n.Options[idx].Text == "FIGHT THEM" {
-						g.TalkChoose(vi)
-						break
-					}
-				}
-				if g.Screen == "talk" {
-					g.TalkChoose(0)
-				}
-			}
+			// a stage can open with a conversation: walk it, always preferring
+			// the answer that starts the fight
+			answerTalk(g)
 			killed := 0
 			for _, e := range append([]*Entity(nil), g.World.Entities...) {
 				if e.CampaignTag == q.Tag {

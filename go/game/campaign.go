@@ -75,7 +75,8 @@ var campaignQuests = []Quest{
 	},
 	{
 		Title: "BLACK BOX",
-		Kind:  QuestKill, Tag: "HULK", Spawn: "python", Count: 1, Pay: 7000,
+		Kind:  QuestKill, Tag: "HULK", Spawn: "python", Count: 1, Pay: 3400,
+		Talk: "c3_roster",
 		Brief: []string{
 			"THEIR SHIP WENT DOWN WITH A FLIGHT",
 			"RECORDER. FIND THE WRECK AND BURN IT -",
@@ -355,6 +356,13 @@ func (g *Game) campaignKill(tag string) {
 		g.Message("STAGE COMPLETE  +"+itoa(q.Pay)+" CR", "good")
 	} else {
 		g.Message("STAGE COMPLETE", "good")
+	}
+	// the wreck paid for a burned recorder: the company does not say thank you,
+	// it just takes your name off one list and puts it on another
+	if tag == "HULK" && g.Cmd.Flags["BURNED_RECORDER"] {
+		g.Cmd.Papers++
+		g.Message("EXECUTED CORRECTLY. THAT IS RARE.", "good")
+		g.Note(LogDone, "CLEAN WORK", c.Stage, 0)
 	}
 	if c.Stage >= CampaignTotal() {
 		g.Message("HELIOS COMBINE IS FINISHED", "good")

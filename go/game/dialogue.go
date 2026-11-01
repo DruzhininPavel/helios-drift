@@ -27,13 +27,22 @@ type Option struct {
 	Do   []Effect
 }
 
+// LineVariant swaps the body text when its conditions hold: the same screen
+// reads differently depending on what the player has done.
+type LineVariant struct {
+	If    []Cond
+	Lines []string
+}
+
 type Node struct {
 	ID      string
 	Kind    string // talk, msg, screen
 	Speaker string // "" for system text
 	Lines   []string
-	Options []Option
-	OnEnter []Effect
+	// Variants are checked in order before Lines, first match wins.
+	Variants []LineVariant
+	Options  []Option
+	OnEnter  []Effect
 }
 
 // Effect kinds.
@@ -239,10 +248,25 @@ func (g *Game) EndTalk() {
 	}
 }
 
+// NodeLines is the text of a node in this commander's circumstances: a variant
+// first, the plain lines otherwise.
+func (g *Game) NodeLines(n *Node) []string {
+	if n == nil {
+		return nil
+	}
+	for _, v := range n.Variants {
+		if g.conditionsMet(v.If) {
+			return v.Lines
+		}
+	}
+	return n.Lines
+}
+
 // TalkText returns the node's lines, translated for the screen.
 func (g *Game) TalkText(n *Node) []string {
-	out := make([]string, 0, len(n.Lines))
-	for _, ln := range n.Lines {
+	src := g.NodeLines(n)
+	out := make([]string, 0, len(src))
+	for _, ln := range src {
 		out = append(out, lang.T(ln))
 	}
 	return out

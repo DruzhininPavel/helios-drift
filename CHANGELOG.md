@@ -1,3 +1,17 @@
+## Unreleased
+
+- Chapter three: the wreck, the roster and the menu. Arriving at the black-box
+  system opens a conversation instead of a fight: the empty racks, the board
+  with 37 names, the beeping recorder (copy it or burn it), the appendix that
+  turns out to be a menu, and one question for the company. The wreck only
+  appears when you agree to burn it.
+- Dialogue nodes can swap their text on a condition, so the same screen reads
+  differently depending on what you did in chapter one.
+- Burning the recorder without copying it is what the company wanted: papers and
+  a colder compliment.
+- The police hail before they shoot: cut speed to a quarter and a clean pilot is
+  released, contraband or a record is an arrest, ignoring the hail or firing on
+  them starts the fight.
 ## v1.16 — 2026-10-31
 
 ### Added

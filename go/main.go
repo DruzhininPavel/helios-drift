@@ -502,6 +502,25 @@ func runShots() {
 	g.Cmd.Campaign.Active = false
 	g.Cmd.Cash = 3812
 
+	// chapter three: the roster on the wreck
+	g.State = "flight"
+	g.Cmd.Campaign.Stage = 2
+	g.Cmd.Campaign.Active = true
+	if g.Cmd.Flags == nil {
+		g.Cmd.Flags = map[string]bool{}
+	}
+	g.Cmd.Flags["REFUSED_SEAL"] = true
+	g.TalkStart("c3_roster")
+	ui.S.TalkScroll = 0
+	shot("g82-talk-ch3-roster")
+	g.EndTalk()
+	g.TalkStart("c3_holo")
+	ui.S.TalkScroll = 0
+	shot("g83-talk-ch3-holo")
+	g.EndTalk()
+	g.Cmd.Campaign.Active = false
+	delete(g.Cmd.Flags, "REFUSED_SEAL")
+
 	// the market with the amount selector up
 	g.State = "docked"
 	g.Screen = "market"

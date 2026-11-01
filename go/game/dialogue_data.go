@@ -195,5 +195,108 @@ func init() {
 				{Text: "ACKNOWLEDGE", Next: ""},
 			},
 		},
+		// ---- chapter three: the wreck, the recorder and the menu
+		&Node{
+			ID:      "c3_roster",
+			Kind:    "screen",
+			Speaker: "CARGO ROSTER",
+			Lines: []string{
+				"THE HOLD IS BARE. FORTY RACKS, ALL EMPTY.",
+				"ON THE BULKHEAD: A BOARD WITH A COLUMN OF NAMES AND A COLUMN OF NUMBERS.",
+				"PICKED UP: 37    PROCESSED: 37    WAITING: 0",
+				"VACANCIES: 3",
+			},
+			Variants: []LineVariant{
+				{If: []Cond{{Key: "KILLED_COLLECTORS", Op: "flag"}}, Lines: []string{
+					"THE HOLD IS BARE. FORTY RACKS, ALL EMPTY.",
+					"ON THE BULKHEAD: A BOARD WITH A COLUMN OF NAMES AND A COLUMN OF NUMBERS.",
+					"PICKED UP: 37    PROCESSED: 37    WAITING: 0    VACANCIES: 3",
+					"THREE NAMES ON THE BOARD MATCH THE SHIPS YOU BURNED. NOBODY HAS CROSSED THEM OUT YET.",
+				}},
+				{If: []Cond{{Key: "REFUSED_SEAL", Op: "flag"}}, Lines: []string{
+					"THE HOLD IS BARE. FORTY RACKS, ALL EMPTY.",
+					"ON THE BULKHEAD: A BOARD WITH A COLUMN OF NAMES AND A COLUMN OF NUMBERS.",
+					"PICKED UP: 37    PROCESSED: 37    WAITING: 0    VACANCIES: 3",
+					"THE CRATE YOU LEFT AT THE CLINIC IS LISTED HERE AS A DELIVERY, NOT AS A LOSS.",
+				}},
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "c3_recorder"}},
+		},
+		&Node{
+			ID:      "c3_recorder",
+			Kind:    "talk",
+			Speaker: "FLIGHT RECORDER",
+			Lines: []string{
+				"THE RECORDER BEEPS EVERY EIGHT SECONDS. EMERGENCY POWER STILL HOLDS.",
+				"FIFTEEN MINUTES BACK THERE IS A VOICE: JUMP COORDINATES GO OUT EVERY SIX DAYS, THE CARGO IS TAKEN AT THE HIVE, THE LIST IS IN THE APPENDIX.",
+				"THE COMPANY WANTS THIS BURNED. IT DOES NOT SAY WHY, AND IT DOES NOT SAY NOT TO READ IT.",
+			},
+			Options: []Option{
+				{Text: "COPY THE RECORDING", Next: "c3_manifest", Do: []Effect{{Kind: FxFlag, Key: "COPIED_RECORDER"}}},
+				{Text: "BURN IT", Next: "c3_manifest", Do: []Effect{{Kind: FxFlag, Key: "BURNED_RECORDER"}}},
+			},
+		},
+		&Node{
+			ID:      "c3_manifest",
+			Kind:    "screen",
+			Speaker: "APPENDIX",
+			Lines: []string{
+				"SUPPLY - PORTIONS - TASTE",
+				"QUIET HARBOUR - 40000 - REGULAR",
+				"FREE TRADE - 120000 - HOTEL",
+				"NINTH DOCK - 8400 - SWEET",
+				"IT IS NOT A MANIFEST. IT IS A MENU, AND YOU ARE READING THE PORTIONS COLUMN.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: "c3_holo"}},
+		},
+		&Node{
+			ID:      "c3_holo",
+			Kind:    "talk",
+			Speaker: "COMPANY",
+			Lines: []string{
+				"THIS IS PRIVATE PROPERTY AND THE ITEM IS SCHEDULED FOR DISPOSAL.",
+				"YOU MAY ASK ONE QUESTION.",
+			},
+			Options: []Option{
+				{Text: "WHAT IS IN THE CRATE", Next: "c3_ans_box", Do: []Effect{{Kind: FxFlag, Key: "KNOWS_BOX"}}},
+				{Text: "WHAT IS THE HIVE", Next: "c3_ans_hive", Do: []Effect{{Kind: FxFlag, Key: "KNOWS_HIVE"}}},
+				{Text: "WHAT DO I GET PAID", Next: "c3_ans_price", Do: []Effect{{Kind: FxFlag, Key: "ASKED_PRICE"}}},
+			},
+		},
+		&Node{
+			ID:      "c3_ans_box",
+			Kind:    "talk",
+			Speaker: "COMPANY",
+			Lines:   []string{"A STATION OBLIGATION, ASSIGNED TO THE HOLDER."},
+			Options: []Option{{Text: "CONTINUE", Next: "c3_end"}},
+		},
+		&Node{
+			ID:      "c3_ans_hive",
+			Kind:    "talk",
+			Speaker: "COMPANY",
+			Lines:   []string{"A RECEIVING POINT. STATUS: CONFIDENTIAL."},
+			Options: []Option{{Text: "CONTINUE", Next: "c3_end"}},
+		},
+		&Node{
+			ID:      "c3_ans_price",
+			Kind:    "talk",
+			Speaker: "COMPANY",
+			Lines:   []string{"THE AMOUNT IS IN YOUR CONTRACT. YOU SIGNED IT."},
+			Options: []Option{{Text: "CONTINUE", Next: "c3_end"}},
+		},
+		&Node{
+			ID:      "c3_end",
+			Kind:    "msg",
+			Speaker: "",
+			Lines: []string{
+				"THE RECORDER IS STILL BEEPING. THE WRECK HOLDS STATION.",
+				"BURN IT AND LEAVE.",
+			},
+			Options: []Option{{
+				Text: "FIRE ON THE WRECK",
+				Next: "",
+				Do:   []Effect{{Kind: FxSpawn, Key: "HULK"}},
+			}},
+		},
 	)
 }
