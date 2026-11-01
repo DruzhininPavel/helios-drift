@@ -63,3 +63,33 @@ func TestMarketIsQuietAboutSuccess(t *testing.T) {
 		t.Fatal("a refused purchase said nothing")
 	}
 }
+
+// Escape closes the amount prompt and leaves the player in the market, so a
+// purchase can be called off; it must not throw him out of the shop.
+func TestEscapeClosesThePromptOnly(t *testing.T) {
+	lang.Set("en")
+	defer lang.Set("ru")
+	g := game.New()
+	g.NewGame("TEST")
+	g.State = "docked"
+	g.Screen = "market"
+	S.Market = 0
+	S.MarketMode, S.MarketQty = "buy", 5
+
+	Key("Escape")
+	if S.MarketMode != "" {
+		t.Fatal("the prompt stayed open")
+	}
+	if g.Screen != "market" {
+		t.Fatalf("Escape left the market: screen %q", g.Screen)
+	}
+	// and nothing was bought
+	if game.CargoUsed(g.Cmd) != 0 {
+		t.Fatal("cancelling a purchase bought something")
+	}
+	// a second Escape leaves the shop
+	Key("Escape")
+	if g.Screen != "launch" {
+		t.Fatalf("second Escape: screen %q", g.Screen)
+	}
+}

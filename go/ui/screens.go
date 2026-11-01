@@ -743,6 +743,7 @@ func dockedKey(k string) bool {
 			return true
 		case "1":
 			g.Screen = "market"
+			S.MarketMode = ""
 			return true
 		case "2":
 			g.Screen = "equip"
@@ -785,6 +786,7 @@ func dockedKey(k string) bool {
 			switch it[S.Menu] {
 			case "BUY / SELL CARGO":
 				g.Screen = "market"
+				S.MarketMode = ""
 			case "EQUIP SHIP":
 				g.Screen = "equip"
 			case "GALACTIC CHART":
@@ -852,6 +854,12 @@ func dockedKey(k string) bool {
 		return true
 	}
 	if k == "Escape" {
+		// the amount prompt is a layer of its own: Escape closes it and stays
+		// in the market, so a purchase can be called off
+		if g.Screen == "market" && S.MarketMode != "" {
+			S.MarketMode = ""
+			return true
+		}
 		g.Screen = "launch"
 		return true
 	}
