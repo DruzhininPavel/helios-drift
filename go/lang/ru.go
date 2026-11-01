@@ -609,7 +609,7 @@ var ru = map[string]string{
 	"NOT AVAILABLE IN CLASSIC MODE":           "НЕДОСТУПНО В РЕЖИМЕ КЛАССИКИ",
 	"MODE":                                    "РЕЖИМ",
 
-	"JOURNAL":                                "ЖУРНАЛ",
+	"JOURNAL":                                "СВОДКА",
 	"STORY CONTRACT":                         "СЮЖЕТНЫЙ КОНТРАКТ",
 	"NONE ACTIVE":                            "НЕТ АКТИВНОГО",
 	"ACCEPTED JOBS":                          "ПРИНЯТЫЕ ЗАДАНИЯ",

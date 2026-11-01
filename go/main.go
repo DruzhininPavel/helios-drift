@@ -16,6 +16,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -962,6 +963,40 @@ func saveCrashCopy(g *game.Game) {
 	}
 }
 
+// ---- hang watchdog ---------------------------------------------------------
+//
+// A frame that never comes back cannot be caught by recover, so it is watched
+// from outside: a goroutine notices that no frame has finished for five seconds
+// and writes every goroutine's stack to the log folder. That is enough to see
+// which loop ate the game.
+
+var lastFrame atomic.Int64 // unix nanos of the last finished frame
+
+func startHangWatchdog() {
+	lastFrame.Store(time.Now().UnixNano())
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			idle := time.Since(time.Unix(0, lastFrame.Load()))
+			if idle < 5*time.Second {
+				continue
+			}
+			ts := time.Now().Format("20060102-150405")
+			path := filepath.Join(crashDir(), "hang-"+ts+".log")
+			var b strings.Builder
+			fmt.Fprintf(&b, "HELIOS DRIFT hang\nwhen:  %s\nbuild: %s\nidle:  %s\n\n",
+				time.Now().Format(time.RFC3339), game.Version, idle.Round(time.Second))
+			buf := make([]byte, 1<<20)
+			n := runtime.Stack(buf, true)
+			b.Write(buf[:n])
+			os.WriteFile(path, []byte(b.String()), 0o644)
+			fmt.Fprintf(os.Stderr, "hang: no frame for %s (see %s)\n", idle.Round(time.Second), path)
+			lastFrame.Store(time.Now().UnixNano()) // do not spam: one report a minute
+			time.Sleep(55 * time.Second)
+		}
+	}()
+}
+
 // Update is the frame's brain, wrapped so a bug cannot take the window.
 func (a *App) Update() error {
 	// An error coming back from the frame is not a crash: this is how the game
@@ -969,6 +1004,7 @@ func (a *App) Update() error {
 	// became a "crash", the window stayed open, and leaving took three presses.
 	var out error
 	tooMany := guardFrame("update", func() { out = a.updateOnce() })
+	lastFrame.Store(time.Now().UnixNano())
 	if tooMany {
 		return fmt.Errorf("three frames crashed in a row: %s", crashDir())
 	}
@@ -1036,6 +1072,7 @@ func main() {
 	}
 	game.SetSeed(*seed)
 
+	startHangWatchdog()
 	if *ver {
 		fmt.Println(game.ProductFull, game.Version)
 		return

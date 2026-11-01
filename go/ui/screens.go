@@ -187,16 +187,17 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD", "LOG")
 	}
-	items = append(items, "SAVE COMMANDER", "GALACTIC CHART", "LEAVE STATION")
 	if game.G.Cmd.Mission.Kind != "" || len(game.G.Cmd.Contracts) > 0 {
+		// what the pilot has taken on, in one place; it used to be appended
+		// after the way out, and the diplomat insertion below then cut the list
+		// in the wrong place
 		items = append(items, "JOURNAL")
 	}
 	if game.G.PardonAvailable() {
-		// a service, so it sits with the others, and never below the way out
-		out := append([]string{}, items[:len(items)-3]...)
-		out = append(out, "DIPLOMAT")
-		items = append(out, items[len(items)-3:]...)
+		items = append(items, "DIPLOMAT")
 	}
+	// the way out is always the last row
+	items = append(items, "SAVE COMMANDER", "GALACTIC CHART", "LEAVE STATION")
 	return items
 }
 
