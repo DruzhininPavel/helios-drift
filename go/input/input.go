@@ -582,7 +582,15 @@ func Save() bool {
 	if err != nil {
 		return false
 	}
-	return os.WriteFile(keyPath(), raw, 0o644) == nil
+	// keep the previous file: losing a set of bindings should be recoverable
+	if old, err := os.ReadFile(keyPath()); err == nil {
+		os.WriteFile(keyPath()+".bak", old, 0o644)
+	}
+	tmp := keyPath() + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o644); err != nil {
+		return false
+	}
+	return os.Rename(tmp, keyPath()) == nil
 }
 
 // Load reads saved bindings, falling back to defaults per action.
@@ -593,6 +601,9 @@ func Load() bool {
 	}
 	var f keyFile
 	if err := json.Unmarshal(raw, &f); err != nil {
+		// keep the broken file instead of letting the next save overwrite the
+		// pilot's bindings with defaults and no trace of what went wrong
+		os.WriteFile(keyPath()+".bad", raw, 0o644)
 		return false
 	}
 	Cur = Defaults()

@@ -999,6 +999,18 @@ func main() {
 	human := flag.Bool("human", false, "play like a person: station time, saving up, side jobs")
 	flag.Parse()
 
+	// Headless runs (screenshots, simulation, the bot) must not touch the
+	// player's files. They used to: a screenshot run walked into the controls
+	// screen, rebound a key and saved the defaults over whatever the pilot had
+	// set, and a run with -lang wrote the language into his config.
+	if *shots || *sim || *botRun || *sheet || *icon != "" || *probe {
+		if dir, err := os.MkdirTemp("", "heliosdrift-headless"); err == nil {
+			input.DirOverride = dir
+			game.SaveDirOverride = dir
+			lang.ReadOnly = true
+		}
+	}
+
 	// Headless modes are tools, not play: they must never rewrite the
 	// player's config. A shots run once switched the cockpit off and left the
 	// game in English, because a scripted Enter landed on a settings row.
