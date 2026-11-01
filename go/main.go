@@ -890,6 +890,10 @@ func runSim() {
 
 var frameCrashes int
 
+// drawFailed is set when a draw panics: the frame is not presented, so the screen
+// keeps the last good picture and the game looks frozen. The player is told once.
+var drawFailed bool
+
 // crashDirOverride keeps test crashes out of the player's log folder.
 var crashDirOverride string
 
@@ -942,6 +946,9 @@ func guardFrame(where string, fn func()) (fatal bool) {
 			logCrash(where, r)
 			if g := game.G; g != nil {
 				saveCrashCopy(g)
+			}
+			if where == "draw" {
+				drawFailed = true
 			}
 			if frameCrashes >= 3 {
 				fatal = true
@@ -1005,6 +1012,14 @@ func (a *App) Update() error {
 	var out error
 	tooMany := guardFrame("update", func() { out = a.updateOnce() })
 	lastFrame.Store(time.Now().UnixNano())
+	if drawFailed {
+		// a frame that cannot be drawn leaves the last picture on screen, which
+		// reads as a frozen game: say so instead of letting the pilot wonder
+		drawFailed = false
+		if g := game.G; g != nil {
+			g.Message("DRAW FAILED - SEE LOGS", "bad")
+		}
+	}
 	if tooMany {
 		return fmt.Errorf("three frames crashed in a row: %s", crashDir())
 	}

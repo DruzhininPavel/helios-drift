@@ -392,15 +392,20 @@ func flight(fb *render.FB, dt float64) {
 
 	// planet (absent in witchspace)
 	planet := w.Planet
-	if w.PlanetFrames == nil && planet.Radius > 0 {
+	n := len(w.PlanetFrames)
+	if n == 0 && planet.Radius > 0 {
 		w.PlanetFrames = models.MakePlanetFrames(128, planet.Seed, planet.Kind, 8)
+		n = len(w.PlanetFrames)
 	}
 	pv := cam.ToView(planet.Pos)
 	pdepth := -pv[2]
-	if pdepth > planet.Radius*0.5 {
+	// no planet, no frames: a modulo by zero here used to panic inside the draw,
+	// which froze the screen on the last good frame while the game kept running
+	// and looked hung
+	if planet.Radius > 0 && n > 0 && pdepth > planet.Radius*0.5 {
 		psp := cam.ProjectView(pv)
 		sr := planet.Radius * focal / pdepth
-		frameIdx := int(g.Time*0.6) % len(w.PlanetFrames)
+		frameIdx := int(g.Time*0.6) % n
 		if sr > 3 {
 			render.BlitScaled(fb, w.PlanetFrames[frameIdx], psp.X-sr, psp.Y-sr, sr*2, sr*2, math.Max(1, pdepth-planet.Radius*0.6))
 			if sr > 7 {
