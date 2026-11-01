@@ -2661,12 +2661,22 @@ func talkScreen(fb *render.FB) {
 		fb.FillRect(8, 16, 308, 26, render.RGB(0x08131f))
 		fb.Text(lang.T(n.Speaker), 12, 19, ColYellow, 1)
 	}
+	// the answers are pinned to the bottom and the text gets whatever is left:
+	// a fixed six-line window left half the panel empty and cut the last line
+	opts := g.VisibleOptions(n)
+	const lineH = 10
+	optsTop := 186 - len(opts)*11
+	textTop := 32
+	visible := (optsTop - 6 - textTop) / lineH
+	if visible < 3 {
+		visible = 3
+	}
+
 	var rows []string
 	for _, ln := range g.TalkText(n) {
-		rows = append(rows, wrapText(ln, 46)...)
+		rows = append(rows, wrapText(ln, 48)...)
 		rows = append(rows, "") // a gap between paragraphs
 	}
-	const visible = 6
 	maxTop := len(rows) - visible
 	if maxTop < 0 {
 		maxTop = 0
@@ -2677,29 +2687,26 @@ func talkScreen(fb *render.FB) {
 	if S.TalkScroll < 0 {
 		S.TalkScroll = 0
 	}
-	y := 32
+	y := textTop
 	for i := S.TalkScroll; i < len(rows) && i < S.TalkScroll+visible; i++ {
 		fb.TextRaw(rows[i], 12, y, ColText, 1)
-		y += 10
+		y += lineH
 	}
-	if len(rows) > visible {
-		fb.TextR(itoa(S.TalkScroll+visible)+"/"+itoa(len(rows)), 304, 19, ColDim, 1)
+	scrolling := len(rows) > visible
+	if scrolling {
+		fb.TextR(itoa(S.TalkScroll+1)+"/"+itoa(maxTop+1), 304, optsTop, ColDim, 1)
 	}
-	// options, numbered: digits are unambiguous and need no cursor
-	opts := g.VisibleOptions(n)
-	oy := 150
 	for i, idx := range opts {
+		oy := optsTop + i*11
 		col := ColYellow
 		if i == S.TalkOpt {
 			fb.FillRect(10, oy-2, 306, oy+8, render.RGB(0x12384f))
 		}
 		fb.Text(itoa(i+1)+"  "+lang.T(n.Options[idx].Text), 14, oy, col, 1)
-		oy += 11
 	}
-	if len(rows) > visible {
-		Hint = "UP/DOWN SCROLL   1-3 CHOOSE"
-	} else {
-		Hint = "1-3 CHOOSE"
+	Hint = "1-" + itoa(len(opts)) + " CHOOSE"
+	if scrolling {
+		Hint = "UP/DOWN SCROLL   " + Hint
 	}
 }
 
@@ -2710,11 +2717,18 @@ func talkKey(k string) bool {
 		g.EndTalk()
 		return true
 	}
+	// the same maths as the screen: answers pinned low, text above them
+	opts := g.VisibleOptions(n)
+	const lineH = 10
+	visible := (186 - len(opts)*11 - 6 - 32) / lineH
+	if visible < 3 {
+		visible = 3
+	}
 	rows := 0
 	for _, ln := range g.TalkText(n) {
-		rows += len(wrapText(ln, 46)) + 1
+		rows += len(wrapText(ln, 48)) + 1
 	}
-	maxTop := rows - 6
+	maxTop := rows - visible
 	if maxTop < 0 {
 		maxTop = 0
 	}
@@ -2732,12 +2746,12 @@ func talkKey(k string) bool {
 			S.TalkScroll = maxTop
 		}
 	case "PageUp":
-		S.TalkScroll -= 6
+		S.TalkScroll -= visible
 		if S.TalkScroll < 0 {
 			S.TalkScroll = 0
 		}
 	case "PageDown":
-		S.TalkScroll += 6
+		S.TalkScroll += visible
 		if S.TalkScroll > maxTop {
 			S.TalkScroll = maxTop
 		}
