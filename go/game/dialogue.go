@@ -93,6 +93,9 @@ func (g *Game) condHolds(c Cond) bool {
 		return compare(g.Cmd.Legal, c.Op, c.N)
 	case "viperclk":
 		return compare(g.Cmd.ViperClk, c.Op, c.N)
+	case "rig":
+		// the heavy mining rig opens the cabinet by force
+		return g.Cmd.Equip["miningrig"]
 	}
 	switch c.Op {
 	case "flag":
