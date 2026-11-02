@@ -130,6 +130,9 @@ type Commander struct {
 	LicenseGalaxy int `json:"license_galaxy,omitempty"`
 	LicenseSys    int `json:"license_sys,omitempty"`
 	Mail          int `json:"mail"`
+	// Slot is the save slot this commander belongs to, -1 when he has never
+	// been written: quick save and quick load go there.
+	Slot int `json:"slot,omitempty"`
 	// SideStep and SideCount are the running side jobs: the step each job is on
 	// and how far into it the pilot is.
 	SideStep  map[string]int `json:"side_step,omitempty"`
@@ -149,7 +152,7 @@ func NewCommander() Commander {
 		// a commander always has a flags map: every story branch writes to it,
 		// and a nil map here is a crash waiting for the right chapter
 		Flags: map[string]bool{}, Visited: map[string]bool{},
-		Ship: "cobra3", Mode: ModeAdvanced,
+		Ship: "cobra3", Mode: ModeAdvanced, Slot: -1,
 	}
 }
 
@@ -301,6 +304,9 @@ type Game struct {
 
 	// HiveWait counts the seconds spent leaving the station's shields up.
 	HiveWait float64
+
+	// auto is the session autosave, taken on every docking.
+	auto *snapshot
 
 	// Viewers is the audience of the courier's broadcast. It only grows while he
 	// is on air, and it is the one new piece of interface the campaign adds.
@@ -1083,6 +1089,8 @@ func (g *Game) dockedAt() {
 	// work that was waiting for the pilot to come back
 	g.SideOnDock()
 	g.SideStartIfReady()
+	// the session autosave: where the pilot would come back to if he died now
+	g.TakeSnapshot()
 	g.DockSalt++
 	g.Autopilot = false
 	g.AutopilotPath = nil

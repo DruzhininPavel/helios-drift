@@ -116,7 +116,7 @@ func (a *App) updateOnce() error {
 			ebiten.KeyL, ebiten.KeyJ, ebiten.KeyF, ebiten.KeyB, ebiten.KeyS, ebiten.KeyX, ebiten.KeyZ,
 			ebiten.Key1, ebiten.Key2, ebiten.Key3, ebiten.Key4, ebiten.Key5, ebiten.Key6,
 			ebiten.Key7, ebiten.Key8, ebiten.Key9, ebiten.Key0, ebiten.KeyG, ebiten.KeyQ, ebiten.KeyH, ebiten.KeyK,
-			ebiten.KeyI, ebiten.KeyD,
+			ebiten.KeyI, ebiten.KeyD, ebiten.KeyF5, ebiten.KeyF7,
 			ebiten.KeyBackspace,
 		} {
 			if inpututil.IsKeyJustPressed(k) {
@@ -282,6 +282,10 @@ func keyName(k ebiten.Key) string {
 	switch k {
 	case ebiten.KeyEnter:
 		return "Enter"
+	case ebiten.KeyF5:
+		return "F5"
+	case ebiten.KeyF7:
+		return "F7"
 	case ebiten.KeyBackspace:
 		return "Backspace"
 	case ebiten.KeyEscape:

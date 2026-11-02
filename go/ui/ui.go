@@ -1051,7 +1051,20 @@ func gameOver(fb *render.FB) {
 	}
 	fb.TextC(reason, 160, 100, ColText, 1)
 	fb.TextC("CASH "+money(g.Cmd.Cash)+" CR   KILLS "+itoa(g.Cmd.Kills), 160, 120, ColDim, 1)
-	fb.TextC("PRESS ENTER TO CONTINUE", 160, 160, ColYellow, 1)
+	// a death is a choice: come back to the last station, load a slot, or stop
+	fb.TextC(lang.T("WHAT NOW?"), 160, 140, ColDim, 1)
+	where := g.SnapshotWhere()
+	line := lang.T("1  COME BACK TO") + " " + where
+	if where == "" {
+		line = lang.T("1  COME BACK TO THE LAST STATION")
+	}
+	col := ColYellow
+	if !g.HasSnapshot() {
+		col = render.RGB(0x2d4a5c)
+	}
+	fb.TextC(clip(line, 50), 160, 154, col, 1)
+	fb.TextC(lang.T("2  LOAD A COMMANDER"), 160, 166, ColDim, 1)
+	fb.TextC(lang.T("3  MAIN MENU"), 160, 178, ColDim, 1)
 }
 
 func hyperScreen(fb *render.FB) {

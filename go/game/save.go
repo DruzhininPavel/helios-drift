@@ -42,7 +42,36 @@ func savePath(slot int) string {
 	return filepath.Join(dir, fmt.Sprintf(".heliosdrift-save%d.json", slot+1))
 }
 
+// Slot is where this commander belongs: the slot he was loaded from or last
+// saved to. Quick save writes there.
+func (g *Game) Slot() int {
+	if g.Cmd.Slot < 0 || g.Cmd.Slot >= Slots {
+		return -1
+	}
+	return g.Cmd.Slot
+}
+
+// QuickSave writes to the slot the commander came from, or to the first one if
+// he has never been saved.
+func (g *Game) QuickSave() (int, bool) {
+	slot := g.Slot()
+	if slot < 0 {
+		slot = 0
+	}
+	return slot, g.SaveSlot(slot)
+}
+
+// QuickLoad reads the slot the commander belongs to.
+func (g *Game) QuickLoad() (int, bool) {
+	slot := g.Slot()
+	if slot < 0 || !SlotExists(slot) {
+		return slot, false
+	}
+	return slot, g.LoadSlot(slot)
+}
+
 func (g *Game) SaveSlot(slot int) bool {
+	g.Cmd.Slot = slot
 	data := saveData{Version: 2, Cmd: g.Cmd}
 	raw, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -62,6 +91,7 @@ func (g *Game) LoadSlot(slot int) bool {
 		return false
 	}
 	g.Cmd = data.Cmd
+	g.Cmd.Slot = slot
 	if g.Cmd.Cargo == nil {
 		g.Cmd.Cargo = map[int]int{}
 	}

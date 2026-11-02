@@ -1,5 +1,17 @@
 ## Unreleased (после v1.17)
 
+- **Quick save and quick load**: F5 writes over the slot the commander came from
+  (or slot 1 if he never had one), F7 reads it back. Both work on the station and
+  in flight, never on the title, the death screen or the ending.
+- **Session autosave**: every docking remembers the commander in memory. There is
+  no extra file and nothing survives quitting - it exists so a death over a
+  station you left two minutes ago is not a loss.
+- **Death is a choice**: the game over screen offers to come back to the last
+  station, to load a saved commander, or to leave for the main menu. Dying still
+  counts as a death.
+- **The handbook reads the pilot's keys**: every control it names is taken from
+  the bindings, so rebinding fire to X makes the book say X. The pause list is
+  built the same way instead of being a hardcoded block.
 - Послесюжетные дела: три цепочки на два-три шага открываются сами, когда
   выполнено условие и пилот сел на станцию - «Долг клиники», «Восемнадцать
   ключей» (финал СОВЕТ), «Список курьера» (если курьер жив и список у пилота).

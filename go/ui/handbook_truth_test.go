@@ -4,7 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hajimehoshi/ebiten/v2"
+
 	"heliosdrift/game"
+	"heliosdrift/input"
 	"heliosdrift/lang"
 )
 
@@ -97,6 +100,31 @@ func TestHandbookPagesFit(t *testing.T) {
 			}
 			if c[1] == "" {
 				t.Errorf("%q has no meaning", c[0])
+			}
+		}
+	}
+}
+
+// The book reads the pilot's bindings, so rebinding a key changes the text.
+func TestHandbookReadsTheBindings(t *testing.T) {
+	lang.Set("en")
+	defer lang.Set("ru")
+	defer input.Reset()
+	before := helpText("{FIRE} FIRES THE LASERS.")
+	input.Cur[input.Fire] = input.Binding{Keys: []int32{int32(ebiten.KeyX)}, Btn: -1, Axis: -1}
+	after := helpText("{FIRE} FIRES THE LASERS.")
+	if after == before {
+		t.Fatalf("rebinding fire left the handbook saying %q", after)
+	}
+	if !strings.HasPrefix(after, "X") {
+		t.Fatalf("handbook says %q, want the new key first", after)
+	}
+	// and no placeholder ever reaches the screen
+	input.Reset()
+	for _, p := range helpPages {
+		for _, l := range p.Lines {
+			if strings.ContainsAny(helpText(l), "{}") {
+				t.Errorf("%q kept a placeholder: %q", l, helpText(l))
 			}
 		}
 	}

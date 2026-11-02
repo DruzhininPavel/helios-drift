@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -10,7 +11,10 @@ import (
 // Every character in a translation must exist in the 5x7 font, otherwise it
 // renders as '?'.
 func TestTranslationsRenderable(t *testing.T) {
+	brace := regexp.MustCompile(`\{[A-Z]+\}`)
 	for k, v := range ru {
+		// {PLACEHOLDER} is filled with the pilot's key before it is ever drawn
+		v = brace.ReplaceAllString(v, "ESC")
 		for _, r := range v {
 			if r == ' ' || r == '\n' {
 				continue
@@ -24,7 +28,10 @@ func TestTranslationsRenderable(t *testing.T) {
 
 // The UI font is uppercase only; lowercase would fall back to '?'.
 func TestTranslationsUppercase(t *testing.T) {
+	brace := regexp.MustCompile(`\{[A-Z]+\}`)
 	for k, v := range ru {
+		// {PLACEHOLDER} is filled with the pilot's key before it is ever drawn
+		v = brace.ReplaceAllString(v, "ESC")
 		if v != strings.ToUpper(v) {
 			t.Errorf("%q -> %q is not uppercase", k, v)
 		}

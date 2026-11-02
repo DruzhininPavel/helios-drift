@@ -637,34 +637,36 @@ func statusScreen(fb *render.FB) {
 func pauseScreen(fb *render.FB) {
 	chrome(fb, "PAUSED")
 	plate(fb, 8, 18, 312, 190, "FLIGHT CONTROLS")
-	steer := "PITCH AND ROLL"
-	if !game.G.Classic() {
-		steer = "PITCH / ROLL / YAW"
+	// the rows come from the pilot's own bindings, not from a hardcoded list: he
+	// may have moved every one of these keys
+	var rows [][2]string
+	for _, a := range input.Actions() {
+		if a == input.Sound {
+			continue
+		}
+		name := lang.T(input.Name(a))
+		if a == input.PitchUp && !game.G.Classic() {
+			continue // the arrows already steer, the pause list stays readable
+		}
+		if a == input.PitchDown {
+			name = "PITCH UP / DOWN"
+		}
+		rows = append(rows, [2]string{input.KeyDesc(a), name})
 	}
-	rows := [][2]string{
-		{"ARROWS / MOUSE", steer},
-		{"Q / R", "YAW LEFT / RIGHT"},
-		{"X / Z", "ACCELERATE / BRAKE"},
-		{"SPACE / LMB", "FIRE LASERS"},
-		{"M", "LAUNCH MISSILE"},
-		{"E", "E.C.M."},
-		{"TAB", "ENERGY BOMB"},
-		{"L", "DOCKING COMPUTER"},
-		{"J", "IN-SYSTEM JUMP"},
-		{"C", "GALACTIC CHART"},
-		{"V", "COMMANDER STATUS"},
-		{"ESC", "RESUME"},
-		{"H", "HANDBOOK"},
-		{"Q", "MAIN MENU"},
-	}
-	// two columns of seven: fourteen rows in one column ran into the plate edge
+	rows = append(rows,
+		[2]string{"F5", lang.T("QUICK SAVE")},
+		[2]string{"F7", lang.T("QUICK LOAD")},
+		[2]string{"ESC", lang.T("RESUME")},
+		[2]string{"H", lang.T("HANDBOOK")},
+		[2]string{"Q", lang.T("MAIN MENU")},
+	)
 	perColumn := (len(rows) + 1) / 2
 	for i, r := range rows {
 		col := i / perColumn
-		y := 32 + (i%perColumn)*13
-		xk := 16 + col*150
+		y := 30 + (i%perColumn)*11
+		xk := 14 + col*152
 		fb.Text(r[0], xk, y, ColYellow, 1)
-		fb.Text(r[1], xk+52, y, ColText, 1)
+		fb.Text(clip(r[1], 22), xk+58, y, ColText, 1)
 	}
 	Hint = "ESC RESUME   H HANDBOOK   Q MAIN MENU"
 }
@@ -672,6 +674,30 @@ func pauseScreen(fb *render.FB) {
 // Key handles a key press; returns true when consumed.
 func Key(k string) bool {
 	g := game.G
+	// quick save and quick load work on the station and in flight, and nowhere
+	// else: the title, the death screen and the ending are not places to save
+	switch k {
+	case "F5":
+		if (g.State == "docked" || g.State == "flight") && g.Overlay == "" {
+			slot, ok := g.QuickSave()
+			if ok {
+				g.Message("SAVED TO SLOT "+itoa(slot+1), "good")
+			} else {
+				g.Message("SAVE FAILED", "bad")
+			}
+			return true
+		}
+	case "F7":
+		if (g.State == "docked" || g.State == "flight") && g.Overlay == "" {
+			if _, ok := g.QuickLoad(); ok {
+				DropSession()
+				g.Message("LOADED", "good")
+			} else {
+				g.Message("NOTHING TO LOAD IN THIS SLOT", "bad")
+			}
+			return true
+		}
+	}
 	// a conversation owns every key, in flight as much as at a counter: it used
 	// to be checked after the flight branch, which ate the digits
 	if g.Screen == "talk" {
@@ -741,7 +767,20 @@ func Key(k string) bool {
 		}
 		return true
 	case "dead":
-		if k == "Enter" {
+		switch k {
+		case "1":
+			if g.Respawn() {
+				DropSession()
+			} else {
+				g.Message("NO AUTOSAVE TO COME BACK TO", "bad")
+			}
+		case "2":
+			if game.SaveExists() {
+				openSlots(false)
+			} else {
+				g.Message("NO SAVED COMMANDER", "bad")
+			}
+		case "3", "Enter", "Escape":
 			DropSession()
 			g.State = "title"
 			g.Screen = "launch"
@@ -2337,16 +2376,16 @@ var helpPages = []helpPage{
 		"UNDER 85% OF TOP SPEED, OR YOU HIT",
 		"THE HULL INSTEAD OF THE MOUTH.",
 		"",
-		"L HANDS THE LAST STRETCH TO THE",
+		"{DOCKING} HANDS THE LAST STRETCH TO THE",
 		"DOCKING COMPUTER, IF ONE IS FITTED.",
 		"",
 		"THE STATION TURNS: THE SLOT MOVES.",
 	}, nil},
 	{"FIGHTING", []string{
-		"SPACE FIRES THE LASERS.",
-		"M LAUNCHES A MISSILE AT THE CROSSHAIR.",
-		"E IS E.C.M. AND KILLS INCOMING MISSILES.",
-		"TAB IS THE ENERGY BOMB: EVERYTHING",
+		"{FIRE} FIRES THE LASERS.",
+		"{MISSILE} LAUNCHES A MISSILE AT THE CROSSHAIR.",
+		"{ECM} IS E.C.M. AND KILLS INCOMING MISSILES.",
+		"{BOMB} IS THE ENERGY BOMB: EVERYTHING",
 		"CLOSE TO YOU DIES, INCLUDING YOUR SHIELDS.",
 		"",
 		"WHAT A KILL LEAVES FLOATS: CANISTERS",
@@ -2358,17 +2397,23 @@ var helpPages = []helpPage{
 		"SHIELDS RECHARGE, THE HULL DOES NOT.",
 	}, nil},
 	{"TRAVEL", []string{
-		"C OPENS THE GALACTIC CHART.",
+		"{CHART} OPENS THE GALACTIC CHART.",
 		"PICK A SYSTEM WITHIN 7 LIGHT YEARS",
 		"AND PRESS H. FUEL BURNS WITH THE JUMP.",
 		"",
-		"J IS A SHORT JUMP INSIDE THE SYSTEM.",
-		"K DUMPS A TONNE OUT OF THE AIRLOCK.",
+		"{JUMP} IS A SHORT JUMP INSIDE THE SYSTEM.",
+		"{JETTISON} DUMPS A TONNE OUT OF THE AIRLOCK.",
 		"",
-		"G CROSSES TO THE NEXT GALAXY: ONE WAY,",
+		"{GALACTIC} CROSSES TO THE NEXT GALAXY: ONE WAY,",
 		"AND YOU NEED A GALACTIC HYPERDRIVE.",
 		"",
 		"F BUYS FUEL AT ANY STATION.",
+		"",
+		"F5 SAVES WHERE YOU STAND, F7 LOADS IT",
+		"BACK. THE GAME ALSO WRITES AN AUTOSAVE",
+		"EVERY TIME YOU DOCK, BUT ONLY FOR THIS",
+		"SESSION: DIE AND YOU MAY COME BACK TO",
+		"THE LAST STATION YOU LEFT.",
 	}, nil},
 	{"TRADING", []string{
 		"BUY WHERE IT IS CHEAP, SELL WHERE IT IS DEAR.",
@@ -2411,6 +2456,35 @@ var helpPages = []helpPage{
 	}},
 }
 
+// helpKeys maps the placeholders in the handbook to bindable actions, so the book
+// reads the pilot's own keys instead of a hardcoded list.
+var helpKeys = map[string]input.Action{
+	"{FIRE}":     input.Fire,
+	"{MISSILE}":  input.Missile,
+	"{ECM}":      input.ECM,
+	"{BOMB}":     input.Bomb,
+	"{DOCKING}":  input.Autopilot,
+	"{JUMP}":     input.JumpInSystem,
+	"{GALACTIC}": input.GalacticJump,
+	"{JETTISON}": input.Jettison,
+	"{CHART}":    input.Chart,
+	"{STATUS}":   input.Status,
+	"{PAUSE}":    input.Pause,
+}
+
+// helpText translates a handbook line and fills in the pilot's own keys.
+func helpText(line string) string {
+	// translate the sentence first - the dictionary knows the placeholder - and
+	// only then put the pilot's key in, because his key is not in any dictionary
+	line = lang.T(line)
+	for ph, a := range helpKeys {
+		if strings.Contains(line, ph) {
+			line = strings.ReplaceAll(line, ph, input.KeyDesc(a))
+		}
+	}
+	return line
+}
+
 // helpPage is one page of the handbook: prose, or a two-column table.
 type helpPage struct {
 	Title string
@@ -2430,7 +2504,7 @@ func helpScreen(fb *render.FB) {
 	var rows []string
 	if len(p.Cols) > 0 {
 		for _, ln := range p.Lines {
-			rows = append(rows, "TEXT:"+lang.T(ln))
+			rows = append(rows, "TEXT:"+helpText(ln))
 		}
 		for _, c := range p.Cols {
 			rows = append(rows, "COL:"+c[0]+"\x00"+lang.T(c[1]))
@@ -2441,7 +2515,7 @@ func helpScreen(fb *render.FB) {
 				rows = append(rows, "")
 				continue
 			}
-			rows = append(rows, wrapText(lang.T(line), 44)...)
+			rows = append(rows, wrapText(helpText(line), 44)...)
 		}
 	}
 	const lineH = 11
