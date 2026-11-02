@@ -2330,21 +2330,18 @@ func journalScreen(fb *render.FB) {
 
 // helpPages is the handbook: four topics, one screen each. Everything a first
 // flight needs and nothing else.
-var helpPages = []struct {
-	Title string
-	Lines []string
-}{
+var helpPages = []helpPage{
 	{"DOCKING", []string{
 		"THE STATION HAS A SLOT IN ONE FACE.",
-		"FLY AT IT WITH THE NOSE POINTED IN.",
-		"SPEED MUST BE UNDER 85% OR YOU HIT",
+		"FLY IN WITH THE NOSE POINTED AT IT.",
+		"UNDER 85% OF TOP SPEED, OR YOU HIT",
 		"THE HULL INSTEAD OF THE MOUTH.",
 		"",
-		"FIT A DOCKING COMPUTER (L) AND THE",
-		"SHIP FLIES THE LAST STRETCH ITSELF.",
+		"L HANDS THE LAST STRETCH TO THE",
+		"DOCKING COMPUTER, IF ONE IS FITTED.",
 		"",
 		"THE STATION TURNS: THE SLOT MOVES.",
-	}},
+	}, nil},
 	{"FIGHTING", []string{
 		"SPACE FIRES THE LASERS.",
 		"M LAUNCHES A MISSILE AT THE CROSSHAIR.",
@@ -2353,52 +2350,68 @@ var helpPages = []struct {
 		"CLOSE TO YOU DIES, INCLUDING YOUR SHIELDS.",
 		"",
 		"WHAT A KILL LEAVES FLOATS: CANISTERS",
-		"OF CARGO, MARKED YELLOW ON THE RADAR.",
-		"A FUEL SCOOP (S) SWALLOWS THEM. WITHOUT",
-		"ONE THEY DAMAGE THE HULL ON IMPACT.",
+		"OF CARGO, YELLOW ON THE RADAR.",
+		"FIT A FUEL SCOOP AND THEY ARE SCOOPED.",
+		"WITHOUT ONE THEY DAMAGE THE HULL.",
 		"",
 		"WATCH THE CABIN TEMPERATURE NEAR THE STAR.",
 		"SHIELDS RECHARGE, THE HULL DOES NOT.",
-	}},
+	}, nil},
 	{"TRAVEL", []string{
 		"C OPENS THE GALACTIC CHART.",
 		"PICK A SYSTEM WITHIN 7 LIGHT YEARS",
 		"AND PRESS H. FUEL BURNS WITH THE JUMP.",
 		"",
 		"J IS A SHORT JUMP INSIDE THE SYSTEM.",
+		"K DUMPS A TONNE OUT OF THE AIRLOCK.",
+		"",
 		"G CROSSES TO THE NEXT GALAXY: ONE WAY,",
 		"AND YOU NEED A GALACTIC HYPERDRIVE.",
 		"",
 		"F BUYS FUEL AT ANY STATION.",
-	}},
-	{"ABBREVIATIONS", []string{
-		"THE PANEL USES SHORT WORDS. HERE THEY ALL ARE.",
-		"",
-		"FS / AS - FORE AND AFT SHIELDS",
-		"FU - FUEL        EN - ENERGY",
-		"HT - WEAPON HEAT CT - CABIN HEAT",
-		"SPD - SPEED      STN - STATION DISTANCE",
-		"MSL - MISSILES   LSR - LASER HEAT",
-		"HOLD - CARGO SPACE   CR - CREDITS",
-		"LY - LIGHT YEARS     T - TONNES",
-		"PAX - PASSENGERS     POP - POPULATION",
-		"PROD - PRODUCTION    KG - KILOGRAMS",
-		"",
-		"E S D B ON THE LAMP ROW: E.C.M., FUEL",
-		"SCOOP, DOCKING COMPUTER, ENERGY BOMBS.",
-		"THEY LIGHT WHEN THE THING IS FITTED.",
-	}},
+	}, nil},
 	{"TRADING", []string{
 		"BUY WHERE IT IS CHEAP, SELL WHERE IT IS DEAR.",
-		"B BUYS A TONNE, SHIFT+B BUYS TEN.",
-		"S SELLS A TONNE, SHIFT+S SELLS TEN.",
+		"B OPENS HOW MUCH TO BUY, S HOW MUCH TO SELL.",
+		"ARROWS CHANGE IT BY ONE, ENTER TRADES,",
+		"ESC CALLS THE WHOLE THING OFF.",
+		"",
+		"THE AMOUNT NEVER GOES PAST WHAT IS THERE:",
+		"THEIR STOCK, YOUR HOLD, YOUR CREDITS.",
 		"",
 		"THE BOARD PAYS FOR COURIER RUNS,",
 		"PASSENGERS, MAIL AND BOUNTIES.",
 		"JOBS HAVE DEADLINES: A MISSED ONE COSTS.",
-		"",
-		"TO WIN A FIGHT, BUY A BIGGER GUN FIRST.",
+	}, nil},
+	{"ABBREVIATIONS", []string{
+		"THE PANEL WRITES SHORT. THIS IS THE KEY.",
+	}, [][2]string{
+		{"FS / AS", "FORE AND AFT SHIELDS"},
+		{"FU", "FUEL"},
+		{"EN", "ENERGY"},
+		{"HT", "WEAPON HEAT"},
+		{"CT", "CABIN HEAT"},
+		{"SPD", "SPEED"},
+		{"STN", "DISTANCE TO STATION"},
+		{"MSL", "MISSILES"},
+		{"LSR", "LASER HEAT"},
+		{"HOLD", "CARGO SPACE"},
+		{"CR", "CREDITS"},
+		{"LY", "LIGHT YEARS"},
+		{"T", "TONNES"},
+		{"PAX", "PASSENGERS"},
+		{"POP", "POPULATION"},
+		{"PROD", "PRODUCTION"},
+		{"KG", "KILOGRAMS"},
+		{"E S D B", "FITTED: ECM, SCOOP, DOCK, BOMBS"},
 	}},
+}
+
+// helpPage is one page of the handbook: prose, or a two-column table.
+type helpPage struct {
+	Title string
+	Lines []string
+	Cols  [][2]string
 }
 
 func helpScreen(fb *render.FB) {
@@ -2407,16 +2420,25 @@ func helpScreen(fb *render.FB) {
 		page = 0
 	}
 	p := helpPages[page]
-	plate(fb, 12, 20, 296, 180, p.Title)
-	// wrap to the plate and scroll: the fighting page ran off the bottom and
-	// landed on the page marks
+	plate(fb, 12, 20, 296, 180, lang.T(p.Title))
+
+	// the row count depends on the page: prose wraps, a table does not
 	var rows []string
-	for _, line := range p.Lines {
-		if line == "" {
-			rows = append(rows, "")
-			continue
+	if len(p.Cols) > 0 {
+		for _, ln := range p.Lines {
+			rows = append(rows, "TEXT:"+lang.T(ln))
 		}
-		rows = append(rows, wrapText(lang.T(line), 44)...)
+		for _, c := range p.Cols {
+			rows = append(rows, "COL:"+c[0]+"\x00"+lang.T(c[1]))
+		}
+	} else {
+		for _, line := range p.Lines {
+			if line == "" {
+				rows = append(rows, "")
+				continue
+			}
+			rows = append(rows, wrapText(lang.T(line), 44)...)
+		}
 	}
 	const lineH = 11
 	visible := (178 - 34) / lineH
@@ -2436,7 +2458,18 @@ func helpScreen(fb *render.FB) {
 			y += lineH
 			continue
 		}
-		fb.TextRaw(rows[i], 22, y, ColText, 1)
+		switch {
+		case strings.HasPrefix(rows[i], "TEXT:"):
+			fb.TextRaw(strings.TrimPrefix(rows[i], "TEXT:"), 22, y, ColText, 1)
+		case strings.HasPrefix(rows[i], "COL:"):
+			// the two columns are drawn at fixed positions, so the meanings line
+			// up no matter how long the abbreviation is
+			parts := strings.SplitN(strings.TrimPrefix(rows[i], "COL:"), "\x00", 2)
+			fb.Text(parts[0], 26, y, ColYellow, 1)
+			fb.TextRaw(parts[1], 96, y, ColText, 1)
+		default:
+			fb.TextRaw(rows[i], 22, y, ColText, 1)
+		}
 		y += lineH
 	}
 	if maxTop > 0 {
@@ -2452,7 +2485,7 @@ func helpScreen(fb *render.FB) {
 		fb.FillRect(x, 186, x+6, 191, c)
 	}
 	Hint = "LEFT/RIGHT PAGE   ESC BACK"
-	if len(rows) > visible {
+	if maxTop > 0 {
 		Hint = "UP/DOWN SCROLL   " + Hint
 	}
 }
