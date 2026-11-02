@@ -2507,7 +2507,14 @@ func helpScreen(fb *render.FB) {
 			rows = append(rows, "TEXT:"+helpText(ln))
 		}
 		for _, c := range p.Cols {
-			rows = append(rows, "COL:"+c[0]+"\x00"+lang.T(c[1]))
+			wrapped := wrapText(lang.T(c[1]), 30)
+			for i, piece := range wrapped {
+				abbr := ""
+				if i == 0 {
+					abbr = c[0]
+				}
+				rows = append(rows, "COL:"+abbr+"\x00"+piece)
+			}
 		}
 	} else {
 		for _, line := range p.Lines {
@@ -2551,7 +2558,16 @@ func helpScreen(fb *render.FB) {
 		y += lineH
 	}
 	if maxTop > 0 {
-		fb.TextR(itoa(S.HelpScroll+1)+"/"+itoa(maxTop+1), 296, 26, ColDim, 1)
+		// a bar down the right edge, a thumb the size of the visible part
+		top, bottom := 36, 176
+		fb.FillRect(300, top, 303, bottom, render.RGB(0x14212e))
+		span := bottom - top
+		thumb := span * visible / len(rows)
+		if thumb < 8 {
+			thumb = 8
+		}
+		y0 := top + (span-thumb)*S.HelpScroll/maxTop
+		fb.FillRect(300, y0, 303, y0+thumb, ColDim)
 	}
 	// page marks
 	for i := range helpPages {
@@ -2564,7 +2580,7 @@ func helpScreen(fb *render.FB) {
 	}
 	Hint = "LEFT/RIGHT PAGE   ESC BACK"
 	if maxTop > 0 {
-		Hint = "UP/DOWN SCROLL   " + Hint
+		Hint = "UP/DOWN SCROLL   LEFT/RIGHT PAGE   ESC BACK"
 	}
 }
 
