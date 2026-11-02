@@ -402,16 +402,17 @@ func equipScreen(fb *render.FB) {
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
 	items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
 
-	// two columns: the catalogue outgrew a single list
-	const rows = 9
+	// two columns: the catalogue outgrew a single list. The gutter has to be
+	// wider than a word space, or a row reads as one long line
+	const rows, colPitch, colW = 9, 154, 136
 	for i, it := range items {
 		col := i / rows
 		row := i % rows
-		x := 12 + col*150
+		x := 12 + col*colPitch
 		y := 32 + row*17
 		sel := S.Equip == i
 		if sel {
-			fb.FillRect(x-4, y-3, x+144, y+8, render.RGB(0x12384f))
+			fb.FillRect(x-4, y-3, x+colW, y+8, render.RGB(0x12384f))
 		}
 		// the shop says why before it charges: a rig with no laser, a laser
 		// the hull cannot carry, something already bolted on
@@ -427,21 +428,21 @@ func equipScreen(fb *render.FB) {
 			c = ColYellow
 		}
 		name := it.Name
-		if len(name) > 18 {
-			name = name[:18]
+		if len(name) > 17 {
+			name = name[:17]
 		}
 		fb.Text(name, x, y, c, 1)
 		switch {
 		case owned:
-			fb.TextR(lang.T("FITTED"), x+144, y, ColGreen, 1)
+			fb.TextR(lang.T("FITTED"), x+colW, y, ColGreen, 1)
 		case it.ID == "missile":
-			fb.TextR(itoa(it.Price)+" x"+itoa(cmd.Missiles), x+144, y, ColGreen, 1)
+			fb.TextR(itoa(it.Price)+" x"+itoa(cmd.Missiles), x+colW, y, ColGreen, 1)
 		default:
 			pc := ColRed
 			if cmd.Cash >= float64(it.Price) {
 				pc = ColGreen
 			}
-			fb.TextR(itoa(it.Price), x+144, y, pc, 1)
+			fb.TextR(itoa(it.Price), x+colW, y, pc, 1)
 		}
 	}
 	// the reason a row cannot be bought goes in the footer, where the player
@@ -1258,20 +1259,21 @@ func settingsScreen(fb *render.FB) {
 			if lang.Cfg.NoCockpit {
 				val = "OFF"
 			}
-			fb.TextR(val, 264, y, ColGreen, 1)
+			fb.TextR(val, 296, y, ColGreen, 1)
 		case "TESTER MODE":
 			val := "OFF"
 			if lang.Cfg.TesterMode {
 				val = "ON"
 			}
-			fb.TextR(val, 264, y, ColGreen, 1)
+			fb.TextR(val, 296, y, ColGreen, 1)
 		case "CONTROLS":
-			fb.TextR(">", 264, y, ColGreen, 1)
+			fb.TextR(">", 296, y, ColGreen, 1)
 		}
 	}
-	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 176, ColDim, 1)
-	// the build belongs where you go looking for it, not over the play field
-	fb.TextC(game.Version, 160, 184, render.RGB(0x24414f), 1)
+	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 172, ColDim, 1)
+	// the build belongs where you go looking for it, not over the play field -
+	// and not across the panel's bottom frame
+	fb.TextC(game.Version, 160, 178, render.RGB(0x24414f), 1)
 	Hint = "UP/DOWN  LEFT/RIGHT  ENTER  ESC"
 }
 
@@ -1928,7 +1930,8 @@ func controlsScreen(fb *render.FB) {
 	acts := input.Actions()
 	rows := len(acts) + 2
 	const visible = 10
-	plate(fb, 4, 16, 312, 184, "CONTROLS")
+	// no tab: the header bar already says what this screen is
+	plate(fb, 4, 16, 312, 184, "")
 	fb.Text("ACTION", 16, 28, ColDim, 1)
 	fb.TextR("KEY", 234, 28, ColDim, 1)
 	fb.TextR("PAD", 306, 28, ColDim, 1)
@@ -3014,7 +3017,8 @@ func talkScreen(fb *render.FB) {
 		return
 	}
 	plate(fb, 6, 14, 310, 190, "")
-	if n.Speaker != "" {
+	named := n.Speaker != ""
+	if named {
 		fb.FillRect(8, 16, 308, 26, render.RGB(0x08131f))
 		fb.Text(lang.T(n.Speaker), 12, 19, ColYellow, 1)
 	}
@@ -3059,9 +3063,13 @@ func talkScreen(fb *render.FB) {
 		fb.Text(itoa(i+1)+"  "+lang.T(n.Options[idx].Text), 14, oy, col, 1)
 	}
 	if scrolling {
-		// drawn after the answers: at optsTop it was painted over by the
-		// highlight band of the selected one
-		fb.TextR(itoa(S.TalkScroll+1)+"/"+itoa(maxTop+1), 304, textTop-9, ColDim, 1)
+		// drawn after the answers, because at optsTop it was painted over by the
+		// highlight band, and on the speaker strip's line so it does not hang off
+		cy := textTop - 9
+		if named {
+			cy = 19
+		}
+		fb.TextR(itoa(S.TalkScroll+1)+"/"+itoa(maxTop+1), 304, cy, ColDim, 1)
 	}
 	Hint = "UP/DOWN SELECT   ENTER CHOOSE   ESC BACK"
 	if scrolling {
