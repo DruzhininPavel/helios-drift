@@ -4,9 +4,24 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"CASH":          "КРЕДИТЫ",
+	"NOW FLYING":    "ТЕПЕРЬ БОРТ:",
+	"ABBREVIATIONS": "СОКРАЩЕНИЯ",
+	"THE PANEL USES SHORT WORDS. HERE THEY ALL ARE.": "ПАНЕЛЬ ПИШЕТ КОРОТКО. ВОТ ЧТО ЗНАЧИТ КАЖДОЕ.",
+	"FS / AS - FORE AND AFT SHIELDS":                 "FS / AS - ПЕРЕДНИЙ И КОРМОВОЙ ЩИТ",
+	"FU - FUEL        EN - ENERGY":                   "FU - ТОПЛИВО        EN - ЭНЕРГИЯ",
+	"HT - WEAPON HEAT CT - CABIN HEAT":               "HT - НАГРЕВ ОРУЖИЯ  CT - НАГРЕВ КАБИНЫ",
+	"SPD - SPEED      STN - STATION DISTANCE":        "SPD - СКОРОСТЬ      STN - ДО СТАНЦИИ",
+	"MSL - MISSILES   LSR - LASER HEAT":              "MSL - РАКЕТЫ        LSR - НАГРЕВ ЛАЗЕРА",
+	"HOLD - CARGO SPACE   CR - CREDITS":              "HOLD - ТРЮМ         CR - КРЕДИТЫ",
+	"LY - LIGHT YEARS     T - TONNES":                "LY - СВЕТОВЫЕ ГОДЫ  T - ТОННЫ",
+	"PAX - PASSENGERS     POP - POPULATION":          "PAX - ПАССАЖИРЫ     POP - НАСЕЛЕНИЕ",
+	"PROD - PRODUCTION    KG - KILOGRAMS":            "PROD - ПРОИЗВОДСТВО KG - КИЛОГРАММЫ",
+	"E S D B ON THE LAMP ROW: E.C.M., FUEL":          "E S D B В РЯДУ ЛАМП: E.C.M., ЗАБОРНИК,",
+	"SCOOP, DOCKING COMPUTER, ENERGY BOMBS.":         "СТЫКОВОЧНЫЙ КОМПЬЮТЕР, ЭНЕРГОБОМБЫ.",
+	"THEY LIGHT WHEN THE THING IS FITTED.":           "ГОРЯТ, КОГДА ЭТО УСТАНОВЛЕНО.",
 	// ---- panel labels and phrases that were still English
 	"NAME":                          "ИМЯ",
-	"CASH":                          "КАПИТАЛ",
 	"FUEL":                          "ТОПЛИВО",
 	"MISSILES":                      "РАКЕТЫ",
 	"LASER":                         "ЛАЗЕР",
@@ -36,7 +51,6 @@ var ru = map[string]string{
 	"NO STATION IN THIS SYSTEM":                            "В ЭТОЙ СИСТЕМЕ НЕТ СТАНЦИИ",
 	"NO STATION TO DOCK WITH":                              "НЕТ СТАНЦИИ ДЛЯ СТЫКОВКИ",
 	"NO YAW IN CLASSIC FLIGHT":                             "В CLASSIC НЕТ РЫСКАНЬЯ",
-	"NOW FLYING":                                           "ТЕПЕРЬ ТЫ ЛЕТАЕШЬ НА",
 	"POLICE HAIL - CUT SPEED TO":                           "ПОЛИЦИЯ: СБРОСЬ СКОРОСТЬ ДО",
 	"PROMOTED:":                                            "ПОВЫШЕНИЕ:",
 	"SECTOR CHARTED - EVERY SYSTEM VISITED":                "СЕКТОР ИЗУЧЕН - ВСЕ СИСТЕМЫ ПОСЕЩЕНЫ",

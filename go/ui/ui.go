@@ -53,6 +53,8 @@ type Sel struct {
 	ClosingScroll int
 	// JournalScroll is how far down the journal is scrolled.
 	JournalScroll int
+	// HelpScroll is how far down the handbook page is scrolled.
+	HelpScroll int
 	// SlotConfirm is set while the save screen waits for a second Enter to
 	// overwrite, or a second Delete to erase.
 	SlotConfirm   bool

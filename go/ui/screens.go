@@ -657,12 +657,16 @@ func pauseScreen(fb *render.FB) {
 		{"H", "HANDBOOK"},
 		{"Q", "MAIN MENU"},
 	}
-	// one column, tight rows: fourteen lines have to fit the plate
+	// two columns of seven: fourteen rows in one column ran into the plate edge
+	perColumn := (len(rows) + 1) / 2
 	for i, r := range rows {
-		y := 30 + i*12
-		fb.Text(r[0], 16, y, ColYellow, 1)
-		fb.TextR(r[1], 300, y, ColText, 1)
+		col := i / perColumn
+		y := 32 + (i%perColumn)*13
+		xk := 16 + col*150
+		fb.Text(r[0], xk, y, ColYellow, 1)
+		fb.Text(r[1], xk+52, y, ColText, 1)
 	}
+	Hint = "ESC RESUME   H HANDBOOK   Q MAIN MENU"
 }
 
 // Key handles a key press; returns true when consumed.
@@ -2367,6 +2371,23 @@ var helpPages = []struct {
 		"",
 		"F BUYS FUEL AT ANY STATION.",
 	}},
+	{"ABBREVIATIONS", []string{
+		"THE PANEL USES SHORT WORDS. HERE THEY ALL ARE.",
+		"",
+		"FS / AS - FORE AND AFT SHIELDS",
+		"FU - FUEL        EN - ENERGY",
+		"HT - WEAPON HEAT CT - CABIN HEAT",
+		"SPD - SPEED      STN - STATION DISTANCE",
+		"MSL - MISSILES   LSR - LASER HEAT",
+		"HOLD - CARGO SPACE   CR - CREDITS",
+		"LY - LIGHT YEARS     T - TONNES",
+		"PAX - PASSENGERS     POP - POPULATION",
+		"PROD - PRODUCTION    KG - KILOGRAMS",
+		"",
+		"E S D B ON THE LAMP ROW: E.C.M., FUEL",
+		"SCOOP, DOCKING COMPUTER, ENERGY BOMBS.",
+		"THEY LIGHT WHEN THE THING IS FITTED.",
+	}},
 	{"TRADING", []string{
 		"BUY WHERE IT IS CHEAP, SELL WHERE IT IS DEAR.",
 		"B BUYS A TONNE, SHIFT+B BUYS TEN.",
@@ -2387,12 +2408,39 @@ func helpScreen(fb *render.FB) {
 	}
 	p := helpPages[page]
 	plate(fb, 12, 20, 296, 180, p.Title)
-	for i, line := range p.Lines {
-		col := ColText
+	// wrap to the plate and scroll: the fighting page ran off the bottom and
+	// landed on the page marks
+	var rows []string
+	for _, line := range p.Lines {
 		if line == "" {
+			rows = append(rows, "")
 			continue
 		}
-		fb.Text(line, 24, 42+i*13, col, 1)
+		rows = append(rows, wrapText(lang.T(line), 44)...)
+	}
+	const lineH = 11
+	visible := (178 - 34) / lineH
+	maxTop := len(rows) - visible
+	if maxTop < 0 {
+		maxTop = 0
+	}
+	if S.HelpScroll > maxTop {
+		S.HelpScroll = maxTop
+	}
+	if S.HelpScroll < 0 {
+		S.HelpScroll = 0
+	}
+	y := 34
+	for i := S.HelpScroll; i < len(rows) && i < S.HelpScroll+visible; i++ {
+		if rows[i] == "" {
+			y += lineH
+			continue
+		}
+		fb.TextRaw(rows[i], 22, y, ColText, 1)
+		y += lineH
+	}
+	if maxTop > 0 {
+		fb.TextR(itoa(S.HelpScroll+1)+"/"+itoa(maxTop+1), 296, 26, ColDim, 1)
 	}
 	// page marks
 	for i := range helpPages {
@@ -2404,6 +2452,9 @@ func helpScreen(fb *render.FB) {
 		fb.FillRect(x, 186, x+6, 191, c)
 	}
 	Hint = "LEFT/RIGHT PAGE   ESC BACK"
+	if len(rows) > visible {
+		Hint = "UP/DOWN SCROLL   " + Hint
+	}
 }
 
 func helpKey(k string) bool {
@@ -2420,10 +2471,20 @@ func helpKey(k string) bool {
 		return true
 	case "ArrowLeft":
 		S.Help = (S.Help + len(helpPages) - 1) % len(helpPages)
+		S.HelpScroll = 0
 		return true
 	case "ArrowRight":
 		S.Help = (S.Help + 1) % len(helpPages)
+		S.HelpScroll = 0
 		return true
+	case "ArrowUp":
+		S.HelpScroll--
+	case "ArrowDown":
+		S.HelpScroll++
+	case "PageUp":
+		S.HelpScroll -= 8
+	case "PageDown":
+		S.HelpScroll += 8
 	}
 	return true
 }
