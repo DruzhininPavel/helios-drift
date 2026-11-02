@@ -1,17 +1,17 @@
 ## Unreleased (после v1.17)
 
-- **Quick save and quick load**: F5 writes over the slot the commander came from
-  (or slot 1 if he never had one), F7 reads it back. Both work on the station and
-  in flight, never on the title, the death screen or the ending.
-- **Session autosave**: every docking remembers the commander in memory. There is
-  no extra file and nothing survives quitting - it exists so a death over a
-  station you left two minutes ago is not a loss.
-- **Death is a choice**: the game over screen offers to come back to the last
-  station, to load a saved commander, or to leave for the main menu. Dying still
-  counts as a death.
-- **The handbook reads the pilot's keys**: every control it names is taken from
-  the bindings, so rebinding fire to X makes the book say X. The pause list is
-  built the same way instead of being a hardcoded block.
+- **Быстрые сохранения**: F5 пишет в тот слот, из которого пилот загружался (или
+  в первый, если он ещё ни разу не сохранялся), F7 оттуда читает. Работают и на
+  станции, и в полёте; на титуле, экране смерти и в финале - нет.
+- **Автосейв на сессию**: каждая стыковка запоминает пилота в памяти. Отдельного
+  файла нет, после выхода он не живёт - он нужен, чтобы смерть над станцией,
+  которую покинул две минуты назад, не была потерей.
+- **Смерть - это выбор**: экран предлагает вернуться на последнюю станцию,
+  загрузить сохранённого пилота или уйти в главное меню. Смерть при этом
+  считается.
+- **Справочник читает твои клавиши**: всё, что он называет, берётся из настроек
+  управления, поэтому если огонь перевешен на X, книга скажет X. Список в паузе
+  собирается оттуда же, а не из захардкоженного блока.
 - Послесюжетные дела: три цепочки на два-три шага открываются сами, когда
   выполнено условие и пилот сел на станцию - «Долг клиники», «Восемнадцать
   ключей» (финал СОВЕТ), «Список курьера» (если курьер жив и список у пилота).
