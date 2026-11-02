@@ -38,10 +38,18 @@ func TestTranslationsUppercase(t *testing.T) {
 	}
 }
 
+var galaxyEconomies = []string{"RICH INDUSTRIAL", "AVERAGE INDUSTRIAL", "POOR INDUSTRIAL",
+	"MAINLY INDUSTRIAL", "MAINLY AGRICULTURAL", "RICH AGRICULTURAL",
+	"AVERAGE AGRICULTURAL", "POOR AGRICULTURAL"}
+
+var galaxyGovernments = []string{"ANARCHY", "FEUDAL", "MULTI-GOVERNMENT", "DICTATORSHIP",
+	"COMMUNIST", "CONFEDERACY", "DEMOCRACY", "CORPORATE STATE"}
+
 // Long labels must still fit the panels they are drawn in.
 func TestTranslationsFit(t *testing.T) {
 	// 17 glyphs is the widest value the chart's system panel can show.
-	for _, key := range []string{"MAINLY AGRICULTURAL", "CONFEDERACY", "COMMANDER STATUS"} {
+	for _, key := range append([]string{"CONFEDERACY", "COMMANDER STATUS"},
+		append(galaxyEconomies, galaxyGovernments...)...) {
 		if w := render.TextWidth(ru[key], 1); w > 17*6 {
 			t.Errorf("%q too wide: %dpx", key, w)
 		}

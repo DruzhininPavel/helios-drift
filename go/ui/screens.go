@@ -86,11 +86,24 @@ func docked(fb *render.FB) {
 	// under the description reads like part of the contract
 	// the market and the board say nothing when a thing works: the log records
 	// it. They still say why something did not happen.
-	switch g.Screen {
-	case "contracts", "market":
-		drawMessagesWhere(fb, 192, 2, true)
-	default:
-		drawMessages(fb, 192, 2)
+	onlyBad := g.Screen == "contracts" || g.Screen == "market"
+	// the log and the chart fill the screen to the footer, so they keep their
+	// own hints and say nothing here
+	roomy := map[string]bool{"launch": true, "market": true, "contracts": true,
+		"equipment": true, "status": true, "shipyard": true, "journal": true,
+		"save": true, "slots": true}
+	if !roomy[g.Screen] {
+		return
+	}
+	if len(g.Messages) > 0 {
+		// a band of its own: the plates run to 204 and the text used to sit on
+		// their bottom frame and on the last row of the sheet
+		fb.FillRect(0, 188, 319, 210, ColBg)
+	}
+	if onlyBad {
+		drawMessagesWhere(fb, 191, 2, true)
+	} else {
+		drawMessages(fb, 191, 2)
 	}
 }
 
@@ -100,17 +113,17 @@ func stationMenu(fb *render.FB) {
 	Hint = "UP/DOWN   ENTER CONFIRM   F REFUEL   Q MAIN MENU"
 
 	// left: commander sheet
-	plate(fb, 8, 16, 152, 188, "COMMANDER "+cmd.Name)
+	plate(fb, 8, 16, 152, 168, "COMMANDER "+cmd.Name)
 	row := func(label, value string, y int, col uint32) {
 		fb.Text(label, 16, y, ColDim, 1)
 		fb.TextR(value, 150, y, col, 1)
 	}
-	row("CASH", money(cmd.Cash)+" CR", 34, ColYellow)
-	row("FUEL", strconv.FormatFloat(cmd.Fuel, 'f', 1, 64)+" LY", 50, ColText)
-	row("HOLD", itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 66, ColText)
-	row("MISSILES", itoa(cmd.Missiles), 82, ColText)
-	row("LASER", game.LaserName[cmd.Laser], 98, ColText)
-	row("RANK", galaxy.RankFor(cmd.Kills), 114, ColGreen)
+	row("CASH", money(cmd.Cash)+" CR", 32, ColYellow)
+	row("FUEL", strconv.FormatFloat(cmd.Fuel, 'f', 1, 64)+" LY", 47, ColText)
+	row("HOLD", itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 62, ColText)
+	row("MISSILES", itoa(cmd.Missiles), 77, ColText)
+	row("LASER", game.LaserName[cmd.Laser], 92, ColText)
+	row("RANK", lang.T(galaxy.RankFor(cmd.Kills)), 107, ColGreen)
 	legal := "CLEAN"
 	lc := ColGreen
 	if cmd.Legal >= 500 {
@@ -118,22 +131,22 @@ func stationMenu(fb *render.FB) {
 	} else if cmd.Legal > 0 {
 		legal, lc = "OFFENDER", ColRed
 	}
-	row("LEGAL", legal, 130, lc)
+	row("LEGAL", lang.T(legal), 122, lc)
 	gal := galaxy.Get(cmd.Galaxy)
-	fb.Text("TARGET", 16, 146, ColDim, 1)
-	drawDataR(fb, gal.Systems[((cmd.TargetSystem%256)+256)%256].Name, 150, 146, ColText)
+	fb.Text("TARGET", 16, 137, ColDim, 1)
+	drawDataR(fb, gal.Systems[((cmd.TargetSystem%256)+256)%256].Name, 150, 137, ColText)
 
 	// system block at the bottom of the same plate
-	fb.HLine(16, 150, 160, render.RGB(0x1b3348))
+	fb.HLine(16, 150, 148, render.RGB(0x1b3348))
 	if g.World != nil {
 		sys := g.World.Sys
-		drawData(fb, sys.Name, 16, 168, ColYellow)
-		fb.Text(galaxy.EconomyNames[sys.Economy], 16, 178, ColDim, 1)
-		fb.Text(galaxy.GovNames[sys.Government], 16, 188, ColDim, 1)
+		drawData(fb, sys.Name, 16, 155, ColYellow)
+		fb.Text(lang.T(galaxy.EconomyNames[sys.Economy]), 16, 166, ColDim, 1)
+		fb.Text(lang.T(galaxy.GovNames[sys.Government]), 16, 176, ColDim, 1)
 	}
 
 	// right: services
-	plate(fb, 168, 16, 144, 188, "STATION SERVICES")
+	plate(fb, 168, 16, 144, 168, "STATION SERVICES")
 	items := menuItems()
 	step := 16
 	switch {
@@ -147,7 +160,7 @@ func stationMenu(fb *render.FB) {
 		step = 15
 	}
 	for i, it := range items {
-		y := 34 + i*step
+		y := 32 + i*step
 		sel := S.Menu == i
 		if sel {
 			fb.FillRect(174, y-4, 306, y+9, render.RGB(0x12384f))
@@ -162,12 +175,12 @@ func stationMenu(fb *render.FB) {
 	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "DIPLOMAT" {
 		Hint = lang.T("CLEAR RECORD FOR") + " " + itoa(game.G.PardonPrice()) + " CR"
 	}
-	fb.HLine(174, 306, 158, render.RGB(0x1b3348))
-	fb.Text("REFUEL  [F]", 180, 168, ColDim, 1)
-	fb.TextR(itoa(galaxy.FuelPricePerLY)+" CR/LY", 300, 168, ColGreen, 1)
+	fb.HLine(174, 306, 150, render.RGB(0x1b3348))
+	fb.Text("REFUEL  [F]", 180, 157, ColDim, 1)
+	fb.TextR(itoa(galaxy.FuelPricePerLY)+" CR/LY", 300, 157, ColGreen, 1)
 	if g.World != nil {
-		fb.Text("TECH "+itoa(g.World.Sys.Tech), 180, 186, ColDim, 1)
-		fb.TextR("DOCKED", 300, 186, render.RGB(0x4c6a80), 1)
+		fb.Text("TECH "+itoa(g.World.Sys.Tech), 180, 172, ColDim, 1)
+		fb.TextR(lang.T("DOCKED"), 300, 172, render.RGB(0x4c6a80), 1)
 	}
 }
 
@@ -499,8 +512,8 @@ func chartScreen(fb *render.FB) {
 	}
 	fb.Text(sel.Name, 206, ty, ColYellow, 1)
 	ty += 11
-	line("ECONOMY", galaxy.EconomyNames[sel.Economy], ColText)
-	line("GOVERNMENT", galaxy.GovNames[sel.Government], ColText)
+	line("ECONOMY", lang.T(galaxy.EconomyNames[sel.Economy]), ColText)
+	line("GOVERNMENT", lang.T(galaxy.GovNames[sel.Government]), ColText)
 	fb.Text("TECH LEVEL "+itoa(sel.Tech), 206, ty, ColText, 1)
 	ty += 9
 	fb.Text("POP "+strconv.FormatFloat(sel.Pop, 'f', 1, 64)+" B", 206, ty, ColText, 1)
@@ -541,7 +554,7 @@ func statusScreen(fb *render.FB) {
 		{"CARGO", itoa(game.CargoUsed(cmd)) + "/" + itoa(cmd.CargoCap) + " T"},
 		{"MISSILES", itoa(cmd.Missiles)},
 		{"LASER", game.LaserName[cmd.Laser]},
-		{"RANK", galaxy.RankFor(cmd.Kills)},
+		{"RANK", lang.T(galaxy.RankFor(cmd.Kills))},
 		{"KILLS", itoa(cmd.Kills)},
 	}
 	legal := "CLEAN"
