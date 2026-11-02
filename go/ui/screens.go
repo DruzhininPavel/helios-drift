@@ -371,12 +371,14 @@ func marketScreen(fb *render.FB) {
 		// under its borders, cut mid-word
 		// the rows are twelve pixels apart from 44, so the box starts on a gap:
 		// at 124 it sliced the row above it in half
-		fb.FillRect(6, 128, 313, 184, render.RGB(0x08131f))
-		fb.Rect(6, 128, 313, 184, ColYellow)
-		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 136, ColYellow, 1)
-		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 148, ColGreen, 1)
-		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 160, ColDim, 1)
-		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 172, ColDim, 1)
+		// the rows sit on an 8px pitch from 42: the row above ends on 128, so
+		// the box starts one line below it
+		fb.FillRect(6, 130, 313, 184, render.RGB(0x08131f))
+		fb.Rect(6, 130, 313, 184, ColYellow)
+		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 138, ColYellow, 1)
+		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 150, ColGreen, 1)
+		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 162, ColDim, 1)
+		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 174, ColDim, 1)
 		Hint = "UP/DOWN  AMOUNT   ENTER  ESC"
 		return
 	}
@@ -2070,9 +2072,9 @@ func controlsScreen(fb *render.FB) {
 		fb.FillRect(296, 38, 304, 38, ColDim)
 	}
 	if off+visible < rows {
-		fb.FillRect(296, 154, 304, 154, ColDim)
+		fb.FillRect(296, 152, 304, 152, ColDim)
 		fb.FillRect(297, 153, 303, 153, ColDim)
-		fb.FillRect(298, 152, 302, 152, ColDim)
+		fb.FillRect(298, 154, 302, 154, ColDim)
 	}
 	// legend under the list: three plain lines beat one crammed hint
 	lx, ly := 16, 162
