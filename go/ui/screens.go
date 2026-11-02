@@ -390,6 +390,22 @@ func marketScreen(fb *render.FB) {
 	fb.Text("HOLD "+itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 240, 197, ColYellow, 1)
 }
 
+// equipGroup is the shelf an item belongs on. The catalogue is one list of
+// fifteen things; a pilot looking for shields should not have to read it end to
+// end to find two of them.
+func equipGroup(id string) string {
+	switch id {
+	case "laserpulse", "laserbeam", "lasermilitary", "laserplasma",
+		"missile", "bomb", "mininglaser":
+		return "WEAPONS"
+	case "shieldboost1", "shieldboost2", "extraenergy":
+		return "SHIELDS"
+	case "largebay", "cargobay2", "escape", "galdrive", "dockcomp":
+		return "HULL AND DRIVE"
+	}
+	return "SYSTEMS"
+}
+
 func equipScreen(fb *render.FB) {
 	g := game.G
 	cmd := g.Cmd
@@ -401,29 +417,57 @@ func equipScreen(fb *render.FB) {
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
 	items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
 
-	// two columns: the catalogue outgrew a single list. The gutter has to be
-	// wider than a word space, or a row reads as one long line
-	const rows, colPitch, colW = 9, 154, 136
-	for i, it := range items {
-		col := i / rows
-		row := i % rows
+	// rows are shelves and things: a header carries no index, an item carries
+	// its place in the catalogue so the cursor still means something
+	type row struct {
+		head string
+		item int
+	}
+	var rows []row
+	for _, group := range []string{"WEAPONS", "SHIELDS", "HULL AND DRIVE", "SYSTEMS"} {
+		first := true
+		for i, it := range items {
+			if equipGroup(it.ID) != group {
+				continue
+			}
+			if first {
+				rows = append(rows, row{head: group, item: -1})
+				first = false
+			}
+			rows = append(rows, row{item: i})
+		}
+	}
+
+	// two columns, split down the middle of the shelf list
+	const colPitch, colW = 154, 136
+	perColumn := (len(rows) + 1) / 2
+	for r, rw := range rows {
+		col := r / perColumn
+		line := r % perColumn
 		x := 12 + col*colPitch
-		y := 32 + row*17
+		y := 30 + line*15
+		if rw.item < 0 {
+			fb.Text(lang.T(rw.head), x, y, render.RGB(0x3f6f8a), 1)
+			continue
+		}
+		it := items[rw.item]
+		i := rw.item
 		sel := S.Equip == i
 		if sel {
 			fb.FillRect(x-4, y-3, x+colW, y+8, render.RGB(0x12384f))
 		}
-		// the shop says why before it charges: a rig with no laser, a laser
-		// the hull cannot carry, something already bolted on
 		blocked := g.EquipBlocked(it.ID)
-		owned := blocked == "ALREADY FITTED" && g.EquipFitted(it.ID)
+		// the gun in the nose is fitted whatever the catalogue says: lasers do
+		// not live in the equipment flags, they replace one another
+		owned := blocked == "ALREADY FITTED" && (g.EquipFitted(it.ID) ||
+			galaxy.EquipByID(it.ID).Kind == galaxy.EquipLaser && cmd.Laser == it.Level)
 		c := ColText
 		switch {
 		case owned:
 			c = ColDim
 		case blocked != "":
-			c = render.RGB(0x6a7f8c) // available, but not to you yet
-		case S.Equip == i:
+			c = render.RGB(0x6a7f8c)
+		case sel:
 			c = ColYellow
 		}
 		name := it.Name
@@ -1202,7 +1246,7 @@ func OpenSettings() {
 // phrase has been typed, and rows are addressed by name so adding one cannot
 // silently shift the key handling.
 func settingsRows() []string {
-	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "COCKPIT"}
+	rows := []string{"LANGUAGE", "SOUND", "VOLUME", "AXIS SPEED", "COCKPIT"}
 	if lang.Cfg.TesterUnlocked {
 		rows = append(rows, "TESTER MODE")
 	}
@@ -1215,8 +1259,14 @@ func settingsScreen(fb *render.FB) {
 	if S.Settings >= len(rows) {
 		S.Settings = len(rows) - 1
 	}
+	// eight rows at twenty pixels do not fit above the hint line: tighten the
+	// pitch once the list grew past six
+	step := 20
+	if len(rows) > 6 {
+		step = 16
+	}
 	for i, name := range rows {
-		y := 34 + i*20
+		y := 32 + i*step
 		sel := S.Settings == i
 		if sel {
 			fb.FillRect(46, y-8, 304, y+11, render.RGB(0x12384f))
@@ -1249,6 +1299,10 @@ func settingsScreen(fb *render.FB) {
 				}
 				fb.FillRect(250+k*9, y-1, 256+k*9, y+6, c)
 			}
+		case "AXIS SPEED":
+			// a percentage, so the pilot can read it and say what he changed
+			pct := int(lang.Axis()*100 + 0.5)
+			fb.TextR(itoa(pct)+"%", 296, y, ColGreen, 1)
 		case "COCKPIT":
 			val := "ON"
 			if lang.Cfg.NoCockpit {
@@ -1302,6 +1356,22 @@ func settingsKey(k string) bool {
 				state = "OFF"
 			}
 			game.G.Message(lang.T("SOUND")+" "+lang.T(state), "info")
+		case "AXIS SPEED":
+			v := lang.Axis()
+			if k == "ArrowLeft" {
+				v -= 0.05
+			} else {
+				v += 0.05
+			}
+			if v < 0.33 {
+				v = 0.33
+			}
+			if v > 1 {
+				v = 1
+			}
+			lang.Cfg.AxisSpeed = v
+			lang.Save()
+			game.G.Message(lang.T("AXIS SPEED")+" "+itoa(int(v*100+0.5))+"%", "info")
 		case "VOLUME":
 			steps := []float64{0.2, 0.4, 0.6, 0.8, 1.0}
 			idx := 3
@@ -2339,7 +2409,11 @@ var helpPages = []helpPage{
 	{"FIGHTING", []string{
 		"{FIRE} FIRES THE LASERS.",
 		"{MISSILE} LAUNCHES A MISSILE AT THE CROSSHAIR.",
-		"{ECM} IS E.C.M. AND KILLS INCOMING MISSILES.",
+		"{ECM} IS E.C.M. - ELECTRONIC COUNTER-",
+		"MEASURES: IT JAMS THE GUIDANCE OF EVERY",
+		"MISSILE COMING AT YOU. YOUR OWN MISSILES",
+		"KEEP FLYING. IT COSTS ENERGY, AND IT IS",
+		"FITTED OR IT IS NOT: BUY IT AT A STATION.",
 		"{BOMB} IS THE ENERGY BOMB: EVERYTHING",
 		"CLOSE TO YOU DIES, INCLUDING YOUR SHIELDS.",
 		"",

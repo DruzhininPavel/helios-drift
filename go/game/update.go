@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"heliosdrift/galaxy"
+	"heliosdrift/lang"
 	"heliosdrift/render"
 )
 
@@ -50,13 +51,22 @@ func (g *Game) Update(dt float64) {
 
 	// ---- flight controls / docking computer
 	if g.Autopilot && g.AutopilotPath != nil {
+		// a fight starts, the computer lets go: it is not a way out of one
+		if g.InCombat() {
+			g.Autopilot = false
+			g.AutopilotPath = nil
+			g.Message("DOCKING COMPUTER OFF - UNDER FIRE", "bad")
+		}
+	}
+	if g.Autopilot && g.AutopilotPath != nil {
 		g.runAutopilot(dt)
 	} else {
+		axis := lang.Axis()
 		if g.In.Pitch != 0 {
-			p.Mat = p.Mat.Mul(render.RotX(g.In.Pitch * PitchRate * g.Ship().Pitch * dt))
+			p.Mat = p.Mat.Mul(render.RotX(g.In.Pitch * PitchRate * g.Ship().Pitch * axis * dt))
 		}
 		if g.In.Roll != 0 {
-			p.Mat = p.Mat.Mul(render.RotZ(-g.In.Roll * RollRate * g.Ship().Roll * dt))
+			p.Mat = p.Mat.Mul(render.RotZ(-g.In.Roll * RollRate * g.Ship().Roll * axis * dt))
 		}
 		// yaw did not exist in the 1984 flight model, so Classic ignores it
 		if g.In.Yaw != 0 {
@@ -64,7 +74,7 @@ func (g *Game) Update(dt float64) {
 				g.warnYaw()
 			} else {
 				// negative: a positive yaw input means "nose to the right"
-				p.Mat = p.Mat.Mul(render.RotY(-g.In.Yaw * YawRate * g.Ship().Yaw * dt))
+				p.Mat = p.Mat.Mul(render.RotY(-g.In.Yaw * YawRate * g.Ship().Yaw * axis * dt))
 			}
 		}
 		if g.In.Pitch != 0 || g.In.Roll != 0 || (!g.Classic() && g.In.Yaw != 0) {
@@ -182,7 +192,8 @@ func (g *Game) Update(dt float64) {
 				if g.TryDock() {
 					return
 				}
-			} else if dst < StationSize*1.02 {
+			} else if dst < StationSize*1.02 && !g.Autopilot {
+				// the computer is flying: it does not put the ship into the hull
 				g.LastDamageReason = "CRASHED INTO THE STATION"
 				g.PlayerDeath()
 				return
@@ -486,9 +497,9 @@ func (g *Game) updateEntities(dt float64) {
 			if e.Cooldown <= 0 && distP < 4000 && math.Abs(ax) < 0.15 && math.Abs(ay) < 0.15 {
 				// a pirate that fires twice a second and never hits is scenery:
 				// he shoots more often and lands more of it
-				e.Cooldown = e.FireRate * randRange(1.0, 1.9)
-				if randFloat() < math.Max(0.15, 0.66-distP/6800) {
-					dmg := randRange(1.8, 4.4)
+				e.Cooldown = e.FireRate * randRange(1.2, 2.2)
+				if randFloat() < math.Max(0.12, 0.62-distP/7000) {
+					dmg := randRange(1.5, 4.0)
 					if e.Type == "thargoid" {
 						dmg = randRange(6, 11)
 					}

@@ -49,6 +49,9 @@ type Quest struct {
 	NeedEquip []string
 	NeedLaser int
 	NeedRank  int
+	// EnsureSpawn puts the stage's ships in the system on arrival, even when the
+	// stage opens with a conversation: the talk explains, it does not spawn.
+	EnsureSpawn bool
 }
 
 // BriefVariant is an alternative briefing, first match wins.
@@ -205,9 +208,11 @@ var campaignQuests = []Quest{
 	{
 		Title: "THE HIVE",
 		Kind:  QuestKill, Tag: "MOTHER", Spawn: "thargoid", Count: 1, Pay: 25000,
-		Talk: "c7_hive",
-		// something that big does not care about a pulse laser
-		NeedLaser: 2, NeedEquip: []string{"shieldboost1"},
+		Talk:        "c7_hive",
+		EnsureSpawn: true,
+		// something that big does not care about a pulse laser, and a pilot
+		// without boosted shields has no business in the same system
+		NeedLaser: 1, NeedEquip: []string{"shieldboost1"},
 		Brief: []string{
 			"THE ARTEFACT IN THAT CONVOY WAS NOT",
 			"CARGO. IT WAS A CALL, AND SOMETHING",
@@ -238,6 +243,10 @@ type CampaignState struct {
 	Active bool `json:"active"`
 	Target int  `json:"target"`
 	Galaxy int  `json:"galaxy"`
+	// Spawned says the stage's ships have been put into the world once: a
+	// system rebuild (docking and launching again) loses them, and a stage that
+	// only spawns from a conversation could then never be finished.
+	Spawned bool `json:"spawned,omitempty"`
 }
 
 // CampaignTotal is the number of stages.
@@ -387,6 +396,16 @@ func (g *Game) spawnQuestGroup(tag string) {
 
 // spawnCampaignGroup puts the stage's opposition into the system.
 func (g *Game) spawnCampaignGroup(q Quest) {
+	// one group per stage: the arrival and the conversation both want to spawn
+	// the hive, and two motherships is not a boss fight
+	if g.World != nil {
+		for _, e := range g.World.Entities {
+			if e.CampaignTag == q.Tag && !e.Dead {
+				return
+			}
+		}
+	}
+	g.Cmd.Campaign.Spawned = true
 	for i := 0; i < q.Count; i++ {
 		e := g.spawnAtDistance(q.Spawn, randRange(3200, 5200), "pirate")
 		e.CampaignTag = q.Tag
@@ -402,8 +421,8 @@ func (g *Game) spawnCampaignGroup(q Quest) {
 			e.Speed = 4
 		case "MOTHER":
 			e.Radius = 62
-			e.Energy, e.MaxEnergy = 700, 700
-			e.Shield, e.MaxShield = 110, 110
+			e.Energy, e.MaxEnergy = 480, 480
+			e.Shield, e.MaxShield = 80, 80
 			if mesh := models.Get("mothership"); mesh != nil {
 				e.Mesh = mesh
 			}
@@ -426,7 +445,9 @@ func (g *Game) spawnCampaignGroup(q Quest) {
 		}
 	}
 	if q.Tag == "MOTHER" {
-		for i := 0; i < 4; i++ {
+		// two drones, not four: the mothership is the fight, the swarm was a
+		// wall in front of it
+		for i := 0; i < 2; i++ {
 			g.World.Entities = append(g.World.Entities, g.spawnAtDistance("thargon", randRange(3000, 5000), "thargoid"))
 		}
 	}
@@ -442,6 +463,7 @@ func (g *Game) advanceCampaign() {
 		return
 	}
 	c.Active = false
+	c.Spawned = false
 	c.Stage++
 	if c.Stage >= CampaignTotal() {
 		g.Message("HELIOS COMBINE IS FINISHED", "good")
@@ -462,6 +484,7 @@ func (g *Game) campaignKill(tag string) {
 		return
 	}
 	c.Active = false
+	c.Spawned = false
 	c.Stage++
 	if q.Pay > 0 {
 		g.Cmd.Cash += float64(q.Pay)
@@ -540,6 +563,7 @@ func (g *Game) campaignDock() {
 	}
 	g.Cmd.Cash += float64(q.Pay)
 	c.Active = false
+	c.Spawned = false
 	c.Stage++
 	g.Message("DELIVERED  +"+itoa(q.Pay)+" CR", "good")
 }

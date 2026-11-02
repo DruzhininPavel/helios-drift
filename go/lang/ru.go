@@ -4,7 +4,17 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"CLEAR RECORD": "СНЯТЬ РОЗЫСК",
+	"{ECM} IS E.C.M. - ELECTRONIC COUNTER-":     "{ECM} - ЭТО E.C.M., ЭЛЕКТРОННОЕ",
+	"MEASURES: IT JAMS THE GUIDANCE OF EVERY":   "ПРОТИВОДЕЙСТВИЕ: ГЛУШИТ НАВЕДЕНИЕ ЛЮБОЙ",
+	"MISSILE COMING AT YOU. YOUR OWN MISSILES":  "РАКЕТЫ, ЛЕТЯЩЕЙ В ТЕБЯ. ТВОИ РАКЕТЫ",
+	"KEEP FLYING. IT COSTS ENERGY, AND IT IS":   "ЛЕТЯТ ДАЛЬШЕ. ТРАТИТ ЭНЕРГИЮ И СТАВИТСЯ",
+	"FITTED OR IT IS NOT: BUY IT AT A STATION.": "ТОЛЬКО НА СТАНЦИИ, КАК ОБОРУДОВАНИЕ.",
+	"E C M":      "E.C.M.",
+	"AXIS SPEED": "СКОРОСТЬ ОСЕЙ",
+	"TOO FAR FOR THE DOCKING COMPUTER - FLY WITHIN ": "ДАЛЕКО ДЛЯ СТЫКОВОЧНОГО КОМПЬЮТЕРА - ПОДЛЕТИ БЛИЖЕ ",
+	" OF THE STATION":                   " ДО СТАНЦИИ",
+	"DOCKING COMPUTER OFF - UNDER FIRE": "СТЫКОВОЧНЫЙ КОМПЬЮТЕР ОТКЛЮЧЁН - ОБСТРЕЛ",
+	"CLEAR RECORD":                      "СНЯТЬ РОЗЫСК",
 	"NOBODY HERE CAN HELP - TRY A HIGH TECH OR CORPORATE STATION":                        "ЗДЕСЬ НЕ ПОМОГУТ - ИЩИ ТЕХУРОВЕНЬ 10+ ИЛИ КОРПОРАТИВНУЮ СТАНЦИЮ",
 	"THE CABINET STAYS SHUT AND THE FORM STAYS BLANK.":                                   "ШКАФ ОСТАЁТСЯ ЗАКРЫТ, БЛАНК - ПУСТЫМ.",
 	"THE JOB IS STILL ON THE BOARD. COME BACK WHEN YOU HAVE SOMETHING HE CANNOT REFUSE.": "ЗАДАНИЕ ОСТАЁТСЯ. ВЕРНИСЬ, КОГДА БУДЕТ ТО, ЧЕМУ ОН НЕ СМОЖЕТ ОТКАЗАТЬ.",

@@ -37,7 +37,16 @@ func (t *Trader) TalkChoice(g *game.Game) int {
 	vis := g.VisibleOptions(n)
 	best, bestDepth := 0, 99
 	for i, idx := range vis {
-		if d := spawnDepth(n.Options[idx].Next, 6); d < bestDepth {
+		opt := n.Options[idx]
+		// a trader does not take an answer that puts a bounty on him: the fight
+		// it leads to is the cheap one, the police afterwards are not
+		penalty := 0
+		for _, e := range opt.Do {
+			if e.Kind == game.FxWanted {
+				penalty = 4
+			}
+		}
+		if d := spawnDepth(opt.Next, 6) + penalty; d < bestDepth {
 			best, bestDepth = i, d
 		}
 	}
@@ -262,6 +271,13 @@ func (t *Trader) flying(g *game.Game, frame int) ([]Event, game.InputState) {
 			return ev, game.InputState{}
 		}
 		if !g.Autopilot {
+			// a station further than the computer's range is flown by hand,
+			// the way a pilot without one would
+			if st := g.World.Station; st != nil {
+				if st.Pos.Sub(g.Player.Pos).Len() > game.DockRange {
+					return ev, t.safety(g, t.dockRun(g, st))
+				}
+			}
 			ev = append(ev, Event{Kind: "autopilot"})
 		}
 		return ev, game.InputState{}
@@ -518,6 +534,11 @@ func (t *Trader) safety(g *game.Game, in game.InputState) game.InputState {
 // better gun first, then shields, then the rest.
 func (t *Trader) upgrade(g *game.Game) []Event {
 	var ev []Event
+	// a record is a tax on everything else: buy it off where the station can
+	if g.Cmd.Legal > 0 && g.PardonAvailable() &&
+		g.Cmd.Cash > float64(g.PardonPrice())+1500 {
+		return append(ev, Event{Kind: "pardon"})
+	}
 	c := &g.Cmd
 	reserve := 300.0
 	buy := func(id string, price float64) {

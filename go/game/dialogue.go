@@ -195,11 +195,15 @@ func (g *Game) apply(e Effect) {
 	case FxQuest:
 		g.advanceCampaign()
 	case FxSpawn:
-		if e.Key == "PIRATES" {
-			// the four who were waiting for the shields to drop. One of them
+		if e.Key == "PIRATES" || e.Key == "ESCORT" {
+			// the ones who were waiting for the shields to drop. One of them
 			// takes payment: if the pilot paid the ambush off in chapter two,
 			// that one turns away instead of shooting.
-			g.SpawnPirates(4)
+			n := 4
+			if e.Key == "ESCORT" {
+				n = 2 // the boss brings drones: two escorts, not four
+			}
+			g.SpawnPirates(n)
 			if g.Cmd.Flags["PAID_PERMIT"] {
 				for i := len(g.World.Entities) - 1; i >= 0; i-- {
 					e := g.World.Entities[i]

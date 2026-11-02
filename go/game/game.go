@@ -58,26 +58,26 @@ type ShipDef struct {
 }
 
 var Ships = map[string]ShipDef{
-	"sidewinder":  {"sidewinder", 26, 380, 70, 12, 5, 2, 1, 0.55, 1.7, "pirate"},
-	"krait":       {"krait", 27, 340, 120, 22, 10, 3, 1, 0.5, 1.6, "pirate"},
-	"mamba":       {"mamba", 28, 420, 105, 24, 15, 3, 1, 0.45, 1.8, "pirate"},
+	"sidewinder":  {"sidewinder", 26, 380, 34, 0, 5, 2, 1, 0.55, 1.7, "pirate"},
+	"krait":       {"krait", 27, 340, 60, 0, 10, 3, 1, 0.5, 1.6, "pirate"},
+	"mamba":       {"mamba", 28, 420, 48, 10, 15, 3, 1, 0.45, 1.8, "pirate"},
 	"adder":       {"adder", 24, 260, 40, 0, 8, 4, 0, 0.8, 1.3, "trader"},
-	"cobra3":      {"cobra3", 34, 350, 150, 34, 20, 6, 1, 0.5, 1.6, "pirate"},
+	"cobra3":      {"cobra3", 34, 350, 80, 20, 20, 6, 1, 0.5, 1.6, "pirate"},
 	"python":      {"python", 46, 200, 140, 30, 30, 12, 1, 0.7, 1.0, "trader"},
-	"viper":       {"viper", 28, 480, 120, 32, 15, 2, 1, 0.4, 2.0, "police"},
-	"asp":         {"asp", 32, 400, 180, 38, 40, 4, 2, 0.4, 1.8, "pirate"},
-	"moray":       {"moray", 24, 320, 95, 16, 12, 3, 1, 0.6, 1.5, "pirate"},
-	"ferdelance":  {"ferdelance", 30, 480, 190, 44, 40, 4, 2, 0.35, 2.1, "pirate"},
-	"thargoid":    {"thargoid", 36, 400, 380, 56, 100, 0, 2, 0.35, 1.6, "thargoid"},
+	"viper":       {"viper", 28, 480, 70, 25, 15, 2, 1, 0.4, 2.0, "police"},
+	"asp":         {"asp", 32, 400, 100, 25, 40, 4, 2, 0.4, 1.8, "pirate"},
+	"moray":       {"moray", 24, 320, 44, 0, 12, 3, 1, 0.6, 1.5, "pirate"},
+	"ferdelance":  {"ferdelance", 30, 480, 100, 30, 40, 4, 2, 0.35, 2.1, "pirate"},
+	"thargoid":    {"thargoid", 36, 400, 260, 40, 100, 0, 2, 0.35, 1.6, "thargoid"},
 	"shuttle":     {"shuttle", 22, 200, 26, 0, 0, 2, 0, 1.0, 1.0, "trader"},
-	"gecko":       {"gecko", 26, 380, 70, 12, 8, 2, 1, 0.55, 1.7, "pirate"},
-	"cobra1":      {"cobra1", 30, 340, 110, 20, 15, 5, 1, 0.55, 1.6, "pirate"},
+	"gecko":       {"gecko", 26, 380, 34, 0, 8, 2, 1, 0.55, 1.7, "pirate"},
+	"cobra1":      {"cobra1", 30, 340, 55, 10, 15, 5, 1, 0.55, 1.6, "pirate"},
 	"worm":        {"worm", 24, 220, 30, 0, 4, 4, 0, 0.9, 1.2, "trader"},
-	"boa":         {"boa", 44, 180, 300, 44, 30, 14, 1, 0.8, 0.9, "trader"},
-	"anaconda":    {"anaconda", 56, 160, 400, 56, 50, 20, 2, 0.85, 0.8, "trader"},
+	"boa":         {"boa", 44, 180, 180, 30, 30, 14, 1, 0.8, 0.9, "trader"},
+	"anaconda":    {"anaconda", 56, 160, 250, 40, 50, 20, 2, 0.85, 0.8, "trader"},
 	"transporter": {"transporter", 26, 200, 40, 0, 0, 4, 0, 1.0, 1.1, "trader"},
-	"thargon":     {"thargon", 12, 420, 18, 4, 5, 0, 1, 0.35, 2.4, "thargoid"},
-	"constrictor": {"constrictor", 34, 500, 210, 42, 0, 0, 2, 0.4, 2.0, "pirate"},
+	"thargon":     {"thargon", 12, 420, 14, 0, 5, 0, 1, 0.35, 2.4, "thargoid"},
+	"constrictor": {"constrictor", 34, 500, 120, 30, 0, 0, 2, 0.4, 2.0, "pirate"},
 }
 
 type Message struct {
@@ -243,6 +243,9 @@ type Approach struct {
 	Dur     float64
 	From    render.Vec3
 	FromMat render.Mat3
+	// Through is the gate the run bends through: a straight line from wherever
+	// the pilot pressed the button clips the hull.
+	Through render.Vec3
 }
 
 type Hyper struct {
@@ -398,6 +401,15 @@ func makeDust() []Dust {
 
 // EnterSystem builds the in-system scene.
 func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misjump bool) {
+	// leaving the system a stage is set in loses what the stage spawned, so the
+	// stage has to be allowed to speak again when the pilot comes back
+	if c := &g.Cmd.Campaign; c.Active {
+		if q := QuestAt(c.Stage); q.Talk != "" && c.Target != systemIndex%256 {
+			if g.Cmd.Flags != nil {
+				delete(g.Cmd.Flags, "SPOKEN_"+q.Tag)
+			}
+		}
+	}
 	gal := galaxy.Get(g.Cmd.Galaxy)
 	sys := gal.Systems[(systemIndex%256+256)%256]
 	g.Cmd.System = sys.ID
@@ -452,6 +464,24 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 		}
 	}
 	g.World = w
+	// a stage that keeps its target in the sky puts it back: launching from the
+	// station in the same system used to wipe the hive out of existence
+	if c := &g.Cmd.Campaign; c.Active && c.Target == sys.ID && c.Spawned {
+		// the stage's ships were in the world once and the rebuild threw them
+		// away: put them back, or the chapter cannot be finished
+		if q := QuestAt(c.Stage); q.Kind == QuestKill {
+			missing := true
+			for _, e := range g.World.Entities {
+				if e.CampaignTag == q.Tag && !e.Dead {
+					missing = false
+					break
+				}
+			}
+			if missing {
+				g.spawnCampaignGroup(q)
+			}
+		}
+	}
 	speed := 260.0
 	if mode == "launch" {
 		speed = 90
@@ -1286,6 +1316,41 @@ func (g *Game) autopilotState() (aim render.Vec3, inLine bool, dist float64, loc
 	return
 }
 
+// InCombat reports whether anything hostile is close enough to matter: the
+// docking computer is a convenience for the last stretch, not a way out of a
+// fight.
+func (g *Game) InCombat() bool {
+	if g.World == nil {
+		return false
+	}
+	if g.PoliceState == "fight" {
+		return true
+	}
+	for _, e := range g.World.Entities {
+		if e == nil || e.Dead || !e.Hostile {
+			continue
+		}
+		if e.Pos.Sub(g.Player.Pos).Len() < 2000 {
+			return true // close enough to be shooting at you
+		}
+	}
+	return false
+}
+
+// DockRange is how close the pilot has to be before the docking computer will
+// take over: fly the approach yourself, then hand it the last stretch.
+const DockRange = 8000.0
+
+// DockGate is the point outside the mouth a pilot aims for before handing the
+// ship over: on the axis, clear of the hull.
+func (g *Game) DockGate() (render.Vec3, bool) {
+	if g.World == nil || g.World.Station == nil {
+		return render.Vec3{}, false
+	}
+	st := g.World.Station
+	return st.Pos.Add(st.Mat.Col(2).Mul(StationSize + 1400)), true
+}
+
 func (g *Game) ToggleAutopilot() {
 	if !g.Cmd.Equip["dockcomp"] {
 		g.Message("DOCKING COMPUTER NOT FITTED", "bad")
@@ -1301,15 +1366,29 @@ func (g *Game) ToggleAutopilot() {
 		g.Message("MANUAL CONTROL", "info")
 		return
 	}
-	aim, _, dist, local, normal, gate := g.autopilotState()
-	_ = aim
-	if dist > 3000 || local[2] < 0 || math.Hypot(local[0], local[1]) > 300 {
-		g.Player.Pos = gate
-		g.Player.Speed = 70
-		g.Player.Mat = render.LookMatrix(normal.Mul(-1))
+	_, _, dist, _, _, _ := g.autopilotState()
+	// it used to put the ship at the gate from anywhere in the system, which is
+	// not a docking computer, it is a teleport
+	if dist > DockRange {
+		g.Message("TOO FAR FOR THE DOCKING COMPUTER - FLY WITHIN "+
+			itoa(int(DockRange))+" OF THE STATION", "bad")
+		return
+	}
+	// and it does not work while somebody is shooting at you
+	if g.InCombat() {
+		g.Message("DOCKING COMPUTER OFF - UNDER FIRE", "bad")
+		return
 	}
 	g.Autopilot = true
-	g.AutopilotPath = &Approach{T: 0, Dur: 6.0, From: g.Player.Pos, FromMat: g.Player.Mat}
+	dur := dist / 320
+	if dur < 2.5 {
+		dur = 2.5
+	}
+	if dur > 9 {
+		dur = 9
+	}
+	gate, _ := g.DockGate()
+	g.AutopilotPath = &Approach{T: 0, Dur: dur, From: g.Player.Pos, FromMat: g.Player.Mat, Through: gate}
 	g.Message("DOCKING COMPUTER ON", "info")
 }
 
@@ -1326,13 +1405,33 @@ func (g *Game) runAutopilot(dt float64) {
 	}
 	normal := st.Mat.Col(2)
 	end := st.Pos.Add(normal.Mul(StationSize - MouthDepth*0.5))
+	// two legs, and neither of them cuts the hull: first swing round to the
+	// axis at the distance the ship already has, then run straight in
+	from := path.From
+	radius := from.Sub(st.Pos).Len()
+	axis := st.Pos.Add(normal.Mul(radius))
 	old := p.Pos
-	p.Pos = render.V3(
-		path.From[0]+(end[0]-path.From[0])*k,
-		path.From[1]+(end[1]-path.From[1])*k,
-		path.From[2]+(end[2]-path.From[2])*k,
-	)
-	p.Speed = old.Sub(p.Pos).Len() / math.Max(dt, 0.0001)
+	switch {
+	case k < 0.5:
+		f := smoothstep(k * 2)
+		p.Pos = render.V3(
+			from[0]+(axis[0]-from[0])*f,
+			from[1]+(axis[1]-from[1])*f,
+			from[2]+(axis[2]-from[2])*f,
+		)
+	default:
+		f := smoothstep((k - 0.5) * 2)
+		p.Pos = render.V3(
+			axis[0]+(end[0]-axis[0])*f,
+			axis[1]+(end[1]-axis[1])*f,
+			axis[2]+(end[2]-axis[2])*f,
+		)
+	}
+	speed := old.Sub(p.Pos).Len() / math.Max(dt, 0.0001)
+	if max := g.Ship().Speed; speed > max {
+		speed = max
+	}
+	p.Speed = speed
 	target := render.LookMatrix(normal.Mul(-1))
 	var m render.Mat3
 	for i := 0; i < 3; i++ {

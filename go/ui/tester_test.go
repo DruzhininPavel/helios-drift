@@ -90,10 +90,14 @@ func TestSettingsFitWithTesterRow(t *testing.T) {
 	defer func() { lang.Cfg.TesterUnlocked = false }()
 	lang.Cfg.TesterUnlocked = true
 	n := len(settingsRows())
-	if n != 7 {
-		t.Fatalf("%d rows with the tester switch, want 7", n)
+	if n != 8 {
+		t.Fatalf("%d rows with the tester switch, want 8", n)
 	}
-	last := 34 + (n-1)*20
+	step := 20
+	if n > 6 {
+		step = 16
+	}
+	last := 32 + (n-1)*step
 	if last+11 > 172 {
 		t.Fatalf("last row ends at %d, the hint line is at 176", last+11)
 	}

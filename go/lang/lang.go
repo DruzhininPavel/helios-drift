@@ -20,6 +20,9 @@ type Config struct {
 	// NoCockpit hides the canopy frame. Stored inverted so that a config
 	// written before the setting existed keeps the cockpit on.
 	NoCockpit bool `json:"no_cockpit,omitempty"`
+	// AxisSpeed scales pitch, roll and yaw: the hulls turned too sharply for a
+	// hand on the stick, so the top rate is 1.0 and the default is 0.6.
+	AxisSpeed float64 `json:"axis_speed,omitempty"`
 	// TesterUnlocked is set by typing the phrase in the settings screen; the
 	// row it reveals switches TesterMode, which is what actually lets the
 	// cheat keys work. Both live in the config so a tester keeps them.
@@ -72,7 +75,20 @@ func Save() bool {
 	return os.WriteFile(configPath(), raw, 0o644) == nil
 }
 
-// Set switches the language ("en" or "ru").
+// Axis returns the turn scale, with the default for a config that predates it.
+func Axis() float64 {
+	if Cfg.AxisSpeed <= 0 {
+		return 0.6
+	}
+	if Cfg.AxisSpeed < 0.33 {
+		return 0.33
+	}
+	if Cfg.AxisSpeed > 1 {
+		return 1
+	}
+	return Cfg.AxisSpeed
+}
+
 // Set switches the language in memory. Use SetSaved to persist it.
 func Set(l string) {
 	if l != "ru" && l != "en" {

@@ -7,6 +7,7 @@ package bot
 import (
 	"encoding/json"
 	"fmt"
+	"heliosdrift/lang"
 	"os"
 
 	"heliosdrift/galaxy"
@@ -137,6 +138,9 @@ func Run(g *game.Game, frames int, pol Policy) *Script {
 
 // RunWith is Run with options.
 func RunWith(g *game.Game, frames int, pol Policy, opt Options) *Script {
+	// the bots fly at the sharpest handling the settings allow: they have no
+	// hand on a stick, and the calmer default is a feel choice for the pilot
+	lang.Cfg.AxisSpeed = 1
 	sc := &Script{Seed: game.Seed(), Mode: g.Cmd.Mode, Frames: frames}
 	sc.Report = Report{Policy: pol.Name(), Steps: map[string]int{}, States: map[string]int{},
 		Phases: map[string]int{}, CashStart: g.Cmd.Cash}
@@ -315,6 +319,8 @@ func applyEvent(g *game.Game, e Event) {
 		g.AcceptOffer(e.A)
 	case "equip":
 		g.BuyEquipment(equipID(e.A))
+	case "pardon":
+		g.BuyPardon()
 	}
 }
 

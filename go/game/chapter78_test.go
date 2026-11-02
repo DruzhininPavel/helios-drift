@@ -40,14 +40,15 @@ func TestChapterSevenShields(t *testing.T) {
 	if countTag(g, "MOTHER") != 1 {
 		t.Fatal("the mothership is not in the sky")
 	}
-	pirates := 0
+	// two escorts, the drones come with the mothership itself
+	escort := 0
 	for _, e := range g.World.Entities {
 		if e.Behaviour == "pirate" {
-			pirates++
+			escort++
 		}
 	}
-	if pirates < 4 {
-		t.Fatalf("%d pirates came for the fallen shields, want four", pirates)
+	if escort < 2 {
+		t.Fatalf("%d pirates came for the fallen shields, want at least the two escorts", escort)
 	}
 	// with the shields cut, damage lands
 	for _, e := range g.World.Entities {

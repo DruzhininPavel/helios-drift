@@ -697,7 +697,8 @@ func init() {
 				"THE FIELD GOES DARK. THE MOTHERSHIP IS NAKED AND THE STATION IS NAKED WITH IT.",
 				"FOUR PIRATES WERE WAITING FOR EXACTLY THIS.",
 			},
-			OnEnter: []Effect{{Kind: FxSpawn, Key: "MOTHER"}, {Kind: FxSpawn, Key: "PIRATES"}},
+			// two escorts, not four: the boss is the fight
+			OnEnter: []Effect{{Kind: FxSpawn, Key: "MOTHER"}, {Kind: FxSpawn, Key: "ESCORT"}},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
 		&Node{

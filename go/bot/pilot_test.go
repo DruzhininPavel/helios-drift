@@ -34,7 +34,9 @@ func TestPilotPointsAtTarget(t *testing.T) {
 		rad := deg * math.Pi / 180
 		want := fwd.Mul(math.Cos(rad)).Add(side.Mul(math.Sin(rad))).Norm()
 		before := angleTo(g, want)
-		for i := 0; i < 300; i++ {
+		// ten seconds: the nose is deliberately calmer than it used to be, so
+		// a target behind the ship takes longer to swing round
+		for i := 0; i < 900; i++ {
 			g.In = p.Aim(g, want)
 			g.Update(DT)
 		}
@@ -55,7 +57,9 @@ func TestPilotLevelsTheHorizon(t *testing.T) {
 		p.LevelGain = gain
 		fwd := g.Player.Mat.Col(2).Mul(-1)
 		trace := make([]float64, 0, 8)
-		for i := 0; i < 300; i++ {
+		// ten seconds: the nose is deliberately calmer than it used to be, so
+		// a target behind the ship takes longer to swing round
+		for i := 0; i < 900; i++ {
 			g.In = p.Aim(g, fwd)
 			g.Update(DT)
 			if i%40 == 0 {

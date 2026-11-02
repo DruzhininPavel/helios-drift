@@ -95,8 +95,8 @@ func TestSettingsNavigation(t *testing.T) {
 		t.Fatalf("up -> %d, want 0", S.Settings)
 	}
 	Key("ArrowUp")
-	if S.Settings != 5 {
-		t.Fatalf("up from first -> %d, want 5 (wrap)", S.Settings)
+	if want := len(settingsRows()) - 1; S.Settings != want {
+		t.Fatalf("up from first -> %d, want %d (wrap)", S.Settings, want)
 	}
 }
 
@@ -170,7 +170,7 @@ func TestControlsScreen(t *testing.T) {
 	newTitle()
 	game.G.State = "docked"
 	game.G.Screen = "settings"
-	S.Settings = 4
+	S.Settings = rowIndex("CONTROLS")
 
 	Key("Enter")
 	if game.G.Screen != "controls" {
@@ -290,7 +290,7 @@ func TestCampaignScreen(t *testing.T) {
 func TestPadTestReachable(t *testing.T) {
 	newTitle()
 	OpenSettings()
-	S.Settings = 4 // CONTROLS
+	S.Settings = rowIndex("CONTROLS")
 	Key("Enter")
 	if game.G.Screen != "controls" {
 		t.Fatalf("screen = %q, want controls", game.G.Screen)
@@ -364,4 +364,14 @@ func TestTitleMenuIsTranslatedAndFits(t *testing.T) {
 	if top < 100 {
 		t.Errorf("menu starts at %d, it would sit on the ship", top)
 	}
+}
+
+// rowIndex finds a settings row by name, so adding one does not break tests.
+func rowIndex(name string) int {
+	for i, r := range settingsRows() {
+		if r == name {
+			return i
+		}
+	}
+	return -1
 }

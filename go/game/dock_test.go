@@ -67,9 +67,13 @@ func TestAutopilotDocks(t *testing.T) {
 	g.Cmd.Equip["dockcomp"] = true
 	g.EnterSystem(g.Cmd.System, "arrive", 9000, false)
 	st := g.World.Station
-	g.Player.Pos = st.Pos.Add(render.V3(600, 200, 3800))
+	// the computer only takes the last stretch: fly the approach first
+	g.Player.Pos = st.Pos.Add(render.V3(600, 200, 2200))
 	g.Player.Speed = 200
 	g.ToggleAutopilot()
+	if !g.Autopilot {
+		t.Fatalf("the computer refused a station 2.2k away")
+	}
 	for i := 0; i < 60*90; i++ {
 		if g.State == "docked" {
 			return
@@ -106,4 +110,53 @@ func TestDockOnlyInsideShaft(t *testing.T) {
 	if g.State == "flight" {
 		t.Fatal("did not dock once inside the shaft")
 	}
+}
+
+// The docking computer is not a way out of anywhere: it needs the station near
+// and nobody shooting.
+func TestDockingComputerRules(t *testing.T) {
+	setup := func() *Game {
+		g := New()
+		g.NewGame("RULES")
+		g.Cmd.Equip["dockcomp"] = true
+		g.EnterSystem(g.Cmd.System, "arrive", 9000, false)
+		return g
+	}
+	t.Run("too far", func(t *testing.T) {
+		g := setup()
+		st := g.World.Station
+		g.Player.Pos = st.Pos.Add(render.V3(0, 0, DockRange+2000))
+		g.ToggleAutopilot()
+		if g.Autopilot {
+			t.Fatal("the computer took over from across the system")
+		}
+	})
+	t.Run("under fire", func(t *testing.T) {
+		g := setup()
+		st := g.World.Station
+		g.Player.Pos = st.Pos.Add(render.V3(0, 0, 1800))
+		e := g.spawnAtDistance("krait", 900, "pirate")
+		e.Hostile = true
+		g.World.Entities = append(g.World.Entities, e)
+		g.ToggleAutopilot()
+		if g.Autopilot {
+			t.Fatal("the computer worked while a pirate was on the tail")
+		}
+	})
+	t.Run("released when the shooting starts", func(t *testing.T) {
+		g := setup()
+		st := g.World.Station
+		g.Player.Pos = st.Pos.Add(render.V3(0, 0, 1800))
+		g.ToggleAutopilot()
+		if !g.Autopilot {
+			t.Fatal("the computer refused a clean approach")
+		}
+		e := g.spawnAtDistance("krait", 900, "pirate")
+		e.Hostile = true
+		g.World.Entities = append(g.World.Entities, e)
+		g.Update(1.0 / 60.0)
+		if g.Autopilot {
+			t.Fatal("the computer kept flying under fire")
+		}
+	})
 }
