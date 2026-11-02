@@ -98,8 +98,15 @@ func TestShootEveryScreen(t *testing.T) {
 	shot("11-status")
 	g.Screen = "log"
 	shot("12-log")
-	g.Screen = "journal"
-	shot("13-journal")
+	g.Cmd.Flags["HAS_SEAL"] = true
+	g.Cmd.Flags["PAID_PERMIT"] = true
+	g.Screen = "diary"
+	S.Diary = 0
+	S.DiaryOpen = false
+	shot("13-diary")
+	S.DiaryOpen = true
+	shot("13-diary-page")
+	S.DiaryOpen = false
 	g.Screen = "slots"
 	shot("14-slots")
 	for i := range helpPages {

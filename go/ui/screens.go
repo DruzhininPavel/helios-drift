@@ -135,24 +135,21 @@ func stationMenu(fb *render.FB) {
 	fb.HLine(16, 150, 150, render.RGB(0x1b3348))
 	if g.World != nil {
 		sys := g.World.Sys
-		drawData(fb, sys.Name, 16, 155, ColYellow)
-		fb.Text(lang.T(galaxy.EconomyNames[sys.Economy]), 16, 166, ColDim, 1)
-		fb.Text(lang.T(galaxy.GovNames[sys.Government]), 16, 173, ColDim, 1)
+		drawData(fb, sys.Name, 16, 154, ColYellow)
+		fb.Text(lang.T(galaxy.EconomyNames[sys.Economy]), 16, 165, ColDim, 1)
+		fb.Text(lang.T(galaxy.GovNames[sys.Government]), 16, 174, ColDim, 1)
 	}
 
 	// right: services
 	plate(fb, 168, 16, 144, 168, "STATION SERVICES")
 	items := menuItems()
+	// the last row has to end above the divider at 150: nine rows at fourteen
+	// pixels put it exactly on the rule
 	step := 16
-	switch {
-	case len(items) > 10:
-		step = 11
-	case len(items) > 9:
-		step = 12
-	case len(items) > 8:
-		step = 14
-	case len(items) > 7:
-		step = 15
+	if n := len(items); n > 1 {
+		if fit := 108 / (n - 1); fit < step {
+			step = fit
+		}
 	}
 	for i, it := range items {
 		y := 32 + i*step
@@ -372,12 +369,14 @@ func marketScreen(fb *render.FB) {
 		}
 		// full width: a narrower box left the ends of the rows sticking out from
 		// under its borders, cut mid-word
-		fb.FillRect(6, 124, 313, 182, render.RGB(0x08131f))
-		fb.Rect(6, 124, 313, 182, ColYellow)
-		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 132, ColYellow, 1)
-		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 144, ColGreen, 1)
-		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 156, ColDim, 1)
-		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 168, ColDim, 1)
+		// the rows are twelve pixels apart from 44, so the box starts on a gap:
+		// at 124 it sliced the row above it in half
+		fb.FillRect(6, 128, 313, 184, render.RGB(0x08131f))
+		fb.Rect(6, 128, 313, 184, ColYellow)
+		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 136, ColYellow, 1)
+		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 148, ColGreen, 1)
+		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 160, ColDim, 1)
+		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 172, ColDim, 1)
 		Hint = "UP/DOWN  AMOUNT   ENTER  ESC"
 		return
 	}
@@ -1332,10 +1331,10 @@ func settingsScreen(fb *render.FB) {
 			fb.TextR(">", 296, y, ColGreen, 1)
 		}
 	}
-	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 172, ColDim, 1)
+	fb.TextC("SHIFT+M - SOUND ON/OFF", 160, 167, ColDim, 1)
 	// the build belongs where you go looking for it, not over the play field -
 	// and not across the panel's bottom frame
-	fb.TextC(game.Version, 160, 178, render.RGB(0x24414f), 1)
+	fb.TextC(game.Version, 160, 176, render.RGB(0x24414f), 1)
 	Hint = "UP/DOWN  LEFT/RIGHT  ENTER  ESC"
 }
 
@@ -2066,10 +2065,14 @@ func controlsScreen(fb *render.FB) {
 		fb.TextR(input.PadDesc(a), 306, y, ColGreen, 1)
 	}
 	if off > 0 {
-		fb.Text("^", 296, 36, ColDim, 1)
+		fb.FillRect(298, 36, 302, 36, ColDim)
+		fb.FillRect(297, 37, 303, 37, ColDim)
+		fb.FillRect(296, 38, 304, 38, ColDim)
 	}
 	if off+visible < rows {
-		fb.Text("v", 296, 152, ColDim, 1)
+		fb.FillRect(296, 154, 304, 154, ColDim)
+		fb.FillRect(297, 153, 303, 153, ColDim)
+		fb.FillRect(298, 152, 302, 152, ColDim)
 	}
 	// legend under the list: three plain lines beat one crammed hint
 	lx, ly := 16, 162
@@ -2734,7 +2737,7 @@ func logVisible() []game.LogEntry {
 
 func logScreen(fb *render.FB) {
 	g := game.G
-	plate(fb, 6, 14, 310, 190, "LOG")
+	plate(fb, 6, 16, 310, 186, "LOG")
 	// filter tabs
 	x := 12
 	for i, name := range logFilters {
@@ -2823,7 +2826,7 @@ func logScreen(fb *render.FB) {
 // nothing to do about it. No buttons, no actions - that is deliberate.
 func closingScreen(fb *render.FB) {
 	g := game.G
-	plate(fb, 6, 14, 310, 190, lang.T("STATIONS TO BE CLOSED"))
+	plate(fb, 6, 16, 310, 188, lang.T("STATIONS TO BE CLOSED"))
 	list := g.ClosingStations()
 	if len(list) == 0 {
 		fb.Text(lang.T("NOTHING"), 14, 30, ColDim, 1)
@@ -3197,7 +3200,7 @@ func marketRows() int {
 func diaryScreen(fb *render.FB) {
 	g := game.G
 	entries := g.DiaryAvailable()
-	plate(fb, 6, 14, 310, 190, lang.T("DIARY"))
+	plate(fb, 6, 16, 310, 188, lang.T("DIARY"))
 	if len(entries) == 0 {
 		fb.Text(lang.T("NOTHING WRITTEN YET"), 14, 40, ColText, 1)
 		fb.Text(lang.T("THE STORY WRITES ITSELF AS YOU FLY IT"), 14, 54, ColDim, 1)
