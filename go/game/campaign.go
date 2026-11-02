@@ -574,6 +574,12 @@ func (g *Game) StartEnding(kind string) {
 	g.Cmd.Campaign.Stage = CampaignTotal()
 	g.Message("THE CAMPAIGN IS OVER", "good")
 	g.Note(LogDone, "ENDING: "+kind, 0, 0)
+	// the epilogue is a page, not a toast: show it where the pilot can read it
+	if g.State == "docked" {
+		g.Screen = "ending"
+	} else {
+		g.pendingEnding = true
+	}
 }
 
 // LicensedHere reports the five per cent that comes with buying a licence off

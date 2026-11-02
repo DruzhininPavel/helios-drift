@@ -307,6 +307,9 @@ type Game struct {
 
 	// auto is the session autosave, taken on every docking.
 	auto *snapshot
+	// pendingEnding means the story finished in flight: the epilogue waits for
+	// the next docking instead of interrupting the cockpit
+	pendingEnding bool
 
 	// Viewers is the audience of the courier's broadcast. It only grows while he
 	// is on air, and it is the one new piece of interface the campaign adds.
@@ -1091,6 +1094,10 @@ func (g *Game) dockedAt() {
 	g.SideStartIfReady()
 	// the session autosave: where the pilot would come back to if he died now
 	g.TakeSnapshot()
+	if g.pendingEnding {
+		g.pendingEnding = false
+		g.Screen = "ending"
+	}
 	g.DockSalt++
 	g.Autopilot = false
 	g.AutopilotPath = nil

@@ -92,7 +92,9 @@ func plate(fb *render.FB, x, y, w, h int, title string) {
 	fb.HLine(x, x+5, y, ColFrameHi)
 	fb.HLine(x+w-6, x+w-1, y, ColFrameHi)
 	if title != "" {
-		fb.FillRect(x+4, y, x+4+render.TextWidth(title, 1)+6, y+8, ColBg)
+		// the tab: clear the plate's top edge and the header rule above it, or
+		// the rule draws a line through the first row of the letters
+		fb.FillRect(x+4, y-4, x+4+render.TextWidth(title, 1)+6, y+8, ColBg)
 		fb.Text(title, x+7, y-3, ColYellow, 1)
 	}
 }
@@ -1044,27 +1046,38 @@ func TitleItems() []string {
 func gameOver(fb *render.FB) {
 	g := game.G
 	fb.Clear(render.RGB(0x05070f))
-	fb.TextC("GAME OVER", 160, 60, ColRed, 3)
+	fb.TextC("GAME OVER", 160, 48, ColRed, 3)
 	reason := "SHIP LOST"
-	if g.Dead != nil {
+	if g.Dead != nil && g.Dead.Reason != "" {
 		reason = g.Dead.Reason
 	}
-	fb.TextC(reason, 160, 100, ColText, 1)
-	fb.TextC("CASH "+money(g.Cmd.Cash)+" CR   KILLS "+itoa(g.Cmd.Kills), 160, 120, ColDim, 1)
-	// a death is a choice: come back to the last station, load a slot, or stop
-	fb.TextC(lang.T("WHAT NOW?"), 160, 140, ColDim, 1)
+	fb.TextC(reason, 160, 92, ColText, 1)
+	fb.TextC("CASH "+money(g.Cmd.Cash)+" CR   KILLS "+itoa(g.Cmd.Kills), 160, 108, ColDim, 1)
+
+	// a death is a choice: come back to the last station, load a slot, or stop.
+	// The digits share a column and the labels share another, so the list reads
+	// as a list and not as a staircase.
+	fb.TextC(lang.T("WHAT NOW?"), 160, 134, ColDim, 1)
 	where := g.SnapshotWhere()
-	line := lang.T("1  COME BACK TO") + " " + where
-	if where == "" {
-		line = lang.T("1  COME BACK TO THE LAST STATION")
+	first := lang.T("COME BACK TO THE LAST STATION")
+	if where != "" {
+		first = lang.T("COME BACK TO") + " " + where
 	}
-	col := ColYellow
-	if !g.HasSnapshot() {
-		col = render.RGB(0x2d4a5c)
+	items := []string{first, lang.T("LOAD A COMMANDER"), lang.T("MAIN MENU")}
+	const numX, labelX = 96, 114
+	for i, it := range items {
+		y := 148 + i*12
+		numCol, labelCol := ColYellow, ColText
+		if i == 0 && !g.HasSnapshot() {
+			numCol, labelCol = render.RGB(0x2d4a5c), render.RGB(0x2d4a5c)
+		}
+		fb.Text(itoa(i+1), numX, y, numCol, 1)
+		fb.Text(clip(it, 33), labelX, y, labelCol, 1)
 	}
-	fb.TextC(clip(line, 50), 160, 154, col, 1)
-	fb.TextC(lang.T("2  LOAD A COMMANDER"), 160, 166, ColDim, 1)
-	fb.TextC(lang.T("3  MAIN MENU"), 160, 178, ColDim, 1)
+	Hint = "1/2/3 CHOOSE"
+	fb.FillRect(0, 211, 319, 223, render.RGB(0x08131f))
+	fb.HLine(0, 319, 211, ColFrame)
+	fb.TextC(Hint, 160, 215, ColDim, 1)
 }
 
 func hyperScreen(fb *render.FB) {

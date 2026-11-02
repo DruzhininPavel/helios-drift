@@ -90,15 +90,10 @@ func docked(fb *render.FB) {
 	// the log and the chart fill the screen to the footer, so they keep their
 	// own hints and say nothing here
 	roomy := map[string]bool{"launch": true, "market": true, "contracts": true,
-		"equipment": true, "status": true, "shipyard": true, "journal": true,
+		"equip": true, "status": true, "shipyard": true, "journal": true,
 		"save": true, "slots": true}
 	if !roomy[g.Screen] {
 		return
-	}
-	if len(g.Messages) > 0 {
-		// a band of its own: the plates run to 204 and the text used to sit on
-		// their bottom frame and on the last row of the sheet
-		fb.FillRect(0, 188, 319, 210, ColBg)
 	}
 	if onlyBad {
 		drawMessagesWhere(fb, 191, 2, true)
@@ -137,12 +132,12 @@ func stationMenu(fb *render.FB) {
 	drawDataR(fb, gal.Systems[((cmd.TargetSystem%256)+256)%256].Name, 150, 137, ColText)
 
 	// system block at the bottom of the same plate
-	fb.HLine(16, 150, 148, render.RGB(0x1b3348))
+	fb.HLine(16, 150, 150, render.RGB(0x1b3348))
 	if g.World != nil {
 		sys := g.World.Sys
 		drawData(fb, sys.Name, 16, 155, ColYellow)
 		fb.Text(lang.T(galaxy.EconomyNames[sys.Economy]), 16, 166, ColDim, 1)
-		fb.Text(lang.T(galaxy.GovNames[sys.Government]), 16, 176, ColDim, 1)
+		fb.Text(lang.T(galaxy.GovNames[sys.Government]), 16, 173, ColDim, 1)
 	}
 
 	// right: services
@@ -170,7 +165,11 @@ func stationMenu(fb *render.FB) {
 		if sel {
 			col = ColYellow
 		}
-		fb.Text(itoa(i+1)+"  "+it, 180, y, col, 1)
+		num := itoa(i + 1)
+		if len(num) < 2 {
+			num = " " + num
+		}
+		fb.Text(num+"  "+it, 180, y, col, 1)
 	}
 	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "DIPLOMAT" {
 		Hint = lang.T("CLEAR RECORD FOR") + " " + itoa(game.G.PardonPrice()) + " CR"
@@ -362,11 +361,13 @@ func marketScreen(fb *render.FB) {
 			unit, total = m.Sell, qty*m.Sell
 			label = lang.T("SELL")
 		}
-		fb.FillRect(52, 128, 268, 180, render.RGB(0x08131f))
-		fb.Rect(52, 128, 268, 180, ColYellow)
-		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 134, ColYellow, 1)
-		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 146, ColGreen, 1)
-		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 158, ColDim, 1)
+		// full width: a narrower box left the ends of the rows sticking out from
+		// under its borders, cut mid-word
+		fb.FillRect(6, 124, 313, 182, render.RGB(0x08131f))
+		fb.Rect(6, 124, 313, 182, ColYellow)
+		fb.TextC(label+" "+itoa(qty)+" X "+m.Name, 160, 132, ColYellow, 1)
+		fb.TextC(itoa(unit)+" CR X "+itoa(qty)+" = "+itoa(total)+" CR", 160, 144, ColGreen, 1)
+		fb.TextC(lang.T("MAX")+" "+itoa(maxQty), 160, 156, ColDim, 1)
 		fb.TextC(lang.T("UP/DOWN  ENTER  ESC"), 160, 168, ColDim, 1)
 		Hint = "UP/DOWN  AMOUNT   ENTER  ESC"
 		return
@@ -502,7 +503,7 @@ func chartScreen(fb *render.FB) {
 		fb.FillRect(mx-1, my-1, mx+1, my+1, render.Color("green", 4))
 	}
 
-	plate(fb, 200, 18, 118, 190, "SYSTEM DATA")
+	plate(fb, 200, 18, 116, 190, "SYSTEM DATA")
 	ty := 32
 	line := func(label, value string, col uint32) {
 		fb.Text(label, 206, ty, ColDim, 1)
@@ -697,7 +698,7 @@ func pauseRows() [][2]string {
 
 func pauseScreen(fb *render.FB) {
 	chrome(fb, "PAUSED")
-	plate(fb, 8, 18, 312, 176, "FLIGHT CONTROLS")
+	plate(fb, 8, 18, 304, 176, "FLIGHT CONTROLS")
 	rows := pauseRows()
 	perColumn := (len(rows) + 1) / 2
 	for i, r := range rows {
@@ -1213,7 +1214,7 @@ func settingsRows() []string {
 }
 
 func settingsScreen(fb *render.FB) {
-	plate(fb, 40, 18, 280, 186, "")
+	plate(fb, 38, 18, 274, 168, "")
 	rows := settingsRows()
 	if S.Settings >= len(rows) {
 		S.Settings = len(rows) - 1
@@ -1222,8 +1223,8 @@ func settingsScreen(fb *render.FB) {
 		y := 34 + i*20
 		sel := S.Settings == i
 		if sel {
-			fb.FillRect(48, y-8, 272, y+11, render.RGB(0x12384f))
-			fb.FillRect(48, y-8, 51, y+11, ColYellow)
+			fb.FillRect(46, y-8, 304, y+11, render.RGB(0x12384f))
+			fb.FillRect(46, y-8, 49, y+11, ColYellow)
 		}
 		col := ColText
 		if sel {
@@ -1236,13 +1237,13 @@ func settingsScreen(fb *render.FB) {
 			if lang.IsRU() {
 				val = "RUSSIAN"
 			}
-			fb.TextR(val, 264, y, ColGreen, 1)
+			fb.TextR(val, 296, y, ColGreen, 1)
 		case "SOUND":
 			val := "ON"
 			if lang.Cfg.Muted {
 				val = "OFF"
 			}
-			fb.TextR(val, 264, y, ColGreen, 1)
+			fb.TextR(val, 296, y, ColGreen, 1)
 		case "VOLUME":
 			pips := int(lang.Cfg.Volume*5 + 0.5)
 			for k := 0; k < 5; k++ {
@@ -1250,7 +1251,7 @@ func settingsScreen(fb *render.FB) {
 				if k < pips {
 					c = ColGreen
 				}
-				fb.FillRect(224+k*9, y-1, 230+k*9, y+6, c)
+				fb.FillRect(250+k*9, y-1, 256+k*9, y+6, c)
 			}
 		case "COCKPIT":
 			val := "ON"
@@ -1556,7 +1557,7 @@ func contractsScreen(fb *render.FB) {
 		lines = storyWhat()
 	}
 	// the last row belongs to the status line
-	const statusY = 180
+	const statusY = 172
 	const lineH = 9
 	maxLines := (statusY - 4 - descTop) / lineH
 	if maxLines < 1 {
@@ -1928,7 +1929,7 @@ func controlsScreen(fb *render.FB) {
 	rows := len(acts) + 2
 	const visible = 10
 	plate(fb, 4, 16, 312, 184, "CONTROLS")
-	fb.Text("ACTION", 12, 28, ColDim, 1)
+	fb.Text("ACTION", 16, 28, ColDim, 1)
 	fb.TextR("KEY", 234, 28, ColDim, 1)
 	fb.TextR("PAD", 306, 28, ColDim, 1)
 	off := 0
@@ -2876,13 +2877,21 @@ func endingScreen(fb *render.FB) {
 		fb.TextRaw(ln, 16, y, ColText, 1)
 		y += 10
 	}
+	// the epitaph follows the body instead of sitting on a fixed line with a
+	// hole above it
+	y += 10
 	for _, ln := range wrapText(last, 48) {
-		fb.TextRaw(ln, 16, 168, ColGreen, 1)
+		fb.TextRaw(ln, 16, y, ColGreen, 1)
 		y += 10
 	}
 	// and then the story steps aside: the sector is still yours to fly
-	for i, ln := range wrapText(lang.T("YOU ARE A FREE PILOT NOW. BECOME A LEGEND AND SEE THE WHOLE UNIVERSE."), 48) {
-		fb.TextRaw(ln, 16, 186+i*9, ColYellow, 1)
+	y += 8
+	for _, ln := range wrapText(lang.T("YOU ARE A FREE PILOT NOW. BECOME A LEGEND AND SEE THE WHOLE UNIVERSE."), 48) {
+		if y > 196 {
+			break
+		}
+		fb.TextRaw(ln, 16, y, ColYellow, 1)
+		y += 9
 	}
 	Hint = "ENTER MAIN MENU"
 }
@@ -3041,9 +3050,6 @@ func talkScreen(fb *render.FB) {
 		y += lineH
 	}
 	scrolling := len(rows) > visible
-	if scrolling {
-		fb.TextR(itoa(S.TalkScroll+1)+"/"+itoa(maxTop+1), 304, optsTop, ColDim, 1)
-	}
 	for i, idx := range opts {
 		oy := optsTop + i*11
 		col := ColYellow
@@ -3052,9 +3058,16 @@ func talkScreen(fb *render.FB) {
 		}
 		fb.Text(itoa(i+1)+"  "+lang.T(n.Options[idx].Text), 14, oy, col, 1)
 	}
+	if scrolling {
+		// drawn after the answers: at optsTop it was painted over by the
+		// highlight band of the selected one
+		fb.TextR(itoa(S.TalkScroll+1)+"/"+itoa(maxTop+1), 304, textTop-9, ColDim, 1)
+	}
 	Hint = "UP/DOWN SELECT   ENTER CHOOSE   ESC BACK"
 	if scrolling {
-		Hint = "PGUP/PGDN SCROLL   " + Hint
+		// the long form was 59 characters and 354 pixels wide on a 320 pixel
+		// screen: it was cut at both edges
+		Hint = "PGUP/PGDN SCROLL   ENTER CHOOSE   ESC BACK"
 	}
 }
 
