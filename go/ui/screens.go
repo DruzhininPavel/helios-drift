@@ -169,7 +169,14 @@ func stationMenu(fb *render.FB) {
 		if len(num) < 2 {
 			num = " " + num
 		}
-		fb.Text(num+"  "+it, 180, y, col, 1)
+		label := it
+		if it == "LOG" {
+			// a page of the diary is waiting: say so on the row that opens it
+			if n := g.DiaryUnread(); n > 0 {
+				label = it + " +" + itoa(n)
+			}
+		}
+		fb.Text(num+"  "+label, 180, y, col, 1)
 	}
 	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "CLEAR RECORD" {
 		if g.PardonAvailable() {
@@ -203,7 +210,8 @@ func menuItems() []string {
 		items = append(items, "MISSION")
 	}
 	if !game.G.Classic() {
-		items = append(items, "SHIPYARD", "LOG")
+		items = append(items, "SHIPYARD")
+		items = append(items, "LOG")
 	}
 	if !game.G.Classic() && game.G.Cmd.Legal > 0 {
 		// always offered while there is a record: a row that comes and goes
