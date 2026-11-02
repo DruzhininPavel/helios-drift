@@ -2654,7 +2654,12 @@ func endingText(kind string) (title, body, last string) {
 func endingKey(k string) bool {
 	switch k {
 	case "Enter", "Escape", " ":
-		QuitToTitle()
+		// the epitaph is shown once; after that the sector is a place to fly in
+		if game.G.Cmd.Flags == nil {
+			game.G.Cmd.Flags = map[string]bool{}
+		}
+		game.G.Cmd.Flags["ENDING_SHOWN"] = true
+		game.G.Screen = "launch"
 	}
 	return true
 }

@@ -273,9 +273,10 @@ func (g *Game) EndTalk() {
 	if g.Screen == "" && g.State == "docked" {
 		g.Screen = "launch"
 	}
-	// a conversation that settled the campaign ends on the last page, not in the
-	// cockpit
-	if g.Cmd.Ending != "" {
+	// a conversation that settled the campaign ends on the last page - once.
+	// Afterwards the sector is still there to fly in, and every counter would
+	// otherwise throw the same epitaph at the pilot again.
+	if g.Cmd.Ending != "" && !g.Cmd.Flags["ENDING_SHOWN"] {
 		g.Screen = "ending"
 	}
 }
