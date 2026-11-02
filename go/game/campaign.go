@@ -738,3 +738,35 @@ func (g *Game) meetSomeone() {
 	g.Cmd.LastMeet = g.Cmd.Day
 	g.TalkStart(pick)
 }
+
+// NextStop names the system the pilot's open work points at: the campaign
+// stage's target first, then the first accepted contract, then side work. It is
+// what the tasks page puts at the bottom so the page answers "and now?".
+func (g *Game) NextStop() string {
+	gal := galaxy.Get(g.Cmd.Galaxy)
+	if gal == nil {
+		return ""
+	}
+	name := func(sys int) string {
+		if sys < 0 || sys >= len(gal.Systems) {
+			return ""
+		}
+		return gal.Systems[((sys%256)+256)%256].Name
+	}
+	if g.Cmd.Campaign.Active && g.Cmd.Campaign.Target >= 0 {
+		if n := name(g.Cmd.Campaign.Target); n != "" {
+			return n
+		}
+	}
+	for _, c := range g.Cmd.Contracts {
+		if n := name(c.System); n != "" && c.Galaxy == g.Cmd.Galaxy {
+			return n
+		}
+	}
+	if g.MissionStatus() != "" {
+		if n := name(g.Cmd.Mission.System); n != "" {
+			return n
+		}
+	}
+	return ""
+}

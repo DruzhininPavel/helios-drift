@@ -204,7 +204,7 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		// always, not only when there is work: the row is how a pilot asks
 		// "where am I in all this", and a missing row reads as a missing feature
-		items = append(items, "JOURNAL")
+		items = append(items, "TASKS")
 	}
 	if game.G.PardonAvailable() {
 		items = append(items, "DIPLOMAT")
@@ -898,7 +898,7 @@ func dockedKey(k string) bool {
 				openMission()
 			case "CONTRACTS":
 				openContracts()
-			case "JOURNAL":
+			case "TASKS":
 				openJournal()
 			case "LOG":
 				g.Screen = "log"
@@ -2349,10 +2349,15 @@ func journalKey(k string) bool {
 
 func journalScreen(fb *render.FB) {
 	g := game.G
-	plate(fb, 8, 16, 304, 182, "JOURNAL")
+	plate(fb, 8, 16, 304, 182, lang.T("TASKS"))
 	// the page scrolls instead of overflowing the panel
 	off := S.JournalScroll * 10
 	y := 32 - off
+	// one line that says what the page is for: a pilot opened it and asked
+	fb.Text(lang.T("WHAT YOU ARE DOING NOW"), 16, y, render.RGB(0x2d4a5c), 1)
+	y += 13
+	fb.HLine(16, 300, y, ColFrame)
+	y += 8
 	if !g.Classic() {
 		c := &g.Cmd.Campaign
 		fb.Text("CAMPAIGN", 16, y, ColDim, 1)
@@ -2415,6 +2420,12 @@ func journalScreen(fb *render.FB) {
 	y += 6
 	if g.Cmd.Pax > 0 || g.Cmd.Mail > 0 {
 		fb.Text("PAX "+itoa(g.Cmd.Pax)+"   MAIL "+itoa(g.Cmd.Mail)+" T", 16, y, ColDim, 1)
+		y += 11
+	}
+	// and where the whole thing sends you next
+	if sys := g.NextStop(); sys != "" {
+		fb.Text(lang.T("NEXT STOP")+": ", 16, y, ColDim, 1)
+		fb.TextRaw(sys, 16+render.TextWidth(lang.T("NEXT STOP")+": ", 1), y, ColYellow, 1)
 	}
 	Hint = "ESC BACK"
 }

@@ -69,7 +69,7 @@ func TestJournalRowAndEmptyLog(t *testing.T) {
 	g.Screen = "launch"
 	found := false
 	for _, it := range menuItems() {
-		if it == "JOURNAL" {
+		if it == "TASKS" {
 			found = true
 		}
 	}

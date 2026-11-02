@@ -4,6 +4,12 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"THE FIELD STAYS UP AND THE MOTHERSHIP DOES NOT MOVE.":                     "ПОЛЕ ДЕРЖИТСЯ, МАТКА НЕ ДВИГАЕТСЯ.",
+	"NOTHING FOLLOWS YOU OUT. THE JOB STAYS ON THE BOARD UNTIL YOU COME BACK.": "ЗА ТОБОЙ НЕ ИДУТ. ЗАДАНИЕ ОСТАЁТСЯ, ПОКА НЕ ВЕРНЁШЬСЯ.",
+	"CUT THE SHIELDS AND THE MOTHERSHIP IS NAKED - AND SO IS THE STATION, AND THE NAVY WILL HAVE YOUR NAME FOR IT. KEEP THEM UP AND YOU CANNOT TOUCH IT AT ALL: THE FIELD FALLS ON ITS OWN IN ABOUT TEN MINUTES, THEN YOU FIGHT A MOTHERSHIP THAT HAS ALREADY WOKEN UP.": "СРЕЖЕШЬ ЩИТЫ - ГОЛАЯ МАТКА, НО И СТАНЦИЯ ТОЖЕ, И ФЛОТ ЗАПОМНИТ ТВОЁ ИМЯ. ОСТАВИШЬ ПОЛЕ - ДО НЕЁ НЕ ДОСТАТЬ ВООБЩЕ: ЧЕРЕЗ ДЕСЯТЬ МИНУТ ОНО ПАДЁТ САМО, И ТЫ БУДЕШЬ БРАТЬ МАТКУ, КОТОРАЯ УЖЕ ПРОСНУЛАСЬ.",
+	"NEXT STOP":                      "КУДА ДАЛЬШЕ",
+	"TASKS":                          "ЗАДАЧИ",
+	"WHAT YOU ARE DOING NOW":         "ЧТО ТЫ ДЕЛАЕШЬ СЕЙЧАС",
 	"ARRESTED":                       "АРЕСТ",
 	"CARGO SEIZED":                   "ГРУЗ ИЗЪЯТ",
 	"T SEIZED":                       "Т ИЗЪЯТО",

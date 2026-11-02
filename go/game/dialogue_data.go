@@ -618,7 +618,7 @@ func init() {
 					If: []Cond{{Key: "MET_AUDITOR", Op: "flag"}}},
 				{Text: "KILL IT", Next: "c7_shields",
 					Do: []Effect{{Kind: FxFlag, Key: "HIVE_ATTACKED"}}},
-				{Text: "LEAVE", Next: "c7_shields"},
+				{Text: "LEAVE", Next: "c7_leave"},
 			},
 		},
 		&Node{
@@ -649,6 +649,19 @@ func init() {
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
 		&Node{
+			ID:      "c7_leave",
+			Kind:    "msg",
+			Speaker: "HIVE",
+			Lines: []string{
+				"THE FIELD STAYS UP AND THE MOTHERSHIP DOES NOT MOVE.",
+				"NOTHING FOLLOWS YOU OUT. THE JOB STAYS ON THE BOARD UNTIL YOU COME BACK.",
+			},
+			// leaving is not a decision the story makes for you: the stage waits,
+			// and the conversation opens again next time you arrive
+			OnEnter: []Effect{{Kind: FxUnflag, Key: "SPOKEN_MOTHER"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
 			ID:      "c7_shields",
 			Kind:    "talk",
 			Speaker: "",
@@ -656,6 +669,8 @@ func init() {
 				"THE MOTHERSHIP SITS IN A FIELD THAT IS FED BY THE STATION'S SHIELDS. NOTHING YOU CARRY CAN REACH IT.",
 				"FOUR DRONES ORBIT IT AND WAIT FOR YOU TO SHOOT FIRST.",
 				"THE STATION HAS TWO HUNDRED PEOPLE IN IT AND ONE BREAKER.",
+				"",
+				"CUT THE SHIELDS AND THE MOTHERSHIP IS NAKED - AND SO IS THE STATION, AND THE NAVY WILL HAVE YOUR NAME FOR IT. KEEP THEM UP AND YOU CANNOT TOUCH IT AT ALL: THE FIELD FALLS ON ITS OWN IN ABOUT TEN MINUTES, THEN YOU FIGHT A MOTHERSHIP THAT HAS ALREADY WOKEN UP.",
 			},
 			Options: []Option{
 				{Text: "CUT THE STATION SHIELDS", Next: "c7_cut",
