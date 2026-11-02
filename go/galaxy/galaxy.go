@@ -370,3 +370,14 @@ func RankFor(kills int) string {
 	}
 	return Ranks[r]
 }
+
+// RankIndexFor is RankFor's number, for comparing two ranks.
+func RankIndexFor(kills int) int {
+	r := 0
+	for i, t := range rankThresholds {
+		if kills >= t {
+			r = i
+		}
+	}
+	return r
+}

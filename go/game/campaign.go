@@ -477,6 +477,10 @@ func (g *Game) dangerNow(base float64) float64 {
 	if g.Cmd.Flags["AUDIT_BROKEN"] {
 		base *= 1.3
 	}
+	if g.Cmd.Ending == "chaos" {
+		// no licences means no licensed cargo worth robbing
+		base *= 0.7
+	}
 	return base
 }
 

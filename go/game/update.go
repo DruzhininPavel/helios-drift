@@ -603,6 +603,7 @@ func (g *Game) Buy(idx, qty int) {
 	if g.LicensedHere() {
 		price = int(math.Round(float64(price) * 0.95))
 	}
+	price = int(math.Round(float64(price) * g.buyBonus()))
 	free := cmd.CargoCap - CargoUsed(*cmd)
 	if qty > m.Qty {
 		qty = m.Qty
@@ -640,11 +641,13 @@ func (g *Game) Sell(idx, qty int) {
 		g.Message("NOTHING TO SELL", "bad")
 		return
 	}
-	cmd.Cash += float64(qty * m.Sell)
+	// an owner takes a cut of what leaves his sector
+	unit := int(math.Round(float64(m.Sell) * g.sellBonus()))
+	cmd.Cash += float64(qty * unit)
 	cmd.Cargo[idx] = have - qty
 	m.Qty += qty
-	g.Note(LogSell, m.Name, qty, float64(qty*m.Sell))
-	g.Message("SOLD "+itoa(qty)+"T "+m.Name+" FOR "+itoa(qty*m.Sell)+" CR", "good")
+	g.Note(LogSell, m.Name, qty, float64(qty*unit))
+	g.Message("SOLD "+itoa(qty)+"T "+m.Name+" FOR "+itoa(qty*unit)+" CR", "good")
 }
 
 func (g *Game) Refuel() {

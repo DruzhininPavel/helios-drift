@@ -23,6 +23,7 @@ const (
 	LogMine   = "mine"   // ore scooped or a rock broken
 	LogDeath  = "death"  // the pilot lost a ship
 	LogVisit  = "visit"  // first time in a system
+	LogGalaxy = "galaxy" // first time in a galaxy
 	LogPirate = "pirate" // hostiles dropped out of hyperspace on you
 	LogPolice = "police" // a viper came to look at your record
 	LogSwarm  = "swarm"  // the swarm, which is a different thing entirely
@@ -118,7 +119,7 @@ func LogGroup(kind string) string {
 		return "FIGHT"
 	case LogJob, LogDone, LogFail, LogPardon:
 		return "JOBS"
-	case LogJump, LogMine, LogVisit:
+	case LogJump, LogMine, LogVisit, LogGalaxy:
 		return "TRAVEL"
 	}
 	return "TRADE"

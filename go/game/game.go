@@ -470,6 +470,9 @@ func (g *Game) EnterSystem(systemIndex int, mode string, spawnDist float64, misj
 			g.Note(LogJump, sys.Name, 0, 0)
 		}
 	}
+	// a charted sector is the long answer to "what now"
+	g.noteGalaxy()
+	g.checkSector()
 	g.State = "flight"
 	g.Screen = "flight"
 	g.Autopilot = false
@@ -773,7 +776,9 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 				bounty = e.Bounty // contract ships are paid through the mission
 			}
 			cmd.Cash += float64(bounty)
+			rankBefore := galaxy.RankIndexFor(cmd.Kills)
 			cmd.Kills++
+			g.RankUp(rankBefore)
 			g.countContracts()
 			if def.Bounty > 0 {
 				g.Message("BOUNTY "+itoa(def.Bounty)+" CR", "good")

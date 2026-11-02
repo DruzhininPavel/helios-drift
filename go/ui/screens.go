@@ -551,7 +551,12 @@ func statusScreen(fb *render.FB) {
 		legal = "OFFENDER"
 	}
 	rows = append(rows, [2]string{"LEGAL", legal})
-	rows = append(rows, [2]string{"GALAXY", itoa(cmd.Galaxy + 1)})
+	rows = append(rows, [2]string{"GALAXY", itoa(cmd.Galaxy+1) + "/" + itoa(galaxy.Galaxies) + " (" + itoa(g.GalaxiesSeen()) + " SEEN)"})
+	// after the story is over, this is the part a pilot is still working on
+	if t := g.TitleName(); t != "" {
+		rows = append(rows, [2]string{"TITLE", t})
+	}
+	rows = append(rows, [2]string{"CHART", itoa(g.SystemsSeen()) + "/" + itoa(len(galaxy.Get(cmd.Galaxy).Systems))})
 	rows = append(rows, [2]string{"DAY", itoa(cmd.Day)})
 	if cmd.Pax > 0 || cmd.Mail > 0 {
 		rows = append(rows, [2]string{"PAX/MAIL", itoa(cmd.Pax) + "/" + itoa(cmd.Mail)})
@@ -2631,6 +2636,10 @@ func endingScreen(fb *render.FB) {
 	for _, ln := range wrapText(last, 48) {
 		fb.TextRaw(ln, 16, 168, ColGreen, 1)
 		y += 10
+	}
+	// and then the story steps aside: the sector is still yours to fly
+	for i, ln := range wrapText(lang.T("YOU ARE A FREE PILOT NOW. BECOME A LEGEND AND SEE THE WHOLE UNIVERSE."), 48) {
+		fb.TextRaw(ln, 16, 186+i*9, ColYellow, 1)
 	}
 	Hint = "ENTER MAIN MENU"
 }

@@ -4,7 +4,14 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
-	"THE LOG IS EMPTY":                           "ЖУРНАЛ ПУСТ",
+	"YOU ARE A FREE PILOT NOW. BECOME A LEGEND AND SEE THE WHOLE UNIVERSE.": "ТЕПЕРЬ ТЫ ВОЛЬНЫЙ ПИЛОТ. СТАНЬ ЛЕГЕНДОЙ И ОБЛЕТИ ВСЮ ВСЕЛЕННУЮ.",
+	"OWNER OF THE SECTOR": "ХОЗЯИН СЕКТОРА",
+	"FREE OF LICENCES":    "СВОБОДЕН ОТ ЛИЦЕНЗИЙ",
+	"COUNCIL MEMBER":      "ЧЛЕН СОВЕТА",
+	"TITLE":               "ТИТУЛ",
+	"CHART":               "КАРТА",
+	"SEEN":                "ВИДЕНО",
+	"THE LOG IS EMPTY":    "ЖУРНАЛ ПУСТ",
 	"EVERY TRADE, KILL AND JUMP IS WRITTEN HERE": "КАЖДАЯ СДЕЛКА, БОЙ И ПРЫЖОК ПИШУТСЯ СЮДА",
 	"ERASE?":                         "СТЕРЕТЬ?",
 	"PRESS ENTER AGAIN TO OVERWRITE": "ENTER ЕЩЁ РАЗ - ПЕРЕЗАПИСАТЬ",
@@ -596,7 +603,6 @@ var ru = map[string]string{
 	"JUMP IN SYSTEM":       "ПРЫЖОК В СИСТЕМЕ",
 	"GALACTIC JUMP":        "ГАЛАКТИЧЕСКИЙ ПРЫЖОК",
 	"JETTISON":             "СБРОС ГРУЗА",
-	"CHART":                "КАРТА",
 	"STATUS":               "СТАТУС",
 	"PAUSE":                "ПАУЗА",
 	"PASSENGERS DELIVERED": "ПАССАЖИРЫ ДОСТАВЛЕНЫ",
