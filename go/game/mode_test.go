@@ -152,9 +152,16 @@ func TestMissionTargets(t *testing.T) {
 	}
 }
 
-// The campaign chain: every stage must be offered, spawned and advanced.
+// The campaign chain: every stage must be offered, spawned and advanced. The
+// late stages want kit, so this commander buys it like a player would.
 func TestCampaignChain(t *testing.T) {
 	g := newGameMode(ModeAdvanced)
+	if g.Cmd.Equip == nil {
+		g.Cmd.Equip = map[string]bool{}
+	}
+	g.Cmd.Equip["shieldboost1"] = true
+	g.Cmd.Equip["shieldboost2"] = true
+	g.Cmd.Laser = 2
 	for i := 0; i < CampaignTotal(); i++ {
 		if !g.CampaignOffer() {
 			t.Fatalf("stage %d is not offered", i)

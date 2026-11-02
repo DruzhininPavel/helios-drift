@@ -43,6 +43,12 @@ type Quest struct {
 	BriefVariants []BriefVariant
 	// TitleVariants rename it for the same reason.
 	TitleVariants []TitleVariant
+	// Requirements: a stage may ask for more than the previous one being over.
+	// NeedEquip is equipment that has to be bolted on, NeedLaser is the gun
+	// class the job expects you to bring, NeedRank is the standing.
+	NeedEquip []string
+	NeedLaser int
+	NeedRank  int
 }
 
 // BriefVariant is an alternative briefing, first match wins.
@@ -55,6 +61,28 @@ type BriefVariant struct {
 type TitleVariant struct {
 	If    []Cond
 	Title string
+}
+
+// MissingFor says what the pilot lacks for a stage: the shop says why before it
+// charges, and the board says why before it offers.
+func (g *Game) MissingFor(q Quest) []string {
+	var out []string
+	for _, id := range q.NeedEquip {
+		if !g.Cmd.Equip[id] {
+			name := id
+			if e := galaxy.EquipByID(id); e != nil {
+				name = e.Name
+			}
+			out = append(out, name)
+		}
+	}
+	if q.NeedLaser > g.Cmd.Laser {
+		out = append(out, LaserName[q.NeedLaser])
+	}
+	if q.NeedRank > 0 && galaxy.RankIndexFor(g.Cmd.Kills) < q.NeedRank {
+		out = append(out, galaxy.Ranks[q.NeedRank])
+	}
+	return out
 }
 
 // TitleFor is the name of the job as this pilot earned it.
@@ -149,6 +177,8 @@ var campaignQuests = []Quest{
 		Title: "FRAMED",
 		Kind:  QuestKill, Tag: "NAVY", Spawn: "viper", Count: 2, Pay: 12000,
 		Talk: "c6_brief",
+		// two navy vipers is not a job for a stock pulse laser
+		NeedLaser: 1,
 		Brief: []string{
 			"THEY HAVE PUT YOUR NAME ON THE CONVOY",
 			"MASSACRE. NAVY VIPERS ARE ON YOUR TAIL",
@@ -176,6 +206,8 @@ var campaignQuests = []Quest{
 		Title: "THE HIVE",
 		Kind:  QuestKill, Tag: "MOTHER", Spawn: "thargoid", Count: 1, Pay: 25000,
 		Talk: "c7_hive",
+		// something that big does not care about a pulse laser
+		NeedLaser: 2, NeedEquip: []string{"shieldboost1"},
 		Brief: []string{
 			"THE ARTEFACT IN THAT CONVOY WAS NOT",
 			"CARGO. IT WAS A CALL, AND SOMETHING",
@@ -188,6 +220,9 @@ var campaignQuests = []Quest{
 		Title: "THE FLAGSHIP",
 		Kind:  QuestKill, Tag: "FLAGSHIP", Spawn: "anaconda", Count: 1, Pay: 50000,
 		Talk: "c8_director",
+		// the last job in the chain: a gun worth the name and shielding that
+		// will survive being looked at by an anaconda
+		NeedLaser: 2, NeedEquip: []string{"shieldboost1", "shieldboost2"},
 		Brief: []string{
 			"HELIOS COMBINE IS RUNNING. THEIR FLAGSHIP",
 			"IS LOADED AND ALREADY CLEARED TO JUMP.",
@@ -232,6 +267,11 @@ func (g *Game) AcceptCampaign() bool {
 		return false
 	}
 	q := g.CampaignQuest()
+	if miss := g.MissingFor(q); len(miss) > 0 {
+		// the board said what it wants; say it again where the pilot pressed
+		g.Message(lang.T("NOT READY")+": "+lang.T(miss[0]), "bad")
+		return false
+	}
 	if q.Kind == QuestDeliver {
 		if CargoUsed(g.Cmd)+q.Qty > g.Cmd.CargoCap {
 			g.Message("NOT ENOUGH CARGO SPACE", "bad")

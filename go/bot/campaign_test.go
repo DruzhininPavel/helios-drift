@@ -124,7 +124,7 @@ func TestCampaignReachesFinalStage(t *testing.T) {
 	g.Cmd.Equip["dockcomp"] = true
 	g.Cmd.Equip["fuelscoop"] = true
 	pol := NewTrader(40)
-	sc := Run(g, 60*60*10, pol)
+	sc := Run(g, 60*60*30, pol)
 
 	if sc.Report.CampaignDone {
 		t.Logf("campaign complete at stage %d, cash %.0f", sc.Report.Stage, g.Cmd.Cash)

@@ -484,9 +484,11 @@ func (g *Game) updateEntities(dt float64) {
 				e.Cooldown = 2.5
 			}
 			if e.Cooldown <= 0 && distP < 4000 && math.Abs(ax) < 0.15 && math.Abs(ay) < 0.15 {
-				e.Cooldown = e.FireRate * randRange(1.2, 2.2)
-				if randFloat() < math.Max(0.12, 0.62-distP/7000) {
-					dmg := randRange(1.5, 4.0)
+				// a pirate that fires twice a second and never hits is scenery:
+				// he shoots more often and lands more of it
+				e.Cooldown = e.FireRate * randRange(1.0, 1.9)
+				if randFloat() < math.Max(0.15, 0.66-distP/6800) {
+					dmg := randRange(1.8, 4.4)
 					if e.Type == "thargoid" {
 						dmg = randRange(6, 11)
 					}

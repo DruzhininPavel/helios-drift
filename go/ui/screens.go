@@ -1484,6 +1484,17 @@ func storyWhat() []string {
 	if q.Pay > 0 {
 		out = append(out, lang.T("PAYS")+" "+itoa(q.Pay)+" CR")
 	}
+	// and what it wants before it will talk to you at all
+	if miss := g.MissingFor(q); len(miss) > 0 {
+		want := lang.T("NEEDS") + ": "
+		for i, m := range miss {
+			if i > 0 {
+				want += ", "
+			}
+			want += lang.T(m)
+		}
+		out = append(out, want)
+	}
 	return out
 }
 

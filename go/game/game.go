@@ -58,26 +58,26 @@ type ShipDef struct {
 }
 
 var Ships = map[string]ShipDef{
-	"sidewinder":  {"sidewinder", 26, 380, 34, 0, 5, 2, 1, 0.55, 1.7, "pirate"},
-	"krait":       {"krait", 27, 340, 60, 0, 10, 3, 1, 0.5, 1.6, "pirate"},
-	"mamba":       {"mamba", 28, 420, 48, 10, 15, 3, 1, 0.45, 1.8, "pirate"},
+	"sidewinder":  {"sidewinder", 26, 380, 70, 12, 5, 2, 1, 0.55, 1.7, "pirate"},
+	"krait":       {"krait", 27, 340, 120, 22, 10, 3, 1, 0.5, 1.6, "pirate"},
+	"mamba":       {"mamba", 28, 420, 105, 24, 15, 3, 1, 0.45, 1.8, "pirate"},
 	"adder":       {"adder", 24, 260, 40, 0, 8, 4, 0, 0.8, 1.3, "trader"},
-	"cobra3":      {"cobra3", 34, 350, 80, 20, 20, 6, 1, 0.5, 1.6, "pirate"},
+	"cobra3":      {"cobra3", 34, 350, 150, 34, 20, 6, 1, 0.5, 1.6, "pirate"},
 	"python":      {"python", 46, 200, 140, 30, 30, 12, 1, 0.7, 1.0, "trader"},
-	"viper":       {"viper", 28, 480, 70, 25, 15, 2, 1, 0.4, 2.0, "police"},
-	"asp":         {"asp", 32, 400, 100, 25, 40, 4, 2, 0.4, 1.8, "pirate"},
-	"moray":       {"moray", 24, 320, 44, 0, 12, 3, 1, 0.6, 1.5, "pirate"},
-	"ferdelance":  {"ferdelance", 30, 480, 100, 30, 40, 4, 2, 0.35, 2.1, "pirate"},
-	"thargoid":    {"thargoid", 36, 400, 260, 40, 100, 0, 2, 0.35, 1.6, "thargoid"},
+	"viper":       {"viper", 28, 480, 120, 32, 15, 2, 1, 0.4, 2.0, "police"},
+	"asp":         {"asp", 32, 400, 180, 38, 40, 4, 2, 0.4, 1.8, "pirate"},
+	"moray":       {"moray", 24, 320, 95, 16, 12, 3, 1, 0.6, 1.5, "pirate"},
+	"ferdelance":  {"ferdelance", 30, 480, 190, 44, 40, 4, 2, 0.35, 2.1, "pirate"},
+	"thargoid":    {"thargoid", 36, 400, 380, 56, 100, 0, 2, 0.35, 1.6, "thargoid"},
 	"shuttle":     {"shuttle", 22, 200, 26, 0, 0, 2, 0, 1.0, 1.0, "trader"},
-	"gecko":       {"gecko", 26, 380, 34, 0, 8, 2, 1, 0.55, 1.7, "pirate"},
-	"cobra1":      {"cobra1", 30, 340, 55, 10, 15, 5, 1, 0.55, 1.6, "pirate"},
+	"gecko":       {"gecko", 26, 380, 70, 12, 8, 2, 1, 0.55, 1.7, "pirate"},
+	"cobra1":      {"cobra1", 30, 340, 110, 20, 15, 5, 1, 0.55, 1.6, "pirate"},
 	"worm":        {"worm", 24, 220, 30, 0, 4, 4, 0, 0.9, 1.2, "trader"},
-	"boa":         {"boa", 44, 180, 180, 30, 30, 14, 1, 0.8, 0.9, "trader"},
-	"anaconda":    {"anaconda", 56, 160, 250, 40, 50, 20, 2, 0.85, 0.8, "trader"},
+	"boa":         {"boa", 44, 180, 300, 44, 30, 14, 1, 0.8, 0.9, "trader"},
+	"anaconda":    {"anaconda", 56, 160, 400, 56, 50, 20, 2, 0.85, 0.8, "trader"},
 	"transporter": {"transporter", 26, 200, 40, 0, 0, 4, 0, 1.0, 1.1, "trader"},
-	"thargon":     {"thargon", 12, 420, 14, 0, 5, 0, 1, 0.35, 2.4, "thargoid"},
-	"constrictor": {"constrictor", 34, 500, 120, 30, 0, 0, 2, 0.4, 2.0, "pirate"},
+	"thargon":     {"thargon", 12, 420, 18, 4, 5, 0, 1, 0.35, 2.4, "thargoid"},
+	"constrictor": {"constrictor", 34, 500, 210, 42, 0, 0, 2, 0.4, 2.0, "pirate"},
 }
 
 type Message struct {
@@ -1399,12 +1399,10 @@ func (g *Game) updatePolice(dt float64) {
 	}
 	if slow && nearest < 900 {
 		if g.CarryingContraband() || g.Cmd.Legal > 0 {
-			g.PoliceState = "fight"
-			for _, e := range police {
-				e.Hostile = true
-			}
-			g.Message("CONTRABAND ABOARD - YOU ARE UNDER ARREST", "bad")
+			// they are alongside and you are slow: this is an arrest, not a
+			// message. Fight it by shooting or by running, not by complying.
 			g.Emit("warning")
+			g.Arrest()
 			return
 		}
 		// clean pilot: they look, they leave

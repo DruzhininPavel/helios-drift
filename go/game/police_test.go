@@ -43,11 +43,18 @@ func TestPoliceArrestAWantedPilot(t *testing.T) {
 			e.Pos = g.Player.Pos.Add(e.Mat.Col(2).Mul(-400))
 		}
 	}
-	for i := 0; i < 120 && g.PoliceState == "hail"; i++ {
+	for i := 0; i < 60*10 && g.State != "docked"; i++ {
 		g.Update(1.0 / 60.0)
 	}
-	if g.PoliceState != "fight" {
-		t.Fatalf("state %q, want a fight", g.PoliceState)
+	// complying with the stop is the end of the chase: cargo seized, fine paid
+	if g.State != "docked" {
+		t.Fatalf("state %q after complying, want the station", g.State)
+	}
+	if g.Cmd.Legal != 0 {
+		t.Fatalf("record %d after the arrest, want it cleared", g.Cmd.Legal)
+	}
+	if g.PoliceState == "fight" {
+		t.Fatal("the vipers opened fire on a pilot who stopped")
 	}
 }
 
@@ -64,7 +71,7 @@ func TestPoliceGiveUpWaiting(t *testing.T) {
 			e.Pos = g.Player.Pos.Add(e.Mat.Col(2).Mul(-4000))
 		}
 	}
-	for i := 0; i < 60*20 && g.PoliceState == "hail"; i++ {
+	for i := 0; i < 60*25 && g.PoliceState == "hail"; i++ {
 		g.Player.Speed = g.Ship().Speed
 		g.Update(1.0 / 60.0)
 	}

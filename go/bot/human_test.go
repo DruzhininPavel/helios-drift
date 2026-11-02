@@ -45,7 +45,7 @@ func TestHumanModeSavingsPlan(t *testing.T) {
 	g.Cmd.Equip["fuelscoop"] = true
 	pol := NewTrader(7)
 	pol.Human = true
-	sc := Run(g, 60*60*40, pol)
+	sc := Run(g, 60*60*90, pol)
 
 	if g.Cmd.Ship == "cobra3" {
 		t.Fatalf("never traded up: still in the starter after %.0f minutes", float64(sc.Report.Frames)/3600)

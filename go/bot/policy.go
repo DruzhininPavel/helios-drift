@@ -530,6 +530,30 @@ func (t *Trader) upgrade(g *game.Game) []Event {
 		}
 		ev = append(ev, Event{Kind: "equip", A: equipIndex(id)})
 	}
+	// what the story is waiting for comes first: the board says what the next
+	// job wants, and a commander who cannot take the job is not a commander
+	if q := g.CampaignQuest(); q.Title != "" {
+		for _, id := range q.NeedEquip {
+			e := galaxy.EquipByID(id)
+			if e == nil || c.Equip[id] || equipIndex(id) < 0 {
+				continue
+			}
+			if c.Cash >= float64(e.Price)+reserve {
+				ev = append(ev, Event{Kind: "equip", A: equipIndex(id)})
+			}
+		}
+		if q.NeedLaser > c.Laser && g.Ship().MaxLaser >= q.NeedLaser {
+			for _, id := range []string{"laserbeam", "lasermilitary", "laserplasma"} {
+				e := galaxy.EquipByID(id)
+				if e == nil || e.Level != q.NeedLaser {
+					continue
+				}
+				if c.Cash >= float64(e.Price)+reserve {
+					ev = append(ev, Event{Kind: "equip", A: equipIndex(id)})
+				}
+			}
+		}
+	}
 	// guns: the hull has to be able to carry them
 	if c.Laser < 1 {
 		buy("laserbeam", 1000)

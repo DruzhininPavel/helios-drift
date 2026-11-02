@@ -4,6 +4,19 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"ARRESTED":                       "АРЕСТ",
+	"CARGO SEIZED":                   "ГРУЗ ИЗЪЯТ",
+	"T SEIZED":                       "Т ИЗЪЯТО",
+	"FINE":                           "ШТРАФ",
+	"RELEASED AT":                    "ОТПУЩЕН НА СТАНЦИИ",
+	"ARRESTED AT":                    "АРЕСТ В СИСТЕМЕ",
+	"NOT READY":                      "НЕ ГОТОВ",
+	"NEEDS":                          "ТРЕБУЕТСЯ",
+	"NOT READY: ":                    "НЕ ГОТОВ: ",
+	"ARRESTED - CARGO SEIZED, FINE ": "АРЕСТ - ГРУЗ ИЗЪЯТ, ШТРАФ ",
+	" T SEIZED, FINE ":               " Т ИЗЪЯТО, ШТРАФ ",
+	"RELEASED AT ":                   "ОТПУЩЕН НА СТАНЦИИ ",
+	"ARRESTED AT ":                   "АРЕСТ В СИСТЕМЕ ",
 	"TWO VIPERS WILL MEET YOU ON THE WAY. THEY ARE NOT THE NAVY.": "ДВЕ ГАДЮКИ ВСТРЕТЯТ ТЕБЯ В ПУТИ. ЭТО НЕ ФЛОТ.",
 	"THE COMBINE WANTS THEM BURNED.":                              "ДВЕ ГАДЮКИ ПРИДУТ ЗАБРАТЬ ИХ У ТЕБЯ.",
 	"THE PAPERS":                                                  "БУМАГИ",
