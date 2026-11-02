@@ -92,7 +92,6 @@ func init() {
 					Text: "JUMP OUT",
 					Next: "c2_jump",
 					Do: []Effect{
-						{Kind: FxSpawn, Key: "AMBUSH"},
 						{Kind: FxFlag, Key: "DISP_OUT"},
 						{Kind: FxQuest},
 					},
@@ -128,7 +127,6 @@ func init() {
 					Text: "JUMP OUT",
 					Next: "c2_jump",
 					Do: []Effect{
-						{Kind: FxSpawn, Key: "AMBUSH"},
 						{Kind: FxFlag, Key: "DISP_OUT"},
 						{Kind: FxQuest},
 					},
@@ -164,7 +162,6 @@ func init() {
 					Text: "JUMP OUT",
 					Next: "c2_jump",
 					Do: []Effect{
-						{Kind: FxSpawn, Key: "AMBUSH"},
 						{Kind: FxFlag, Key: "DISP_OUT"},
 						{Kind: FxQuest},
 					},
@@ -335,6 +332,19 @@ func init() {
 			Options: []Option{{Text: "CONTINUE", Next: "c6_archive"}},
 		},
 		&Node{
+			ID:      "c6_leave",
+			Kind:    "msg",
+			Speaker: "CLERK",
+			Lines: []string{
+				"THE CABINET STAYS SHUT AND THE FORM STAYS BLANK.",
+				"THE JOB IS STILL ON THE BOARD. COME BACK WHEN YOU HAVE SOMETHING HE CANNOT REFUSE.",
+			},
+			// the stage stays open: clear the spoken flag so the story can be
+			// picked up again on the next docking
+			OnEnter: []Effect{{Kind: FxUnflag, Key: "SPOKEN_NAVY"}},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
 			ID:      "c6_archive",
 			Kind:    "screen",
 			Speaker: "CLERK",
@@ -378,7 +388,7 @@ func init() {
 					Do: []Effect{{Kind: FxCash, N: -2000}, {Kind: FxFlag, Key: "CLERK_2"}}},
 				{Text: "FORGE THE SIGNATURE", Next: "c6_forged",
 					Do: []Effect{{Kind: FxFlag, Key: "FORGED"}}},
-				{Text: "LEAVE", Next: "c6_arch3"},
+				{Text: "LEAVE", Next: "c6_leave"},
 			},
 		},
 		&Node{

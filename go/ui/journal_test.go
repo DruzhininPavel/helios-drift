@@ -44,40 +44,21 @@ func TestJournalComesBackToTheMenu(t *testing.T) {
 	}
 }
 
-// The journal answers Enter as well, because a pad's A is Enter.
-func TestJournalEnterLeaves(t *testing.T) {
-	lang.Set("en")
-	defer lang.Set("ru")
-	g := game.New()
-	g.NewGame("JOUR")
-	g.State = "docked"
-	g.Screen = "journal"
-	Key("Enter")
-	if g.Screen != "launch" {
-		t.Fatalf("Enter left the game in %q", g.Screen)
-	}
-}
-
-// The summary row is always offered, and an empty log says so instead of looking
-// like a broken screen.
-func TestJournalRowAndEmptyLog(t *testing.T) {
+// The station menu no longer offers a tasks page: it repeated the board and the
+// log. What is left of that idea is that an empty log still says so.
+func TestEmptyLogSaysSo(t *testing.T) {
 	lang.Set("ru")
 	defer lang.Set("en")
 	g := game.New()
 	g.NewGame("JROW")
 	g.State = "docked"
 	g.Screen = "launch"
-	found := false
+	g.Docked()
 	for _, it := range menuItems() {
-		if it == "TASKS" {
-			found = true
+		if it == "TASKS" || it == "JOURNAL" {
+			t.Errorf("the station menu still offers %q", it)
 		}
 	}
-	if !found {
-		t.Fatal("no summary row with nothing taken on")
-	}
-	// a fresh commander may already have a line or two (arrival in system)
-	g.Cmd.Log = nil
 	g.Cmd.Log = g.Cmd.Log[:0]
 	g.Screen = "log"
 	Draw(render.NewFB(320, 224), 1.0/60.0)

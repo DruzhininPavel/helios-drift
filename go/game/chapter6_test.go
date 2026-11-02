@@ -203,7 +203,8 @@ func TestChapterSixArchivesOpenOtherWays(t *testing.T) {
 	})
 	t.Run("auditor", func(t *testing.T) {
 		g := open(t)
-		chooseText(t, g, "LEAVE")
+		chooseText(t, g, "FORGE THE SIGNATURE")
+		chooseText(t, g, "CONTINUE")
 		if g.Talk != "c6_arch3" {
 			t.Fatalf("third archive is %q", g.Talk)
 		}

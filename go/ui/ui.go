@@ -51,8 +51,6 @@ type Sel struct {
 	ContractScroll int
 	// ClosingScroll is the page of the closing notice being read.
 	ClosingScroll int
-	// JournalScroll is how far down the journal is scrolled.
-	JournalScroll int
 	// HelpScroll is how far down the handbook page is scrolled.
 	HelpScroll int
 	// SlotConfirm is set while the save screen waits for a second Enter to

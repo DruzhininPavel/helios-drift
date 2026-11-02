@@ -44,7 +44,7 @@ func TestEveryDockedScreenDraws(t *testing.T) {
 	g.State = "docked"
 	fb := render.NewFB(320, 224)
 	for _, screen := range []string{"market", "equip", "chart", "status", "contracts",
-		"journal", "log", "shipyard", "slots", "closing", "ending"} {
+		"log", "shipyard", "slots", "closing", "ending"} {
 		g.Screen = "launch"
 		Draw(fb, 1.0/60.0)
 		menu := append([]uint32{}, fb.Buf...)

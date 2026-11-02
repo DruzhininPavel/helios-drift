@@ -63,8 +63,6 @@ func docked(fb *render.FB) {
 		missionScreen(fb)
 	case "contracts":
 		contractsScreen(fb)
-	case "journal":
-		journalScreen(fb)
 	case "log":
 		logScreen(fb)
 	case "closing":
@@ -171,8 +169,12 @@ func stationMenu(fb *render.FB) {
 		}
 		fb.Text(num+"  "+it, 180, y, col, 1)
 	}
-	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "DIPLOMAT" {
-		Hint = lang.T("CLEAR RECORD FOR") + " " + itoa(game.G.PardonPrice()) + " CR"
+	if S.Menu >= 0 && S.Menu < len(items) && items[S.Menu] == "CLEAR RECORD" {
+		if g.PardonAvailable() {
+			Hint = lang.T("CLEAR RECORD FOR") + " " + itoa(game.G.PardonPrice()) + " CR"
+		} else {
+			Hint = lang.T("NOBODY HERE CAN HELP WITH THAT")
+		}
 	}
 	fb.HLine(174, 306, 150, render.RGB(0x1b3348))
 	fb.Text("REFUEL  [F]", 180, 157, ColDim, 1)
@@ -201,13 +203,10 @@ func menuItems() []string {
 	if !game.G.Classic() {
 		items = append(items, "SHIPYARD", "LOG")
 	}
-	if !game.G.Classic() {
-		// always, not only when there is work: the row is how a pilot asks
-		// "where am I in all this", and a missing row reads as a missing feature
-		items = append(items, "TASKS")
-	}
-	if game.G.PardonAvailable() {
-		items = append(items, "DIPLOMAT")
+	if !game.G.Classic() && game.G.Cmd.Legal > 0 {
+		// always offered while there is a record: a row that comes and goes
+		// looked like a bug, and the pilot had no way to learn the rule
+		items = append(items, "CLEAR RECORD")
 	}
 	// the way out is always the last row
 	items = append(items, "SAVE COMMANDER", "GALACTIC CHART", "LEAVE STATION")
@@ -903,15 +902,11 @@ func dockedKey(k string) bool {
 			case "LOG":
 				g.Screen = "log"
 				S.Log = 0
-			case "DIPLOMAT":
+			case "CLEAR RECORD":
 				g.BuyPardon()
 			}
 			return true
 		}
-		return true
-	}
-	if g.Screen == "journal" {
-		journalKey(k)
 		return true
 	}
 	if g.Screen == "ending" {
@@ -2323,111 +2318,6 @@ func openJournal() {
 		return
 	}
 	g.Screen = "journal"
-}
-
-// journalKey leaves the journal with Escape, Enter or the back button, and
-// scrolls it if the page is longer than the panel.
-func journalKey(k string) bool {
-	g := game.G
-	switch k {
-	case "Escape", "Enter", "Backspace":
-		g.Screen = "launch"
-	case "ArrowUp":
-		S.JournalScroll--
-	case "ArrowDown":
-		S.JournalScroll++
-	case "PageUp":
-		S.JournalScroll -= 8
-	case "PageDown":
-		S.JournalScroll += 8
-	}
-	if S.JournalScroll < 0 {
-		S.JournalScroll = 0
-	}
-	return true
-}
-
-func journalScreen(fb *render.FB) {
-	g := game.G
-	plate(fb, 8, 16, 304, 182, lang.T("TASKS"))
-	// the page scrolls instead of overflowing the panel
-	off := S.JournalScroll * 10
-	y := 32 - off
-	// one line that says what the page is for: a pilot opened it and asked
-	fb.Text(lang.T("WHAT YOU ARE DOING NOW"), 16, y, render.RGB(0x2d4a5c), 1)
-	y += 13
-	fb.HLine(16, 300, y, ColFrame)
-	y += 8
-	if !g.Classic() {
-		c := &g.Cmd.Campaign
-		fb.Text("CAMPAIGN", 16, y, ColDim, 1)
-		y += 11
-		if c.Stage >= game.CampaignTotal() {
-			fb.Text("COMPLETE", 16, y, ColGreen, 1)
-		} else {
-			q := g.CampaignQuest()
-			fb.Text(clip(g.TitleFor(q), 46), 16, y, ColYellow, 1)
-			y += 10
-			if st := g.CampaignStatus(); st != "" {
-				fb.Text(clip(st, 46), 16, y, ColGreen, 1)
-				y += 10
-			}
-			fb.Text("STAGE "+itoa(c.Stage+1)+"/"+itoa(game.CampaignTotal()), 16, y, ColDim, 1)
-		}
-		y += 14
-		fb.HLine(16, 300, y, ColFrame)
-		y += 8
-	} else if ms := g.MissionStatus(); ms != "" {
-		fb.Text("PRIVATE CONTRACT", 16, y, ColDim, 1)
-		y += 11
-		fb.Text(clip(ms, 46), 16, y, ColGreen, 1)
-		y += 10
-		fb.Text("PAYS "+itoa(g.Cmd.Mission.Pay)+" CR", 16, y, ColDim, 1)
-		y += 12
-	} else {
-		fb.Text("PRIVATE CONTRACT", 16, y, ColDim, 1)
-		y += 11
-		fb.Text("NONE ACTIVE", 16, y, render.RGB(0x2d4a5c), 1)
-		y += 12
-	}
-	fb.HLine(16, 300, y, ColFrame)
-	y += 8
-	fb.Text("ACCEPTED JOBS", 16, y, ColDim, 1)
-	y += 12
-	if len(g.Cmd.Contracts) == 0 {
-		fb.Text("NONE", 16, y, render.RGB(0x2d4a5c), 1)
-		y += 11
-	} else {
-		for _, c := range g.Cmd.Contracts {
-			fb.Text(clip(g.ContractDetail(c), 44), 16, y, ColText, 1)
-			y += 11
-		}
-	}
-	// work that opened after the campaign, or because the pilot went somewhere
-	if side := g.SideActive(); len(side) > 0 {
-		y += 8
-		fb.HLine(16, 300, y, ColFrame)
-		y += 8
-		fb.Text(lang.T("SIDE WORK"), 16, y, ColDim, 1)
-		y += 12
-		for _, j := range side {
-			fb.Text(clip(lang.T(j.Title), 44), 16, y, ColYellow, 1)
-			y += 10
-			fb.Text(clip(lang.T(g.SideLine(j)), 46), 22, y, ColText, 1)
-			y += 11
-		}
-	}
-	y += 6
-	if g.Cmd.Pax > 0 || g.Cmd.Mail > 0 {
-		fb.Text("PAX "+itoa(g.Cmd.Pax)+"   MAIL "+itoa(g.Cmd.Mail)+" T", 16, y, ColDim, 1)
-		y += 11
-	}
-	// and where the whole thing sends you next
-	if sys := g.NextStop(); sys != "" {
-		fb.Text(lang.T("NEXT STOP")+": ", 16, y, ColDim, 1)
-		fb.TextRaw(sys, 16+render.TextWidth(lang.T("NEXT STOP")+": ", 1), y, ColYellow, 1)
-	}
-	Hint = "ESC BACK"
 }
 
 // ------------------------------------------------------------------- help

@@ -34,7 +34,8 @@ func (g *Game) PardonAvailable() bool {
 // is actively hunting: those vipers are already in the air.
 func (g *Game) BuyPardon() bool {
 	if !g.PardonAvailable() {
-		g.Message("NOBODY HERE CAN HELP WITH THAT", "bad")
+		// say the rule, not just the refusal: the row is always there now
+		g.Message("NOBODY HERE CAN HELP - TRY A HIGH TECH OR CORPORATE STATION", "bad")
 		return false
 	}
 	price := g.PardonPrice()
