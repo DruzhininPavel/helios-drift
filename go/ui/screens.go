@@ -647,39 +647,65 @@ func statusScreen(fb *render.FB) {
 	}
 }
 
-func pauseScreen(fb *render.FB) {
-	chrome(fb, "PAUSED")
-	plate(fb, 8, 18, 312, 190, "FLIGHT CONTROLS")
-	// the rows come from the pilot's own bindings, not from a hardcoded list: he
-	// may have moved every one of these keys
+// pauseLabels are the short names the pause list uses: the full ones - docking
+// computer, jump in system - do not fit two columns and get cut in half.
+var pauseLabels = map[input.Action]string{
+	input.PitchUp:      "PITCH UP",
+	input.PitchDown:    "PITCH DOWN",
+	input.RollLeft:     "ROLL LEFT",
+	input.RollRight:    "ROLL RIGHT",
+	input.YawLeft:      "YAW LEFT",
+	input.YawRight:     "YAW RIGHT",
+	input.Fire:         "FIRE",
+	input.Accel:        "SPEED UP",
+	input.Decel:        "SLOW DOWN",
+	input.Missile:      "MISSILE",
+	input.ECM:          "E.C.M.",
+	input.Bomb:         "BOMB",
+	input.Autopilot:    "DOCK",
+	input.JumpInSystem: "JUMP",
+	input.GalacticJump: "GALAXY",
+	input.Jettison:     "JETTISON",
+	input.Chart:        "CHART",
+	input.Status:       "STATUS",
+	input.Pause:        "PAUSE",
+}
+
+// pauseRows is the list the pause screen shows: key on the left, what it does on
+// the right, both taken from the pilot's bindings.
+func pauseRows() [][2]string {
 	var rows [][2]string
 	for _, a := range input.Actions() {
 		if a == input.Sound {
 			continue
 		}
-		name := lang.T(input.Name(a))
-		if a == input.PitchUp && !game.G.Classic() {
-			continue // the arrows already steer, the pause list stays readable
+		name, ok := pauseLabels[a]
+		if !ok {
+			name = input.Name(a)
 		}
-		if a == input.PitchDown {
-			name = "PITCH UP / DOWN"
-		}
-		rows = append(rows, [2]string{input.KeyDesc(a), name})
+		rows = append(rows, [2]string{input.KeyDesc(a), lang.T(name)})
 	}
 	rows = append(rows,
-		[2]string{"F5", lang.T("QUICK SAVE")},
-		[2]string{"F7", lang.T("QUICK LOAD")},
+		[2]string{"F5", lang.T("SAVE")},
+		[2]string{"F7", lang.T("LOAD")},
 		[2]string{"ESC", lang.T("RESUME")},
 		[2]string{"H", lang.T("HANDBOOK")},
 		[2]string{"Q", lang.T("MAIN MENU")},
 	)
+	return rows
+}
+
+func pauseScreen(fb *render.FB) {
+	chrome(fb, "PAUSED")
+	plate(fb, 8, 18, 312, 176, "FLIGHT CONTROLS")
+	rows := pauseRows()
 	perColumn := (len(rows) + 1) / 2
 	for i, r := range rows {
 		col := i / perColumn
 		y := 30 + (i%perColumn)*11
-		xk := 14 + col*152
+		xk := 12 + col*150
 		fb.Text(r[0], xk, y, ColYellow, 1)
-		fb.Text(clip(r[1], 22), xk+58, y, ColText, 1)
+		fb.Text(r[1], xk+46, y, ColText, 1)
 	}
 	Hint = "ESC RESUME   H HANDBOOK   Q MAIN MENU"
 }
