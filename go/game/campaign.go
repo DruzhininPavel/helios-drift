@@ -38,6 +38,43 @@ type Quest struct {
 	Spawn    string // ship type spawned on arrival
 	Count    int
 	Brief    []string
+	// BriefVariants rewrite the briefing when something earlier changed what
+	// the job actually is: a convoy you let pass is not a convoy you broke.
+	BriefVariants []BriefVariant
+	// TitleVariants rename it for the same reason.
+	TitleVariants []TitleVariant
+}
+
+// BriefVariant is an alternative briefing, first match wins.
+type BriefVariant struct {
+	If    []Cond
+	Lines []string
+}
+
+// TitleVariant renames the stage when the story took a different turn.
+type TitleVariant struct {
+	If    []Cond
+	Title string
+}
+
+// TitleFor is the name of the job as this pilot earned it.
+func (g *Game) TitleFor(q Quest) string {
+	for _, v := range q.TitleVariants {
+		if g.conditionsMet(v.If) {
+			return v.Title
+		}
+	}
+	return q.Title
+}
+
+// BriefFor is the briefing as this pilot has earned it.
+func (g *Game) BriefFor(q Quest) []string {
+	for _, v := range q.BriefVariants {
+		if g.conditionsMet(v.If) {
+			return v.Lines
+		}
+	}
+	return q.Brief
 }
 
 const (
@@ -119,6 +156,21 @@ var campaignQuests = []Quest{
 			"",
 			"SURVIVE. TWO OF THEM.",
 		},
+		TitleVariants: []TitleVariant{{
+			If:    []Cond{{Key: "CONVOY_SPARED", Op: "flag"}},
+			Title: "THE PAPERS",
+		}},
+		BriefVariants: []BriefVariant{{
+			If: []Cond{{Key: "CONVOY_SPARED", Op: "flag"}},
+			Lines: []string{
+				"THE CONVOY DOCKED AND TOLD THEM WHAT",
+				"YOU DID. NOBODY IS PUTTING THE DEAD ON",
+				"YOUR NAME: THE NAVY WANTS THE PAPERS READ,",
+				"THE COMBINE WANTS THEM BURNED.",
+				"",
+				"TWO VIPERS COME TO TAKE THEM OFF YOU.",
+			},
+		}},
 	},
 	{
 		Title: "THE HIVE",
@@ -199,7 +251,7 @@ func (g *Game) AcceptCampaign() bool {
 	g.Cmd.Campaign.Active = true
 	g.Cmd.Campaign.Target = g.missionTarget()
 	g.Cmd.Campaign.Galaxy = g.Cmd.Galaxy
-	g.Message("CONTRACT ACCEPTED: "+q.Title, "good")
+	g.Message("CONTRACT ACCEPTED: "+g.TitleFor(q), "good")
 	return true
 }
 
@@ -218,9 +270,9 @@ func (g *Game) CampaignStatus() string {
 	// system name stays as it is on the chart
 	switch q.Kind {
 	case QuestDeliver:
-		return lang.T(q.Title) + lang.T(" TO ") + sys
+		return lang.T(g.TitleFor(q)) + lang.T(" TO ") + sys
 	}
-	return lang.T(q.Title) + lang.T(" IN ") + sys
+	return lang.T(g.TitleFor(q)) + lang.T(" IN ") + sys
 }
 
 // campaignTarget returns the system the current stage points at.
@@ -265,6 +317,21 @@ func (g *Game) campaignArrive() {
 		return
 	}
 	g.spawnCampaignGroup(q)
+}
+
+// clearCampaignTag sends a tagged group away: used when a conversation ends a
+// stage without a fight.
+func (g *Game) clearCampaignTag(tag string) {
+	if g.World == nil {
+		return
+	}
+	for i := len(g.World.Entities) - 1; i >= 0; i-- {
+		e := g.World.Entities[i]
+		if e.CampaignTag != tag {
+			continue
+		}
+		g.World.Entities = append(g.World.Entities[:i], g.World.Entities[i+1:]...)
+	}
 }
 
 // spawnQuestGroup releases the ships of a tagged stage group in the current
@@ -323,7 +390,7 @@ func (g *Game) spawnCampaignGroup(q Quest) {
 			g.World.Entities = append(g.World.Entities, g.spawnAtDistance("thargon", randRange(3000, 5000), "thargoid"))
 		}
 	}
-	g.Message(q.Title+" - CONTACTS", "bad")
+	g.Message(g.TitleFor(q)+" - CONTACTS", "bad")
 	g.Emit("warning")
 }
 
@@ -358,7 +425,7 @@ func (g *Game) campaignKill(tag string) {
 	c.Stage++
 	if q.Pay > 0 {
 		g.Cmd.Cash += float64(q.Pay)
-		g.Note(LogDone, q.Title, c.Stage, float64(q.Pay))
+		g.Note(LogDone, g.TitleFor(q), c.Stage, float64(q.Pay))
 		g.Message("STAGE COMPLETE  +"+itoa(q.Pay)+" CR", "good")
 	} else {
 		g.Message("STAGE COMPLETE", "good")

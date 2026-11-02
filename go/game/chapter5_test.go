@@ -1,6 +1,9 @@
 package game
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // Chapter five: the convoy captain talks before anyone shoots. Breaking it pays,
 // letting it pass costs nothing but earns the record, and a licence changes the
@@ -92,4 +95,59 @@ func TestChapterFiveConviction(t *testing.T) {
 			t.Fatalf("a licence holder paid %.0f for a 100 crate", spent)
 		}
 	})
+}
+
+// Sparing the convoy is not breaking it: the next briefing must not accuse the
+// pilot of a massacre he did not commit, and the haulers must not stay behind.
+func TestSparingTheConvoyClearsTheBlame(t *testing.T) {
+	g := New()
+	g.NewGame("SPARE")
+	g.State = "flight"
+	g.EnterSystem(3, "launch", 0, false)
+	g.Cmd.Campaign.Stage = 4 // the convoy
+	g.spawnCampaignGroup(QuestAt(4))
+	if len(g.World.Entities) == 0 {
+		t.Fatal("no convoy spawned")
+	}
+	if !g.TalkStart("c5_captain") {
+		t.Fatal("the convoy captain does not talk")
+	}
+	// LET THEM PASS is the second visible answer
+	vis := g.VisibleOptions(DialogueNode("c5_captain"))
+	pick := -1
+	for i, idx := range vis {
+		if DialogueNode("c5_captain").Options[idx].Next == "c5_spared" {
+			pick = i
+		}
+	}
+	if pick < 0 {
+		t.Fatal("no option spares the convoy")
+	}
+	if g.TalkChoose(pick) {
+		g.EndTalk()
+	}
+	if !g.Cmd.Flags["CONVOY_SPARED"] {
+		t.Fatal("the flag was not set")
+	}
+	for _, e := range g.World.Entities {
+		if e.CampaignTag == "CONVOY" {
+			t.Error("a spared hauler is still sitting in the system")
+		}
+	}
+	next := QuestAt(g.Cmd.Campaign.Stage)
+	if next.Talk != "c6_brief" {
+		t.Fatalf("stage %d is %q", g.Cmd.Campaign.Stage, next.Talk)
+	}
+	if got := g.TitleFor(next); got == next.Title {
+		t.Errorf("the job is still called %q after sparing the convoy", got)
+	}
+	blamed := false
+	for _, ln := range g.BriefFor(next) {
+		if strings.Contains(ln, "MASSACRE") || strings.Contains(ln, "FILTHY") {
+			blamed = true
+		}
+	}
+	if blamed {
+		t.Errorf("the briefing still blames the pilot: %v", g.BriefFor(next))
+	}
 }

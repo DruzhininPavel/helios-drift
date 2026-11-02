@@ -235,9 +235,9 @@ func missionScreen(fb *render.FB) {
 			Hint = "ESC BACK"
 			return
 		}
-		fb.TextC(q.Title, 160, 44, ColYellow, 1)
+		fb.TextC(g.TitleFor(q), 160, 44, ColYellow, 1)
 		y := 60
-		for _, ln := range q.Brief {
+		for _, ln := range g.BriefFor(q) {
 			if ln == "" {
 				y += 4
 				continue
@@ -1468,7 +1468,7 @@ func storyWhat() []string {
 	g := game.G
 	q := g.CampaignQuest()
 	para := ""
-	for _, ln := range q.Brief {
+	for _, ln := range g.BriefFor(q) {
 		if ln != "" {
 			para += lang.T(ln) + " "
 		}
@@ -2350,7 +2350,7 @@ func journalScreen(fb *render.FB) {
 			fb.Text("COMPLETE", 16, y, ColGreen, 1)
 		} else {
 			q := g.CampaignQuest()
-			fb.Text(clip(q.Title, 46), 16, y, ColYellow, 1)
+			fb.Text(clip(g.TitleFor(q), 46), 16, y, ColYellow, 1)
 			y += 10
 			if st := g.CampaignStatus(); st != "" {
 				fb.Text(clip(st, 46), 16, y, ColGreen, 1)

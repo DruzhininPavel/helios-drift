@@ -156,6 +156,12 @@ func (g *Game) apply(e Effect) {
 	switch e.Kind {
 	case FxFlag:
 		cmd.Flags[e.Key] = true
+		if e.Key == "CONVOY_SPARED" {
+			// the haulers they let pass jump out: they were never cargo to be
+			// collected, and a convoy that stays put is a convoy the next stage
+			// still thinks is alive
+			g.clearCampaignTag("CONVOY")
+		}
 		if e.Key == "BOUGHT_LICENSE" {
 			// remember where the licence was bought: the discount is local
 			cmd.LicenseSys = cmd.System
