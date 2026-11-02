@@ -65,6 +65,8 @@ func docked(fb *render.FB) {
 		contractsScreen(fb)
 	case "log":
 		logScreen(fb)
+	case "diary":
+		diaryScreen(fb)
 	case "closing":
 		closingScreen(fb)
 	case "ending":
@@ -958,6 +960,9 @@ func dockedKey(k string) bool {
 	}
 	if g.Screen == "closing" {
 		return closingKey(k)
+	}
+	if g.Screen == "diary" {
+		return diaryKey(k)
 	}
 	if g.Screen == "log" {
 		return logKey(k)
@@ -2737,9 +2742,9 @@ func logScreen(fb *render.FB) {
 	if len(ents) == 0 {
 		fb.Text(lang.T("THE LOG IS EMPTY"), 14, 44, ColText, 1)
 		fb.Text(lang.T("EVERY TRADE, KILL AND JUMP IS WRITTEN HERE"), 14, 56, ColDim, 1)
-		Hint = "LEFT/RIGHT FILTER   ESC BACK"
+		Hint = "LEFT/RIGHT FILTER   D DIARY   ESC BACK"
 		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
-			Hint = "LEFT/RIGHT FILTER   L CLOSING NOTICE   ESC BACK"
+			Hint = "LEFT/RIGHT FILTER   D DIARY   L NOTICE   ESC BACK"
 		}
 		return
 	}
@@ -2920,6 +2925,11 @@ func logKey(k string) bool {
 	switch k {
 	case "Escape":
 		g.Screen = "launch"
+	case "d", "D":
+		g.Screen = "diary"
+		S.Diary = 0
+		S.DiaryOpen = false
+		S.DiaryScroll = 0
 	case "l", "L":
 		// the list is a page of the log, not a menu item: it is not a thing to do
 		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
@@ -3170,4 +3180,131 @@ func marketRows() int {
 		n++
 	}
 	return n
+}
+
+// ---------------------------------------------------------------- diary
+
+// diaryScreen is the story as the pilot wrote it down: a list of pages, and the
+// page itself when one is opened.
+func diaryScreen(fb *render.FB) {
+	g := game.G
+	entries := g.DiaryAvailable()
+	plate(fb, 6, 14, 310, 190, lang.T("DIARY"))
+	if len(entries) == 0 {
+		fb.Text(lang.T("NOTHING WRITTEN YET"), 14, 40, ColText, 1)
+		fb.Text(lang.T("THE STORY WRITES ITSELF AS YOU FLY IT"), 14, 54, ColDim, 1)
+		Hint = "ESC BACK"
+		return
+	}
+	if S.Diary >= len(entries) {
+		S.Diary = len(entries) - 1
+	}
+	if S.Diary < 0 {
+		S.Diary = 0
+	}
+
+	if !S.DiaryOpen {
+		// the list: page numbers, headings, and a mark on what is new
+		top := S.Diary - 7
+		if top < 0 {
+			top = 0
+		}
+		for i := top; i < len(entries) && i < top+8; i++ {
+			e := entries[i]
+			y := 30 + (i-top)*15
+			col := ColText
+			if i == S.Diary {
+				fb.FillRect(10, y-3, 308, y+9, render.RGB(0x12384f))
+				col = ColYellow
+			}
+			fb.Text(itoa(i+1)+".", 14, y, ColDim, 1)
+			fb.Text(clip(lang.T(e.Title), 40), 28, y, col, 1)
+			if !g.DiaryReadIDs()[e.ID] {
+				fb.TextR(lang.T("NEW"), 300, y, ColGreen, 1)
+			}
+		}
+		Hint = "UP/DOWN   ENTER READ   ESC BACK"
+		return
+	}
+
+	e := entries[S.Diary]
+	fb.Text(clip(lang.T(e.Title), 44), 14, 24, ColYellow, 1)
+	fb.HLine(12, 306, 33, ColFrame)
+	var rows []string
+	for _, ln := range e.Lines {
+		if ln == "" {
+			rows = append(rows, "")
+			continue
+		}
+		rows = append(rows, wrapText(lang.T(ln), 46)...)
+	}
+	const lineH = 10
+	visible := (196 - 40) / lineH
+	maxTop := len(rows) - visible
+	if maxTop < 0 {
+		maxTop = 0
+	}
+	if S.DiaryScroll > maxTop {
+		S.DiaryScroll = maxTop
+	}
+	if S.DiaryScroll < 0 {
+		S.DiaryScroll = 0
+	}
+	y := 40
+	for i := S.DiaryScroll; i < len(rows) && i < S.DiaryScroll+visible; i++ {
+		if rows[i] == "" {
+			y += 5
+			continue
+		}
+		fb.TextRaw(rows[i], 14, y, ColText, 1)
+		y += lineH
+	}
+	if maxTop > 0 {
+		fb.TextR(itoa(S.DiaryScroll+1)+"/"+itoa(maxTop+1), 300, 24, ColDim, 1)
+	}
+	Hint = "ESC BACK"
+	if maxTop > 0 {
+		Hint = "UP/DOWN SCROLL   ESC BACK"
+	}
+}
+
+func diaryKey(k string) bool {
+	g := game.G
+	entries := g.DiaryAvailable()
+	if !S.DiaryOpen {
+		switch k {
+		case "Escape":
+			g.Screen = "log"
+		case "ArrowUp":
+			S.Diary--
+			if S.Diary < 0 {
+				S.Diary = 0
+			}
+		case "ArrowDown":
+			S.Diary++
+			if S.Diary > len(entries)-1 {
+				S.Diary = len(entries) - 1
+			}
+		case "Enter", " ":
+			if S.Diary >= 0 && S.Diary < len(entries) {
+				S.DiaryOpen = true
+				S.DiaryScroll = 0
+				g.DiaryMarkRead(entries[S.Diary].ID)
+			}
+		}
+		return true
+	}
+	switch k {
+	case "Escape", "Enter", " ":
+		S.DiaryOpen = false
+	case "ArrowUp":
+		S.DiaryScroll--
+	case "ArrowDown":
+		S.DiaryScroll++
+	case "PageUp":
+		S.DiaryScroll -= 8
+	case "PageDown":
+		S.DiaryScroll += 8
+	}
+	return true
 }

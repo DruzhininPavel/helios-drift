@@ -130,6 +130,9 @@ type Commander struct {
 	LicenseGalaxy int `json:"license_galaxy,omitempty"`
 	LicenseSys    int `json:"license_sys,omitempty"`
 	Mail          int `json:"mail"`
+	// DiaryRead is the pages of the diary the pilot has opened: the rest are
+	// marked as new until he reads them.
+	DiaryRead []string `json:"diary_read,omitempty"`
 	// Slot is the save slot this commander belongs to, -1 when he has never
 	// been written: quick save and quick load go there.
 	Slot int `json:"slot,omitempty"`

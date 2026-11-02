@@ -53,6 +53,11 @@ type Sel struct {
 	ClosingScroll int
 	// HelpScroll is how far down the handbook page is scrolled.
 	HelpScroll int
+	// Diary is the page the pilot is looking at, DiaryOpen says whether the page
+	// itself is open, DiaryScroll how far down it is.
+	Diary       int
+	DiaryOpen   bool
+	DiaryScroll int
 	// SlotConfirm is set while the save screen waits for a second Enter to
 	// overwrite, or a second Delete to erase.
 	SlotConfirm   bool
