@@ -74,6 +74,12 @@ func (g *Game) LoadSlot(slot int) bool {
 	if g.Cmd.Visited == nil {
 		g.Cmd.Visited = map[string]bool{}
 	}
+	if g.Cmd.SideStep == nil {
+		g.Cmd.SideStep = map[string]int{}
+	}
+	if g.Cmd.SideCount == nil {
+		g.Cmd.SideCount = map[string]int{}
+	}
 	if g.Cmd.Ship == "" {
 		g.Cmd.Ship = "cobra3"
 	}

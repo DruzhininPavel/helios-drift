@@ -569,6 +569,7 @@ func (g *Game) StartEnding(kind string) {
 		g.Cmd.Flags = map[string]bool{}
 	}
 	g.Cmd.Ending = kind
+	g.noteEndingFlag(kind)
 	g.Cmd.Campaign.Active = false
 	g.Cmd.Campaign.Stage = CampaignTotal()
 	g.Message("THE CAMPAIGN IS OVER", "good")

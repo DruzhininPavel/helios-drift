@@ -2299,6 +2299,20 @@ func journalScreen(fb *render.FB) {
 			y += 11
 		}
 	}
+	// work that opened after the campaign, or because the pilot went somewhere
+	if side := g.SideActive(); len(side) > 0 {
+		y += 8
+		fb.HLine(16, 300, y, ColFrame)
+		y += 8
+		fb.Text(lang.T("SIDE WORK"), 16, y, ColDim, 1)
+		y += 12
+		for _, j := range side {
+			fb.Text(clip(lang.T(j.Title), 44), 16, y, ColYellow, 1)
+			y += 10
+			fb.Text(clip(lang.T(g.SideLine(j)), 46), 22, y, ColText, 1)
+			y += 11
+		}
+	}
 	y += 6
 	if g.Cmd.Pax > 0 || g.Cmd.Mail > 0 {
 		fb.Text("PAX "+itoa(g.Cmd.Pax)+"   MAIL "+itoa(g.Cmd.Mail)+" T", 16, y, ColDim, 1)

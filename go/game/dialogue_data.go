@@ -811,6 +811,74 @@ func init() {
 			Options: []Option{{Text: "ENTER THE STATION", Next: ""}},
 		},
 
+		// ---- work that opens after the campaign
+		&Node{
+			ID:      "sj_clinic_a",
+			Kind:    "talk",
+			Speaker: "CLINIC NURSE",
+			Lines: []string{
+				"YOU ARE THE ONE WHO CARRIED THE CRATE. GOOD. LISTEN.",
+				"SUPPLIES COME THROUGH A MIDDLEMAN. ONE TONNE IN THREE NEVER ARRIVES, AND THE PAPER SAYS IT DID.",
+				"HE HAS TWO SHIPS THAT COLLECT THE DIFFERENCE. I HAVE A CLINIC. YOU HAVE GUNS.",
+			},
+			Options: []Option{{Text: "FIND THEM", Next: ""}},
+		},
+		&Node{
+			ID:      "sj_clinic_done",
+			Kind:    "talk",
+			Speaker: "CLINIC NURSE",
+			Lines: []string{
+				"BOTH OF THEM. THE PAPER WILL SAY THEY WERE LOST IN TRANSIT.",
+				"TAKE THIS. IT IS FROM THE SUPPLY FUND, WHICH NOW GOES WHERE IT SHOULD.",
+				"AND DO NOT EXPECT THANKS. THANKS IS NOT IN THE BUDGET.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "sj_keys_a",
+			Kind:    "talk",
+			Speaker: "COUNCIL CLERK",
+			Lines: []string{
+				"THE SEAL IS IN THE SAFE. THE SAFE HAS EIGHTEEN KEYS. THREE OF THEM BELONG TO PEOPLE WHO HAVE NOT BEEN TOLD YET.",
+				"SOMEONE HAS TO FLY TO THEM AND EXPLAIN WHAT THEY SIGNED UP FOR.",
+				"THEY WILL NOT BELIEVE A MESSAGE. THEY MIGHT BELIEVE A SHIP.",
+			},
+			Options: []Option{{Text: "TAKE ME TO THEM", Next: ""}},
+		},
+		&Node{
+			ID:      "sj_keys_done",
+			Kind:    "talk",
+			Speaker: "COUNCIL CLERK",
+			Lines: []string{
+				"THREE OF EIGHTEEN. THE FIRST SESSION CAN BE CALLED.",
+				"IT WILL BE DULL, IT WILL BE SLOW, AND IT WILL BE THEIRS.",
+				"HERE IS THE FEE THE COUNCIL VOTED ITSELF BEFORE IT KNEW WHAT IT WOULD COST.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+		&Node{
+			ID:      "sj_list_a",
+			Kind:    "talk",
+			Speaker: "COURIER",
+			Lines: []string{
+				"YOU STILL HAVE MY LIST. GOOD. I HAVE EIGHTEEN COPIES AND THREE STATIONS THAT WILL TAKE THEM.",
+				"TAKE THE FIRST TO THE FRONTIER. THAT IS WHERE THE NOTICE ARRIVES LAST AND MATTERS MOST.",
+				"AND IF SOMEONE TRIES TO TAKE IT OFF YOU, LET THEM TRY.",
+			},
+			Options: []Option{{Text: "TAKE THE COPY", Next: ""}},
+		},
+		&Node{
+			ID:      "sj_list_done",
+			Kind:    "talk",
+			Speaker: "COURIER",
+			Lines: []string{
+				"THREE STATIONS KNOW. EIGHTEEN STATIONS WORTH OF PEOPLE WILL HEAR IT FROM THEM.",
+				"THE COMBINE WILL CALL IT A RUMOUR. RUMOURS ARE ALL THAT EVER MOVES A MARKET.",
+				"FOUR THOUSAND, AS AGREED. AND A FAVOUR I WILL NOT FORGET.",
+			},
+			Options: []Option{{Text: "CONTINUE", Next: ""}},
+		},
+
 		// ---- the four faces you keep meeting on stations. No campaign, no
 		// reward: they are here so the sector has people in it.
 		&Node{

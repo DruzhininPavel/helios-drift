@@ -130,6 +130,10 @@ type Commander struct {
 	LicenseGalaxy int `json:"license_galaxy,omitempty"`
 	LicenseSys    int `json:"license_sys,omitempty"`
 	Mail          int `json:"mail"`
+	// SideStep and SideCount are the running side jobs: the step each job is on
+	// and how far into it the pilot is.
+	SideStep  map[string]int `json:"side_step,omitempty"`
+	SideCount map[string]int `json:"side_count,omitempty"`
 	// LastMeet is the day of the last station conversation, so two dockings on
 	// the same day do not both open one.
 	LastMeet int           `json:"last_meet,omitempty"`
@@ -779,6 +783,7 @@ func (g *Game) DestroyEntity(e *Entity, source string) {
 			rankBefore := galaxy.RankIndexFor(cmd.Kills)
 			cmd.Kills++
 			g.RankUp(rankBefore)
+			g.SideOnKill(e.CampaignTag)
 			g.countContracts()
 			if def.Bounty > 0 {
 				g.Message("BOUNTY "+itoa(def.Bounty)+" CR", "good")
@@ -1075,6 +1080,9 @@ func (g *Game) dockedAt() {
 			g.Market[i].Qty = int(float64(g.Market[i].Qty) * 0.6)
 		}
 	}
+	// work that was waiting for the pilot to come back
+	g.SideOnDock()
+	g.SideStartIfReady()
 	g.DockSalt++
 	g.Autopilot = false
 	g.AutopilotPath = nil
