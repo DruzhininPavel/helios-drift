@@ -2167,9 +2167,11 @@ func openMode() {
 }
 
 func modeScreen(fb *render.FB) {
+	// advanced first and selected by default: it is the game, and classic is the
+	// museum piece for the people who want 1984 back
 	rows := []struct{ name, desc string }{
-		{"CLASSIC", "1984 RULES: TWO MISSIONS, NO CONTRACTS"},
 		{"ADVANCED", "EVERYTHING: CONTRACTS, SHIPYARD, EXTRAS"},
+		{"CLASSIC", "1984 RULES: TWO MISSIONS, NO CONTRACTS"},
 	}
 	plate(fb, 14, 34, 292, 120, "")
 	for i, r := range rows {
@@ -2202,7 +2204,7 @@ func modeKey(k string) bool {
 		return true
 	case "Enter":
 		mode := game.ModeAdvanced
-		if S.Mode == 0 {
+		if S.Mode == 1 {
 			mode = game.ModeClassic
 		}
 		g.NewGameMode(mode, "")

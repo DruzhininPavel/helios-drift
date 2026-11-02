@@ -218,11 +218,11 @@ func TestModeScreenStartsGame(t *testing.T) {
 	if game.G.Screen != "mode" {
 		t.Fatalf("screen = %q, want mode", game.G.Screen)
 	}
+	// advanced is the first row now, classic is the second
 	Key("ArrowDown")
 	if S.Mode != 1 {
-		t.Fatalf("selection = %d, want advanced", S.Mode)
+		t.Fatalf("selection = %d, want classic", S.Mode)
 	}
-	Key("ArrowUp")
 	Key("Enter")
 	if !game.G.Classic() {
 		t.Fatalf("mode = %q, want classic", game.G.Cmd.Mode)
