@@ -429,8 +429,6 @@ func equipScreen(fb *render.FB) {
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
 	items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
 
-	// rows are shelves and things: a header carries no index, an item carries
-	// its place in the catalogue so the cursor still means something
 	type row struct {
 		head string
 		item int
@@ -450,27 +448,38 @@ func equipScreen(fb *render.FB) {
 		}
 	}
 
-	// two columns, split down the middle of the shelf list
-	const colPitch, colW = 154, 136
-	perColumn := (len(rows) + 1) / 2
+	const visible, lineH = 11, 13
+	selRow := 0
 	for r, rw := range rows {
-		col := r / perColumn
-		line := r % perColumn
-		x := 12 + col*colPitch
-		y := 30 + line*15
+		if rw.item == S.Equip {
+			selRow = r
+		}
+	}
+	top := 0
+	if selRow >= visible {
+		top = selRow - visible + 1
+	}
+	if maxTop := len(rows) - visible; maxTop > 0 && top > maxTop {
+		top = maxTop
+	}
+	if top < 0 {
+		top = 0
+	}
+
+	for r := top; r < len(rows) && r < top+visible; r++ {
+		rw := rows[r]
+		y := 30 + (r-top)*lineH
 		if rw.item < 0 {
-			fb.Text(lang.T(rw.head), x, y, render.RGB(0x3f6f8a), 1)
+			fb.Text(lang.T(rw.head), 12, y, render.RGB(0x3f6f8a), 1)
 			continue
 		}
 		it := items[rw.item]
-		i := rw.item
-		sel := S.Equip == i
+		sel := S.Equip == rw.item
 		if sel {
-			fb.FillRect(x-4, y-3, x+colW, y+8, render.RGB(0x12384f))
+			fb.FillRect(8, y-3, 308, y+8, render.RGB(0x12384f))
+			fb.FillRect(8, y-3, 10, y+8, ColYellow)
 		}
 		blocked := g.EquipBlocked(it.ID)
-		// the gun in the nose is fitted whatever the catalogue says: lasers do
-		// not live in the equipment flags, they replace one another
 		owned := blocked == "ALREADY FITTED" && (g.EquipFitted(it.ID) ||
 			galaxy.EquipByID(it.ID).Kind == galaxy.EquipLaser && cmd.Laser == it.Level)
 		c := ColText
@@ -482,26 +491,46 @@ func equipScreen(fb *render.FB) {
 		case sel:
 			c = ColYellow
 		}
-		name := it.Name
-		if len(name) > 17 {
-			name = name[:17]
-		}
-		fb.Text(name, x, y, c, 1)
-		switch {
-		case owned:
-			fb.TextR(lang.T("FITTED"), x+colW, y, ColGreen, 1)
-		case it.ID == "missile":
-			fb.TextR(itoa(it.Price)+" x"+itoa(cmd.Missiles), x+colW, y, ColGreen, 1)
-		default:
-			pc := ColRed
-			if cmd.Cash >= float64(it.Price) {
-				pc = ColGreen
+		right := 12
+		if !owned {
+			right = render.TextWidth(itoa(it.Price), 1)
+			if it.ID == "missile" {
+				right = render.TextWidth(itoa(it.Price)+" x"+itoa(cmd.Missiles), 1)
 			}
-			fb.TextR(itoa(it.Price), x+colW, y, pc, 1)
 		}
+		name := lang.T(it.Name)
+		limit := (300 - right - 16) / 6
+		if limit < 6 {
+			limit = 6
+		}
+		fb.Text(clip(name, limit), 14, y, c, 1)
+		if owned {
+			tx, ty := 300, y
+			fb.FillRect(tx, ty+4, tx+1, ty+5, ColGreen)
+			fb.FillRect(tx+2, ty+2, tx+3, ty+3, ColGreen)
+			fb.FillRect(tx+4, ty, tx+5, ty+1, ColGreen)
+			continue
+		}
+		pc := ColGreen
+		if it.ID != "missile" && cmd.Cash < float64(it.Price) {
+			pc = ColRed
+		}
+		val := itoa(it.Price)
+		if it.ID == "missile" {
+			val = itoa(it.Price) + " x" + itoa(cmd.Missiles)
+		}
+		fb.TextR(val, 306, y, pc, 1)
 	}
-	// the reason a row cannot be bought goes in the footer, where the player
-	// is already looking for the key hints
+	if top > 0 {
+		fb.FillRect(298, 24, 302, 24, ColDim)
+		fb.FillRect(297, 25, 303, 25, ColDim)
+		fb.FillRect(296, 26, 304, 26, ColDim)
+	}
+	if top+visible < len(rows) {
+		fb.FillRect(296, 178, 304, 178, ColDim)
+		fb.FillRect(297, 179, 303, 179, ColDim)
+		fb.FillRect(298, 180, 302, 180, ColDim)
+	}
 	if S.Equip >= 0 && S.Equip < len(items) {
 		if why := g.EquipBlocked(items[S.Equip].ID); why != "" && why != "ALREADY FITTED" {
 			Hint = lang.T(why)
