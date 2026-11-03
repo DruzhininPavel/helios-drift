@@ -37,10 +37,12 @@ func TestLeavingTheHiveIsLeaving(t *testing.T) {
 	if g.Cmd.Flags["HIVE_ATTACKED"] {
 		t.Error("leaving counted as an attack")
 	}
-	if g.Cmd.Flags["SPOKEN_MOTHER"] {
-		t.Error("the stage marked itself spoken: the talk would never open again")
+	// walking away ends the stage: the contract comes off the board, and the
+	// pilot is not made to come back and kill the thing to be rid of it
+	if !g.Cmd.Flags["AUDIT_WALKED"] {
+		t.Error("leaving did not record the decision")
 	}
-	if !g.Cmd.Campaign.Active || g.Cmd.Campaign.Stage != 6 {
+	if g.Cmd.Campaign.Active || g.Cmd.Campaign.Stage != 7 {
 		t.Errorf("campaign is at %d active=%v after leaving", g.Cmd.Campaign.Stage, g.Cmd.Campaign.Active)
 	}
 }
@@ -66,5 +68,37 @@ func TestTheFieldDecidesWhetherTheHiveCanBeHit(t *testing.T) {
 	g.HitEntity(mother, 500, "laser")
 	if !mother.Dead && mother.Energy >= 50 {
 		t.Error("cutting the field did not expose the mothership")
+	}
+}
+
+// Killing the hive must leave a working station board behind: the flag that
+// records a broken audit used to switch every board in the sector off, so the
+// pilot finished the fight and could never take a job again.
+func TestTheBoardStillWorksAfterTheHiveDies(t *testing.T) {
+	g := New()
+	g.NewGame("BOARD")
+	g.Cmd.Campaign.Stage = 6
+	g.Cmd.Campaign.Active = true
+	g.Cmd.Flags["HIVE_ATTACKED"] = true
+	g.Cmd.Flags["SPOKEN_MOTHER"] = true
+	q := g.CampaignQuest()
+	g.campaignKill(q.Tag)
+	if !g.Cmd.Flags["AUDIT_BROKEN"] {
+		t.Fatal("the audit did not break")
+	}
+	if g.Cmd.Campaign.Stage != 7 || g.Cmd.Campaign.Active {
+		t.Fatalf("campaign at %d active=%v after the kill", g.Cmd.Campaign.Stage, g.Cmd.Campaign.Active)
+	}
+	if !g.CampaignOffer() {
+		t.Fatal("the last stage is not on offer")
+	}
+	g.Cmd.Contracts = nil
+	offers := 0
+	for i := 0; i < 20 && offers == 0; i++ {
+		g.rollContracts()
+		offers = len(g.Offers)
+	}
+	if offers == 0 {
+		t.Fatal("no ordinary contracts on the board after the hive died")
 	}
 }

@@ -225,6 +225,22 @@ var campaignQuests = []Quest{
 		Title: "THE FLAGSHIP",
 		Kind:  QuestKill, Tag: "FLAGSHIP", Spawn: "anaconda", Count: 1, Pay: 50000,
 		Talk: "c8_director",
+		TitleVariants: []TitleVariant{
+			{If: []Cond{{Key: "AUDIT_WALKED", Op: "flag"}}, Title: "THE LEDGER"},
+		},
+		BriefVariants: []BriefVariant{
+			{If: []Cond{{Key: "AUDIT_WALKED", Op: "flag"}}, Lines: []string{
+				"THE HIVE IS STILL OUT THERE AND THE",
+				"CLOSURES ARE ALREADY FILED. YOU DID NOT",
+				"SIGN THEM AND YOU CANNOT UNSIGN THEM.",
+				"",
+				"THE COMBINE'S FLAGSHIP IS LOADED AND",
+				"CLEARED TO JUMP. IT LEAVES WITH THE",
+				"PAPERWORK THAT BURNS SEVENTEEN STATIONS.",
+				"",
+				"STOP IT, OR LET IT GO.",
+			}},
+		},
 		// the last job in the chain: a gun worth the name and shielding that
 		// will survive being looked at by an anaconda
 		NeedLaser: 2, NeedEquip: []string{"shieldboost1", "shieldboost2"},

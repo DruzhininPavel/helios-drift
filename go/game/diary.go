@@ -176,6 +176,14 @@ var diaryEntries = []DiaryEntry{
 		},
 	},
 	{
+		ID: "ch7_walked", Order: 73, Title: "SOMEONE ELSE'S LEDGER",
+		When: []Cond{{Key: "AUDIT_WALKED", Op: "flag"}},
+		Lines: []string{
+			"I LEFT THE HIVE IN ITS FIELD AND FLEW OUT WITHOUT FIRING. NOBODY FOLLOWED ME. THE JOB CAME OFF THE BOARD THE MOMENT I TURNED AWAY FROM IT.",
+			"SEVENTEEN STATIONS WILL CLOSE AND BE RECOUNTED OVER FORTY TWO YEARS, AND I WILL BE SOMEWHERE ELSE, TRADING. THE LEDGER WAS NEVER MINE - BUT I AM THE ONE WHO READ IT AND LEFT.",
+		},
+	},
+	{
 		ID: "ch7_reform", Order: 72, Title: "A REWRITING",
 		When: []Cond{{Key: "AUDIT_REFORMED", Op: "flag"}},
 		Lines: []string{

@@ -664,11 +664,12 @@ func init() {
 			Speaker: "HIVE",
 			Lines: []string{
 				"THE FIELD STAYS UP AND THE MOTHERSHIP DOES NOT MOVE.",
-				"NOTHING FOLLOWS YOU OUT. THE JOB STAYS ON THE BOARD UNTIL YOU COME BACK.",
+				"NOTHING FOLLOWS YOU OUT. THE AUDIT GOES AHEAD WITHOUT YOU: SEVENTEEN STATIONS WILL BE CLOSED AND RECOUNTED OVER FORTY TWO YEARS.",
+				"IT IS NOT YOUR LEDGER. IT WAS NEVER YOUR LEDGER.",
 			},
-			// leaving is not a decision the story makes for you: the stage waits,
-			// and the conversation opens again next time you arrive
-			OnEnter: []Effect{{Kind: FxUnflag, Key: "SPOKEN_MOTHER"}},
+			// walking away is a decision: the stage ends, the contract comes off
+			// the board, and the story remembers that the pilot declined
+			OnEnter: []Effect{{Kind: FxFlag, Key: "AUDIT_WALKED"}, {Kind: FxQuest}},
 			Options: []Option{{Text: "CONTINUE", Next: ""}},
 		},
 		&Node{

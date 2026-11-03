@@ -43,16 +43,23 @@ func TestEarlierDecisionsComeBack(t *testing.T) {
 		}
 	})
 
-	t.Run("a broken audit stops delivery", func(t *testing.T) {
+	t.Run("a broken audit makes the lanes dangerous, not empty", func(t *testing.T) {
 		g := New()
 		g.NewGame("AUDIT")
 		g.State = "docked"
 		g.Cmd.Flags["AUDIT_BROKEN"] = true
-		g.rollContracts()
-		for _, c := range g.Offers {
-			if c.Kind == ContractCourier || c.Kind == ContractMail || c.Kind == ContractPassenger {
-				t.Fatalf("a %s contract is still on the board", c.Kind)
+		// the board keeps working: an interrupted audit used to switch every
+		// station in the sector off, and there was no way to earn again
+		found := false
+		for i := 0; i < 40 && !found; i++ {
+			g.rollContracts()
+			for _, c := range g.Offers {
+				found = true
+				_ = c
 			}
+		}
+		if !found {
+			t.Fatal("the board stayed empty forty rolls after the audit broke")
 		}
 		// and the market is worth thirty per cent less
 		g.dockedAt()
