@@ -1554,9 +1554,19 @@ func boardRows() []boardRow {
 	return rows
 }
 
+// destName is a destination, and the galaxy it sits in when that is not the one
+// the pilot is flying: a jump of one galaxy is seven jumps back.
+func destName(gal, sys int) string {
+	name := galaxy.Get(gal).Systems[sys].Name
+	if gal != game.G.Cmd.Galaxy {
+		name += " (" + lang.T("GALAXY") + " " + itoa(gal+1) + ")"
+	}
+	return name
+}
+
 // contractWhat is the description template: what the job actually asks for.
 func contractWhat(c game.Contract) []string {
-	sys := galaxy.Get(c.Galaxy).Systems[c.System].Name
+	sys := destName(c.Galaxy, c.System)
 	good := galaxy.Commodities[c.Good].Name
 	days := itoa(maxInt(0, c.Due-game.G.Cmd.Day))
 	switch c.Kind {
@@ -1615,10 +1625,16 @@ func storyWhat() []string {
 		out := []string{lang.T("PRIVATE CONTRACT.")}
 		out = append(out, wrapText(para, 48)...)
 		out = append(out, g.CampaignStatus())
+		if gal := g.Cmd.Campaign.Galaxy; gal != g.Cmd.Galaxy {
+			out = append(out, lang.T("THE JOB IS IN GALAXY")+" "+itoa(gal+1))
+		}
 		return out
 	}
 	out := []string{lang.T("PRIVATE CONTRACT. THE COMPANY PAYS.")}
 	out = append(out, wrapText(para, 48)...)
+	if gal := g.Cmd.Campaign.Galaxy; gal != g.Cmd.Galaxy {
+		out = append(out, lang.T("THE JOB IS IN GALAXY")+" "+itoa(gal+1))
+	}
 	if q.Pay > 0 {
 		out = append(out, lang.T("PAYS")+" "+itoa(q.Pay)+" CR")
 	}
@@ -1659,15 +1675,18 @@ func contractsScreen(fb *render.FB) {
 		mark := " "
 		col := ColText
 		var label string
+		targetGal := g.Cmd.Galaxy
 		switch r.kind {
 		case "offer":
 			c := g.Offers[r.idx]
+			targetGal = c.Galaxy
 			label = g.ContractLabel(c)
 			if c.Taken {
 				mark = "*"
 				col = ColGreen
 			}
 		case "story":
+			targetGal = g.Cmd.Campaign.Galaxy
 			label = lang.T("PRIVATE") + ": " + lang.T(g.CampaignQuest().Title)
 			if g.Cmd.Campaign.Active {
 				mark = "*"
@@ -1680,6 +1699,7 @@ func contractsScreen(fb *render.FB) {
 			}
 		case "active":
 			c := g.Cmd.Contracts[r.idx]
+			targetGal = c.Galaxy
 			label = g.ContractLabel(c)
 			mark = "*"
 			col = ColGreen
@@ -1688,7 +1708,19 @@ func contractsScreen(fb *render.FB) {
 			col = ColYellow
 		}
 		fb.Text(mark, 12, y, ColGreen, 1)
-		fb.TextRaw(clip(label, 45), 20, y, col, 1)
+		tag := ""
+		if targetGal != g.Cmd.Galaxy {
+			// not this galaxy: the row says so, the pilot is not left to find out
+			// after seven jumps
+			tag = lang.T("GAL") + " " + itoa(targetGal+1)
+			label = clip(label, 36)
+		} else {
+			label = clip(label, 45)
+		}
+		fb.TextRaw(label, 20, y, col, 1)
+		if tag != "" {
+			fb.TextR(tag, 302, y, ColOrange, 1)
+		}
 		y += 10
 	}
 	// description of whatever is under the cursor: it takes the room the list
