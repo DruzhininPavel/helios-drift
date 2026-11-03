@@ -573,7 +573,8 @@ func chartScreen(fb *render.FB) {
 	fb.Rect(ox, oy, ox+cw, oy+ch, render.RGB(0x16394a))
 	cxp := float64(ox) + float64(cur.X)/256*float64(cw)
 	cyp := float64(oy+ch) - float64(cur.Y)/256*float64(ch)
-	rr := int(28.0 / 256 * float64(cw))
+	// four map units to the light year, and the light years come from the tanks
+	rr := int(g.JumpRange() * 4.0 / 256 * float64(cw))
 	fb.Ellipse(int(cxp), int(cyp), rr, rr, render.RGB(0x3fbcd8))
 	fb.Ellipse(int(cxp), int(cyp), rr-1, rr-1, render.RGB(0x1f5e6e))
 
@@ -2495,7 +2496,7 @@ var helpPages = []helpPage{
 	}, nil},
 	{"TRAVEL", []string{
 		"{CHART} OPENS THE GALACTIC CHART.",
-		"PICK A SYSTEM WITHIN 7 LIGHT YEARS",
+		"PICK A SYSTEM WITHIN YOUR JUMP RANGE",
 		"AND PRESS H. FUEL BURNS WITH THE JUMP.",
 		"",
 		"{JUMP} IS A SHORT JUMP INSIDE THE SYSTEM.",

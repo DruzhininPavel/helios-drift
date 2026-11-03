@@ -5,10 +5,12 @@ package game
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
 	"heliosdrift/galaxy"
+	"heliosdrift/lang"
 	"heliosdrift/models"
 	"heliosdrift/render"
 )
@@ -1246,8 +1248,9 @@ func (g *Game) Hyperspace(target int) bool {
 		g.Message("ALREADY IN SYSTEM", "bad")
 		return false
 	}
-	if d > 7 {
-		g.Message("TARGET OUT OF RANGE (MAX 7.0 LY)", "bad")
+	if d > g.FuelCap() {
+		g.Message(lang.T("TARGET OUT OF RANGE")+" ("+
+			strconv.FormatFloat(g.FuelCap(), 'f', 1, 64)+" LY)", "bad")
 		return false
 	}
 	if cmd.Fuel < d {
@@ -1341,6 +1344,10 @@ func (g *Game) InCombat() bool {
 	}
 	return false
 }
+
+// JumpRange is how far one jump can go: the tanks decide, so a long range tank
+// widens the circle on the chart as well as filling it.
+func (g *Game) JumpRange() float64 { return g.FuelCap() }
 
 // FuelCap is how much the tanks hold: the hull's seven light years, plus the
 // long range tank if one is bolted on.

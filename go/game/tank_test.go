@@ -1,6 +1,10 @@
 package game
 
-import "testing"
+import (
+	"testing"
+
+	"heliosdrift/galaxy"
+)
 
 // The long range tank has to change the number the tanks hold, or it is a
 // five thousand credit line in the shop that does nothing.
@@ -47,5 +51,40 @@ func TestGalacticDriveFromTheChart(t *testing.T) {
 	}
 	if g.GalacticJump() {
 		t.Fatal("a spent drive jumped again")
+	}
+}
+
+// A long range tank widens the jump range, not only the number of jumps: the
+// chart draws its circle from the same number the hyperspace check uses.
+func TestTankWidensTheJumpRange(t *testing.T) {
+	g := New()
+	g.NewGame("RANGE")
+	if g.JumpRange() != 7 {
+		t.Fatalf("range %.1f without a tank", g.JumpRange())
+	}
+	g.Cmd.Equip["fueltank"] = true
+	if g.JumpRange() != 10 {
+		t.Fatalf("range %.1f with a tank, want 10", g.JumpRange())
+	}
+	// an eight light year hop is out of reach without the tank and fine with it
+	gal := galaxy.Get(g.Cmd.Galaxy)
+	g.Cmd.Fuel = 10
+	g.Cmd.Equip["fueltank"] = false
+	far := -1
+	for _, s := range gal.Systems {
+		if d := galaxy.Distance(gal.Systems[g.Cmd.System], s); d > 7.5 && d <= 10 {
+			far = s.ID
+			break
+		}
+	}
+	if far < 0 {
+		t.Skip("no system between eight and ten light years in this galaxy")
+	}
+	if g.Hyperspace(far) {
+		t.Fatal("jumped eight light years on a standard tank")
+	}
+	g.Cmd.Equip["fueltank"] = true
+	if !g.Hyperspace(far) {
+		t.Fatal("the long range tank did not reach a system eight light years out")
 	}
 }
