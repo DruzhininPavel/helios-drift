@@ -739,6 +739,10 @@ func (g *Game) BuyEquipment(id string) {
 	cmd.Cash -= float64(item.Price)
 	g.Note(LogEquip, item.Name, 1, -float64(item.Price))
 	g.Message("PURCHASED: "+item.Name, "good")
+	if item.ID == "galdrive" {
+		// a five thousand credit button with no label: say where it is
+		g.Message(lang.T("PRESS G IN FLIGHT TO USE IT"), "info")
+	}
 }
 
 // NewGame starts a fresh commander docked at the first system.

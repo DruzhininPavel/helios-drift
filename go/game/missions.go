@@ -261,6 +261,7 @@ func (g *Game) missionDock() {
 func (g *Game) GalacticJump() bool {
 	// the chart is where a pilot looks for a jump, so it works from there too
 	if g.State != "flight" && g.Overlay != "chart" {
+		g.Message(lang.T("GALACTIC JUMP ONLY IN FLIGHT"), "bad")
 		return false
 	}
 	if !g.Cmd.Equip["galdrive"] {

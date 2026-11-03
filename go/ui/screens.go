@@ -560,6 +560,10 @@ func chartScreen(fb *render.FB) {
 	g := game.G
 	cmd := g.Cmd
 	Hint = "ARROWS SELECT SYSTEM   H HYPERSPACE   ESC BACK"
+	if cmd.Equip["galdrive"] {
+		// the drive is one use and easy to miss in a shop list: say it here
+		Hint = "ARROWS SELECT   H HYPERSPACE   G GALACTIC   ESC"
+	}
 	gal := galaxy.Get(cmd.Galaxy)
 	cur := gal.Systems[cmd.System]
 	selIdx := S.ChartCursor
@@ -2507,7 +2511,9 @@ var helpPages = []helpPage{
 		"{JETTISON} DUMPS A TONNE OUT OF THE AIRLOCK.",
 		"",
 		"{GALACTIC} CROSSES TO THE NEXT GALAXY: ONE WAY,",
-		"AND YOU NEED A GALACTIC HYPERDRIVE.",
+		"AND YOU NEED A GALACTIC HYPERDRIVE. PRESS IT",
+		"IN FLIGHT OR ON THE CHART. THE DRIVE BURNS",
+		"OUT WITH THE JUMP: ONE JUMP PER DRIVE.",
 		"",
 		"F BUYS FUEL AT ANY STATION.",
 		"",
