@@ -4,6 +4,12 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"GALACTIC HYPERSPACE":                   "ГАЛАКТИЧЕСКИЙ ГИПЕРПРЫЖОК",
+	"DRIVE SPENT":                           "ПРИВОД СГОРЕЛ",
+	"NO GALACTIC HYPERDRIVE":                "НЕТ ГАЛАКТИЧЕСКОГО ПРИВОДА",
+	"LONG RANGE TANK":                       "ДАЛЬНИЙ БАК",
+	"GALACTIC HYPERSPACE - GALAXY ":         "ГАЛАКТИЧЕСКИЙ ГИПЕРПРЫЖОК - ГАЛАКТИКА ",
+	", DRIVE SPENT":                         ", ПРИВОД СГОРЕЛ",
 	"DIARY":                                 "\u0414\u041d\u0415\u0412\u041d\u0418\u041a",
 	"NEW":                                   "\u041d\u041e\u0412\u041e\u0415",
 	"NOTHING WRITTEN YET":                   "\u041f\u041e\u041a\u0410 \u041d\u0418\u0427\u0415\u0413\u041e \u041d\u0415 \u0417\u0410\u041f\u0418\u0421\u0410\u041d\u041e",
@@ -852,8 +858,6 @@ var ru = map[string]string{
 	"DOCUMENTS DELIVERED":                     "ДОКУМЕНТЫ ДОСТАВЛЕНЫ",
 	"CONTRACT ACCEPTED - HUNT THE SHRIKE":     "КОНТРАКТ ПРИНЯТ - ОХОТА НА ШРАЙКА",
 	"YOU NEED A GALACTIC HYPERDRIVE FIRST":    "СНАЧАЛА НУЖЕН ГАЛАКТИЧЕСКИЙ ГИПЕРДРАЙВ",
-	"NO GALACTIC HYPERDRIVE":                  "НЕТ ГАЛАКТИЧЕСКОГО ГИПЕРДРАЙВА",
-	"GALACTIC HYPERSPACE":                     "ГАЛАКТИЧЕСКИЙ ПРЫЖОК",
 	"NO CONTRACT ON OFFER":                    "КОНТРАКТОВ НЕТ",
 	"ESCAPE CAPSULE JETTISONED":               "КАПСУЛА СБРОШЕНА",
 	"JUMP TO THE SYSTEM AND DESTROY IT":       "ПРЫГНИТЕ В СИСТЕМУ И УНИЧТОЖЬТЕ ЕГО",
@@ -1074,6 +1078,5 @@ var ru = map[string]string{
 	"DESTROYED BY A MISSILE":              "УНИЧТОЖЕН РАКЕТОЙ",
 	"POLICE SHIP DESTROYED  +50 CR BOUNTY ON YOU": "ПОЛИЦЕЙСКИЙ УНИЧТОЖЕН: +50 КР НАГРАДА",
 	"TRADER DESTROYED  LEGAL RECORD WORSENED":     "ТОРГОВЕЦ УНИЧТОЖЕН: СТАТУС ХУЖЕ",
-	"GALACTIC HYPERSPACE - GALAXY ":               "ГАЛАКТИЧЕСКИЙ ПРЫЖОК - ГАЛАКТИКА ",
-	"TECH ":                                       "ТЕХ ",
+	"TECH ": "ТЕХ ",
 }

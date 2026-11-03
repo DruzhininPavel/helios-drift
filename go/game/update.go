@@ -129,8 +129,8 @@ func (g *Game) Update(dt float64) {
 		g.PlayerDeath()
 		return
 	}
-	if cmd.Equip["fuelscoop"] && dSun < w.Sun.Radius*2.2 && cmd.Fuel < FuelMax {
-		cmd.Fuel = math.Min(FuelMax, math.Round((cmd.Fuel+0.35*dt)*100)/100)
+	if cmd.Equip["fuelscoop"] && dSun < w.Sun.Radius*2.2 && cmd.Fuel < g.FuelCap() {
+		cmd.Fuel = math.Min(g.FuelCap(), math.Round((cmd.Fuel+0.35*dt)*100)/100)
 		if randFloat() < dt*0.8 {
 			g.Message("FUEL SCOOPING", "good")
 		}
@@ -665,7 +665,7 @@ func (g *Game) Sell(idx, qty int) {
 
 func (g *Game) Refuel() {
 	cmd := &g.Cmd
-	need := FuelMax - cmd.Fuel
+	need := g.FuelCap() - cmd.Fuel
 	if need <= 0.01 {
 		g.Message("TANKS ALREADY FULL", "bad")
 		return
@@ -684,7 +684,7 @@ func (g *Game) Refuel() {
 		return
 	}
 	cmd.Cash -= float64(cost)
-	cmd.Fuel = FuelMax
+	cmd.Fuel = g.FuelCap()
 	g.Note(LogFuel, "", int(need), -float64(cost))
 	g.Message("REFUELLED FOR "+itoa(cost)+" CR", "good")
 }

@@ -648,7 +648,7 @@ func (t *Trader) stationRound(g *game.Game, frame int) []Event {
 	case 0:
 		ev = append(ev, t.sellAll(g)...)
 		ev = append(ev, t.buyCargo(g)...)
-		if g.Cmd.Fuel < game.FuelMax-0.5 && g.Cmd.Cash >= 20 {
+		if g.Cmd.Fuel < g.FuelCap()-0.5 && g.Cmd.Cash >= 20 {
 			ev = append(ev, Event{Kind: "refuel"})
 		}
 		t.stationPhase = 1

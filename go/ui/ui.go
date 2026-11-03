@@ -898,7 +898,7 @@ func hud(fb *render.FB) {
 	fb.Text("AS", gx, y0+13, ColText, 1)
 	segBar(fb, bx, y0+13, bw, 5, p.ShieldA/shieldMax, "blue", p.ShieldA < 22)
 	fb.Text("FU", gx, y0+21, ColText, 1)
-	segBar(fb, bx, y0+21, bw, 5, cmd.Fuel/game.FuelMax, "green", cmd.Fuel < 0.8)
+	segBar(fb, bx, y0+21, bw, 5, cmd.Fuel/g.FuelCap(), "green", cmd.Fuel < 0.8)
 	fb.Text("EN", gx, y0+29, ColText, 1)
 	segBar(fb, bx, y0+29, bw, 5, p.Energy/maxE, "yellow", p.Energy < 22)
 	fb.Text("HT", gx, y0+37, ColText, 1)

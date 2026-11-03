@@ -114,7 +114,8 @@ func stationMenu(fb *render.FB) {
 		fb.TextR(value, 150, y, col, 1)
 	}
 	row("CASH", money(cmd.Cash)+" CR", 32, ColYellow)
-	row("FUEL", strconv.FormatFloat(cmd.Fuel, 'f', 1, 64)+" LY", 47, ColText)
+	row("FUEL", strconv.FormatFloat(cmd.Fuel, 'f', 1, 64)+"/"+
+		strconv.FormatFloat(g.FuelCap(), 'f', 0, 64)+" LY", 47, ColText)
 	row("HOLD", itoa(game.CargoUsed(cmd))+"/"+itoa(cmd.CargoCap)+" T", 62, ColText)
 	row("MISSILES", itoa(cmd.Missiles), 77, ColText)
 	row("LASER", game.LaserName[cmd.Laser], 92, ColText)
@@ -1093,6 +1094,11 @@ func dockedKey(k string) bool {
 			S.ChartCursor = nearestInDirection(gal, chartCursorID(), k)
 		case "h":
 			if g.Hyperspace(chartCursorID()) {
+				g.Overlay = ""
+			}
+		case "g":
+			// the galactic drive is spent on the chart like a normal jump
+			if g.GalacticJump() {
 				g.Overlay = ""
 			}
 		}

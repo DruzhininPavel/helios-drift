@@ -108,6 +108,7 @@ var EquipmentList = []Equipment{
 	{ID: "largebay", Name: "LARGE CARGO BAY", Price: 400, Tech: 2, Kind: EquipUnique},
 	{ID: "ecm", Name: "E.C.M. SYSTEM", Price: 600, Tech: 3, Kind: EquipUnique},
 	{ID: "fuelscoop", Name: "FUEL SCOOP", Price: 525, Tech: 4, Kind: EquipUnique},
+	{ID: "fueltank", Name: "LONG RANGE TANK", Price: 2500, Tech: 5, Kind: EquipUnique},
 	{ID: "laserpulse", Name: "PULSE LASER", Price: 400, Tech: 2, Kind: EquipLaser, Level: 0},
 	{ID: "laserbeam", Name: "BEAM LASER", Price: 1000, Tech: 5, Kind: EquipLaser, Level: 1},
 	{ID: "lasermilitary", Name: "MILITARY LASER", Price: 6000, Tech: 10, Kind: EquipLaser, Level: 2},

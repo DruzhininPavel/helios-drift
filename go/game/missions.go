@@ -259,11 +259,12 @@ func (g *Game) missionDock() {
 // GalacticJump moves the commander to the next galaxy, consuming the drive the
 // way the original does.
 func (g *Game) GalacticJump() bool {
-	if g.State != "flight" {
+	// the chart is where a pilot looks for a jump, so it works from there too
+	if g.State != "flight" && g.Overlay != "chart" {
 		return false
 	}
 	if !g.Cmd.Equip["galdrive"] {
-		g.Message("NO GALACTIC HYPERDRIVE", "bad")
+		g.Message(lang.T("NO GALACTIC HYPERDRIVE"), "bad")
 		return false
 	}
 	delete(g.Cmd.Equip, "galdrive")
@@ -272,7 +273,10 @@ func (g *Game) GalacticJump() bool {
 	g.Cmd.TargetSystem = tgt
 	g.State = "hyper"
 	g.Hyper = &Hyper{Target: tgt}
-	g.Message("GALACTIC HYPERSPACE - GALAXY "+itoa(g.Cmd.Galaxy+1), "good")
+	// the drive burns out with the jump: say so, or the pilot presses G again
+	// and concludes the thing never worked
+	g.Message(lang.T("GALACTIC HYPERSPACE")+" - "+lang.T("GALAXY")+" "+
+		itoa(g.Cmd.Galaxy+1)+", "+lang.T("DRIVE SPENT"), "good")
 	g.Emit("hyper")
 	return true
 }

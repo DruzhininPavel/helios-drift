@@ -37,7 +37,7 @@ func check(g *game.Game, frame int) *Violation {
 	if c.Cash < 0 {
 		return bad("negative cash", ftoa(c.Cash))
 	}
-	if c.Fuel < -0.001 || c.Fuel > game.FuelMax+0.001 {
+	if c.Fuel < -0.001 || c.Fuel > g.FuelCap()+0.001 {
 		return bad("fuel out of range", ftoa(c.Fuel))
 	}
 	if game.CargoUsed(*c) > c.CargoCap {

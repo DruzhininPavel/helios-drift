@@ -22,13 +22,15 @@ const (
 	RollRate  = 2.55
 	// YawRate is deliberately slower than pitch: yaw is a steering aid added
 	// for Advanced mode, not the main way to turn the ship.
-	YawRate     = 1.35
-	MaxEnergy   = 100
-	MaxShield   = 100
-	CargoBase   = 20
-	FuelMax     = 7.0
-	MissilesMax = 4
-	RadarRange  = 26000
+	YawRate   = 1.35
+	MaxEnergy = 100
+	MaxShield = 100
+	CargoBase = 20
+	FuelMax   = 7.0
+	// FuelTankBonus is what the long range tank adds to the tanks.
+	FuelTankBonus = 3.0
+	MissilesMax   = 4
+	RadarRange    = 26000
 )
 
 var StationSize = models.StationSize
@@ -1338,6 +1340,15 @@ func (g *Game) InCombat() bool {
 		}
 	}
 	return false
+}
+
+// FuelCap is how much the tanks hold: the hull's seven light years, plus the
+// long range tank if one is bolted on.
+func (g *Game) FuelCap() float64 {
+	if g.Cmd.Equip["fueltank"] {
+		return FuelMax + FuelTankBonus
+	}
+	return FuelMax
 }
 
 // DockRange is how close the pilot has to be before the docking computer will
