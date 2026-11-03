@@ -65,8 +65,6 @@ func docked(fb *render.FB) {
 		contractsScreen(fb)
 	case "log":
 		logScreen(fb)
-	case "diary":
-		diaryScreen(fb)
 	case "closing":
 		closingScreen(fb)
 	case "ending":
@@ -470,14 +468,18 @@ func equipScreen(fb *render.FB) {
 		rw := rows[r]
 		y := 30 + (r-top)*lineH
 		if rw.item < 0 {
-			fb.Text(lang.T(rw.head), 12, y, render.RGB(0x3f6f8a), 1)
+			// a shelf, not a row: a band and a colour of its own, or it reads
+			// like an entry that failed to draw
+			fb.FillRect(10, y-4, 306, y+7, render.RGB(0x142a3a))
+			fb.Text(lang.T(rw.head), 14, y, ColYellow, 1)
+			fb.TextR(lang.T("SECTION"), 302, y, render.RGB(0x3f6f8a), 1)
 			continue
 		}
 		it := items[rw.item]
 		sel := S.Equip == rw.item
 		if sel {
-			fb.FillRect(8, y-3, 308, y+8, render.RGB(0x12384f))
-			fb.FillRect(8, y-3, 10, y+8, ColYellow)
+			fb.FillRect(12, y-3, 308, y+8, render.RGB(0x12384f))
+			fb.FillRect(12, y-3, 14, y+8, ColYellow)
 		}
 		blocked := g.EquipBlocked(it.ID)
 		owned := blocked == "ALREADY FITTED" && (g.EquipFitted(it.ID) ||
@@ -503,7 +505,7 @@ func equipScreen(fb *render.FB) {
 		if limit < 6 {
 			limit = 6
 		}
-		fb.Text(clip(name, limit), 14, y, c, 1)
+		fb.Text(clip(name, limit), 18, y, c, 1)
 		if owned {
 			tx, ty := 300, y
 			fb.FillRect(tx, ty+4, tx+1, ty+5, ColGreen)
@@ -999,9 +1001,6 @@ func dockedKey(k string) bool {
 	}
 	if g.Screen == "closing" {
 		return closingKey(k)
-	}
-	if g.Screen == "diary" {
-		return diaryKey(k)
 	}
 	if g.Screen == "log" {
 		return logKey(k)
@@ -2701,7 +2700,10 @@ func helpKey(k string) bool {
 // ---------------------------------------------------------------- log
 
 // logFilters are the tabs of the log screen, in order.
-var logFilters = []string{"ALL", "TRADE", "FIGHT", "JOBS", "TRAVEL"}
+var logFilters = []string{"ALL", "TRADE", "FIGHT", "JOBS", "TRAVEL", "DIARY"}
+
+// logDiaryTab is the index of the diary tab in logFilters.
+func logDiaryTab() int { return len(logFilters) - 1 }
 
 // logLine turns an entry into the sentence the player reads. The words are
 // translated one by one and the data (names, numbers) is left alone, so the
@@ -2784,15 +2786,21 @@ func logScreen(fb *render.FB) {
 			fb.FillRect(x-2, 24, x+render.TextWidth(name, 1)+2, 31, render.RGB(0x12384f))
 		}
 		fb.Text(name, x, 25, col, 1)
-		x += render.TextWidth(name, 1) + 8
+		x += render.TextWidth(name, 1) + 6
+	}
+	// the diary is one of the tabs: a page of the same book, not a screen behind
+	// a key nobody presses
+	if S.LogFilter == logDiaryTab() {
+		logDiaryPanel(fb)
+		return
 	}
 	ents := logVisible()
 	if len(ents) == 0 {
 		fb.Text(lang.T("THE LOG IS EMPTY"), 14, 44, ColText, 1)
 		fb.Text(lang.T("EVERY TRADE, KILL AND JUMP IS WRITTEN HERE"), 14, 56, ColDim, 1)
-		Hint = "LEFT/RIGHT FILTER   D DIARY   ESC BACK"
+		Hint = "LEFT/RIGHT FILTER   ESC BACK"
 		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
-			Hint = "LEFT/RIGHT FILTER   D DIARY   L NOTICE   ESC BACK"
+			Hint = "LEFT/RIGHT FILTER   L NOTICE   ESC BACK"
 		}
 		return
 	}
@@ -2856,11 +2864,9 @@ func logScreen(fb *render.FB) {
 		}
 		y += 11
 	}
-	// the diary lives behind this screen: the hint has to say so, or nobody
-	// finds it
-	Hint = "LEFT/RIGHT FILTER   D DIARY   ESC BACK"
+	Hint = "LEFT/RIGHT FILTER   ESC BACK"
 	if len(ents) > 13 {
-		Hint = "UP/DOWN SCROLL   D DIARY   LEFT/RIGHT FILTER"
+		Hint = "UP/DOWN SCROLL   LEFT/RIGHT FILTER   ESC BACK"
 	}
 }
 
@@ -2972,17 +2978,145 @@ func endingKey(k string) bool {
 	return true
 }
 
+// logDiaryPanel is the diary as it appears inside the log screen: the list of
+// pages, or the page itself.
+func logDiaryPanel(fb *render.FB) {
+	g := game.G
+	entries := g.DiaryAvailable()
+	if len(entries) == 0 {
+		fb.Text(lang.T("NOTHING WRITTEN YET"), 14, 44, ColText, 1)
+		fb.Text(lang.T("THE STORY WRITES ITSELF AS YOU FLY IT"), 14, 58, ColDim, 1)
+		Hint = "LEFT/RIGHT FILTER   ESC BACK"
+		return
+	}
+	if S.Diary >= len(entries) {
+		S.Diary = len(entries) - 1
+	}
+	if S.Diary < 0 {
+		S.Diary = 0
+	}
+	if !S.DiaryOpen {
+		top := S.Diary - 9
+		if top < 0 {
+			top = 0
+		}
+		for i := top; i < len(entries) && i < top+10; i++ {
+			e := entries[i]
+			y := 42 + (i-top)*11
+			col := ColText
+			if i == S.Diary {
+				fb.FillRect(10, y-2, 306, y+8, render.RGB(0x12384f))
+				col = ColYellow
+			}
+			fb.Text(itoa(i+1)+".", 14, y, ColDim, 1)
+			fb.Text(clip(lang.T(e.Title), 40), 28, y, col, 1)
+			if !g.DiaryReadIDs()[e.ID] {
+				fb.TextR(lang.T("NEW"), 300, y, ColGreen, 1)
+			}
+		}
+		Hint = "UP/DOWN SELECT   ENTER READ   ESC BACK"
+		return
+	}
+	e := entries[S.Diary]
+	fb.Text(clip(lang.T(e.Title), 44), 14, 38, ColYellow, 1)
+	var rows []string
+	for _, ln := range e.Lines {
+		if ln == "" {
+			rows = append(rows, "")
+			continue
+		}
+		rows = append(rows, wrapText(lang.T(ln), 46)...)
+	}
+	const lineH = 10
+	visible := (196 - 52) / lineH
+	maxTop := len(rows) - visible
+	if maxTop < 0 {
+		maxTop = 0
+	}
+	if S.DiaryScroll > maxTop {
+		S.DiaryScroll = maxTop
+	}
+	if S.DiaryScroll < 0 {
+		S.DiaryScroll = 0
+	}
+	y := 52
+	for i := S.DiaryScroll; i < len(rows) && i < S.DiaryScroll+visible; i++ {
+		if rows[i] == "" {
+			y += 5
+			continue
+		}
+		fb.TextRaw(rows[i], 14, y, ColText, 1)
+		y += lineH
+	}
+	if maxTop > 0 {
+		fb.TextR(itoa(S.DiaryScroll+1)+"/"+itoa(maxTop+1), 300, 38, ColDim, 1)
+	}
+	Hint = "ESC BACK"
+	if maxTop > 0 {
+		Hint = "UP/DOWN SCROLL   ESC BACK"
+	}
+}
+
 func logKey(k string) bool {
 	g := game.G
+
+	// tabs first: they work from the diary as much as from the log
+	if k == "ArrowLeft" || k == "ArrowRight" {
+		if k == "ArrowLeft" {
+			S.LogFilter = (S.LogFilter + len(logFilters) - 1) % len(logFilters)
+		} else {
+			S.LogFilter = (S.LogFilter + 1) % len(logFilters)
+		}
+		S.Log = 0
+		S.DiaryOpen = false
+		S.DiaryScroll = 0
+		return true
+	}
+
+	if S.LogFilter == logDiaryTab() {
+		entries := g.DiaryAvailable()
+		if !S.DiaryOpen {
+			switch k {
+			case "Escape":
+				g.Screen = "launch"
+			case "ArrowUp":
+				S.Diary--
+				if S.Diary < 0 {
+					S.Diary = 0
+				}
+			case "ArrowDown":
+				S.Diary++
+				if S.Diary > len(entries)-1 {
+					S.Diary = len(entries) - 1
+				}
+			case "Enter", " ":
+				if S.Diary >= 0 && S.Diary < len(entries) {
+					S.DiaryOpen = true
+					S.DiaryScroll = 0
+					g.DiaryMarkRead(entries[S.Diary].ID)
+				}
+			}
+			return true
+		}
+		switch k {
+		case "Escape", "Enter", " ":
+			S.DiaryOpen = false
+		case "ArrowUp":
+			S.DiaryScroll--
+		case "ArrowDown":
+			S.DiaryScroll++
+		case "PageUp":
+			S.DiaryScroll -= 8
+		case "PageDown":
+			S.DiaryScroll += 8
+		}
+		return true
+	}
+
 	n := len(logVisible())
 	switch k {
 	case "Escape":
 		g.Screen = "launch"
-	case "d", "D":
-		g.Screen = "diary"
-		S.Diary = 0
-		S.DiaryOpen = false
-		S.DiaryScroll = 0
 	case "l", "L":
 		// the list is a page of the log, not a menu item: it is not a thing to do
 		if g.Cmd.Flags["HAS_LIST"] || g.Cmd.Flags["READ_LIST"] {
@@ -2999,24 +3133,16 @@ func logKey(k string) bool {
 		if n > 0 && S.Log > n-1 {
 			S.Log = n - 1
 		}
-	case "PageUp", "PageDown":
-		if k == "PageUp" {
-			S.Log -= 13
-		} else {
-			S.Log += 13
-		}
+	case "PageUp":
+		S.Log -= 13
 		if S.Log < 0 {
 			S.Log = 0
 		}
+	case "PageDown":
+		S.Log += 13
 		if n > 0 && S.Log > n-1 {
 			S.Log = n - 1
 		}
-	case "ArrowLeft", "ArrowRight":
-		S.LogFilter = (S.LogFilter + len(logFilters) + 1) % len(logFilters)
-		if k == "ArrowLeft" {
-			S.LogFilter = (S.LogFilter + len(logFilters) - 2) % len(logFilters)
-		}
-		S.Log = 0
 	}
 	return true
 }
@@ -3233,131 +3359,4 @@ func marketRows() int {
 		n++
 	}
 	return n
-}
-
-// ---------------------------------------------------------------- diary
-
-// diaryScreen is the story as the pilot wrote it down: a list of pages, and the
-// page itself when one is opened.
-func diaryScreen(fb *render.FB) {
-	g := game.G
-	entries := g.DiaryAvailable()
-	plate(fb, 6, 16, 310, 188, lang.T("DIARY"))
-	if len(entries) == 0 {
-		fb.Text(lang.T("NOTHING WRITTEN YET"), 14, 40, ColText, 1)
-		fb.Text(lang.T("THE STORY WRITES ITSELF AS YOU FLY IT"), 14, 54, ColDim, 1)
-		Hint = "ESC BACK"
-		return
-	}
-	if S.Diary >= len(entries) {
-		S.Diary = len(entries) - 1
-	}
-	if S.Diary < 0 {
-		S.Diary = 0
-	}
-
-	if !S.DiaryOpen {
-		// the list: page numbers, headings, and a mark on what is new
-		top := S.Diary - 7
-		if top < 0 {
-			top = 0
-		}
-		for i := top; i < len(entries) && i < top+8; i++ {
-			e := entries[i]
-			y := 30 + (i-top)*15
-			col := ColText
-			if i == S.Diary {
-				fb.FillRect(10, y-3, 308, y+9, render.RGB(0x12384f))
-				col = ColYellow
-			}
-			fb.Text(itoa(i+1)+".", 14, y, ColDim, 1)
-			fb.Text(clip(lang.T(e.Title), 40), 28, y, col, 1)
-			if !g.DiaryReadIDs()[e.ID] {
-				fb.TextR(lang.T("NEW"), 300, y, ColGreen, 1)
-			}
-		}
-		Hint = "UP/DOWN   ENTER READ   ESC BACK"
-		return
-	}
-
-	e := entries[S.Diary]
-	fb.Text(clip(lang.T(e.Title), 44), 14, 24, ColYellow, 1)
-	fb.HLine(12, 306, 33, ColFrame)
-	var rows []string
-	for _, ln := range e.Lines {
-		if ln == "" {
-			rows = append(rows, "")
-			continue
-		}
-		rows = append(rows, wrapText(lang.T(ln), 46)...)
-	}
-	const lineH = 10
-	visible := (196 - 40) / lineH
-	maxTop := len(rows) - visible
-	if maxTop < 0 {
-		maxTop = 0
-	}
-	if S.DiaryScroll > maxTop {
-		S.DiaryScroll = maxTop
-	}
-	if S.DiaryScroll < 0 {
-		S.DiaryScroll = 0
-	}
-	y := 40
-	for i := S.DiaryScroll; i < len(rows) && i < S.DiaryScroll+visible; i++ {
-		if rows[i] == "" {
-			y += 5
-			continue
-		}
-		fb.TextRaw(rows[i], 14, y, ColText, 1)
-		y += lineH
-	}
-	if maxTop > 0 {
-		fb.TextR(itoa(S.DiaryScroll+1)+"/"+itoa(maxTop+1), 300, 24, ColDim, 1)
-	}
-	Hint = "ESC BACK"
-	if maxTop > 0 {
-		Hint = "UP/DOWN SCROLL   ESC BACK"
-	}
-}
-
-func diaryKey(k string) bool {
-	g := game.G
-	entries := g.DiaryAvailable()
-	if !S.DiaryOpen {
-		switch k {
-		case "Escape":
-			g.Screen = "log"
-		case "ArrowUp":
-			S.Diary--
-			if S.Diary < 0 {
-				S.Diary = 0
-			}
-		case "ArrowDown":
-			S.Diary++
-			if S.Diary > len(entries)-1 {
-				S.Diary = len(entries) - 1
-			}
-		case "Enter", " ":
-			if S.Diary >= 0 && S.Diary < len(entries) {
-				S.DiaryOpen = true
-				S.DiaryScroll = 0
-				g.DiaryMarkRead(entries[S.Diary].ID)
-			}
-		}
-		return true
-	}
-	switch k {
-	case "Escape", "Enter", " ":
-		S.DiaryOpen = false
-	case "ArrowUp":
-		S.DiaryScroll--
-	case "ArrowDown":
-		S.DiaryScroll++
-	case "PageUp":
-		S.DiaryScroll -= 8
-	case "PageDown":
-		S.DiaryScroll += 8
-	}
-	return true
 }

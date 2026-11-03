@@ -18,26 +18,32 @@ func TestDiaryIsReachableFromTheLog(t *testing.T) {
 	g.NewGame("D")
 	g.State = "docked"
 	g.Screen = "log"
-	Draw(render.NewFB(320, 224), 1.0/60.0)
-	if !containsText(lang.TranslateLine(Hint), "ДНЕВНИК") {
-		t.Fatalf("hint %q does not mention the diary", lang.TranslateLine(Hint))
-	}
-	// a full log takes the other branch: still has to mention it
 	for i := 0; i < 40; i++ {
 		g.Note("trade", "ALLOYS", 1, 100)
 	}
-	Draw(render.NewFB(320, 224), 1.0/60.0)
-	if !containsText(lang.TranslateLine(Hint), "ДНЕВНИК") {
-		t.Fatalf("hint %q on a full log does not mention the diary", lang.TranslateLine(Hint))
+	// the diary is the last tab: arrow over to it
+	for i := 0; i < len(logFilters)-1; i++ {
+		Key("ArrowRight")
 	}
-	Key("d")
-	if g.Screen != "diary" {
-		t.Fatalf("D opened %q", g.Screen)
+	if S.LogFilter != logDiaryTab() {
+		t.Fatalf("filter %d after arrowing right, want the diary tab", S.LogFilter)
+	}
+	Draw(render.NewFB(320, 224), 1.0/60.0)
+	if !containsText(lang.TranslateLine(Hint), "ENTER") {
+		t.Fatalf("the diary tab has no hint: %q", Hint)
+	}
+	Key("Enter")
+	if !S.DiaryOpen {
+		t.Fatal("enter did not open a page")
 	}
 	Draw(render.NewFB(320, 224), 1.0/60.0)
 	Key("Escape")
-	if g.Screen != "log" {
-		t.Fatalf("escape left the diary for %q", g.Screen)
+	if S.DiaryOpen {
+		t.Fatal("escape did not close the page")
+	}
+	Key("Escape")
+	if g.Screen != "launch" {
+		t.Fatalf("escape left the log for %q", g.Screen)
 	}
 }
 
@@ -51,4 +57,18 @@ func containsText(hay, needle string) bool {
 		}
 	}
 	return false
+}
+
+// The tab row grew a sixth tab: it still has to fit inside the plate.
+func TestLogTabsFit(t *testing.T) {
+	lang.Set("ru")
+	defer lang.Set("en")
+	x := 12
+	for _, name := range logFilters {
+		w := render.TextWidth(lang.TranslateLine(name), 1)
+		x += w + 6
+	}
+	if x > 310 {
+		t.Fatalf("the tab row ends at %d, the plate at 310", x)
+	}
 }

@@ -4,6 +4,7 @@ package lang
 // translator first tries the whole string, then each word, so composed
 // messages ("ARRIVED: LAVE") still translate.
 var ru = map[string]string{
+	"SECTION": "\u0420\u0410\u0417\u0414\u0415\u041b",
 	"UP/DOWN SCROLL   D DIARY   LEFT/RIGHT FILTER":      "\u0412\u0412\u0415\u0420\u0425/\u0412\u041d\u0418\u0417 \u041f\u0420\u041e\u041a\u0420\u0423\u0422\u041a\u0410  D \u0414\u041d\u0415\u0412\u041d\u0418\u041a  \u0424\u0418\u041b\u042c\u0422\u0420",
 	"LEFT/RIGHT FILTER   D DIARY   ESC BACK":            "\u0412\u041b\u0415\u0412\u041e/\u0412\u041f\u0420\u0410\u0412\u041e \u0424\u0418\u041b\u042c\u0422\u0420  D \u0414\u041d\u0415\u0412\u041d\u0418\u041a  ESC \u041d\u0410\u0417\u0410\u0414",
 	"LEFT/RIGHT FILTER   D DIARY   L NOTICE   ESC BACK": "\u0424\u0418\u041b\u042c\u0422\u0420  D \u0414\u041d\u0415\u0412\u041d\u0418\u041a  L \u0421\u041f\u0418\u0421\u041e\u041a  ESC \u041d\u0410\u0417\u0410\u0414",
