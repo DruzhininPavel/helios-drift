@@ -575,8 +575,12 @@ func chartScreen(fb *render.FB) {
 	cyp := float64(oy+ch) - float64(cur.Y)/256*float64(ch)
 	// four map units to the light year, and the light years come from the tanks
 	rr := int(g.JumpRange() * 4.0 / 256 * float64(cw))
+	// the ring is clipped to the map: a bigger tank draws a bigger circle, and a
+	// bigger circle centred near the edge used to spill over the panel
+	fb.SetClip(ox+1, oy+1, ox+cw-1, oy+ch-1)
 	fb.Ellipse(int(cxp), int(cyp), rr, rr, render.RGB(0x3fbcd8))
 	fb.Ellipse(int(cxp), int(cyp), rr-1, rr-1, render.RGB(0x1f5e6e))
+	fb.ResetClip()
 
 	for _, s := range gal.Systems {
 		x := ox + s.X*cw/256
