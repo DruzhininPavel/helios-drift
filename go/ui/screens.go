@@ -416,6 +416,22 @@ func equipGroup(id string) string {
 	return "SYSTEMS"
 }
 
+// equipList is the catalogue in the order the screen draws it: grouped by shelf,
+// catalogue order inside a shelf. The cursor walks this list, so moving down goes
+// to the next row on screen instead of jumping between sections.
+func equipList(g *game.Game) []galaxy.Equipment {
+	all := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
+	var out []galaxy.Equipment
+	for _, group := range []string{"WEAPONS", "SHIELDS", "HULL AND DRIVE", "SYSTEMS"} {
+		for _, it := range all {
+			if equipGroup(it.ID) == group {
+				out = append(out, it)
+			}
+		}
+	}
+	return out
+}
+
 func equipScreen(fb *render.FB) {
 	g := game.G
 	cmd := g.Cmd
@@ -425,7 +441,7 @@ func equipScreen(fb *render.FB) {
 		tech = g.World.Sys.Tech
 	}
 	plate(fb, 4, 18, 312, 190, "EQUIP SHIP  -  TECH LEVEL "+itoa(tech))
-	items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
+	items := equipList(g)
 
 	type row struct {
 		head string
@@ -1100,7 +1116,7 @@ func dockedKey(k string) bool {
 		}
 		return true
 	case "equip":
-		items := galaxy.AvailableEquipment(g.World.Sys, g.Classic())
+		items := equipList(g)
 		if len(items) == 0 {
 			return true
 		}
