@@ -2856,7 +2856,12 @@ func logScreen(fb *render.FB) {
 		}
 		y += 11
 	}
-	Hint = "UP/DOWN SCROLL   LEFT/RIGHT FILTER   ESC BACK"
+	// the diary lives behind this screen: the hint has to say so, or nobody
+	// finds it
+	Hint = "LEFT/RIGHT FILTER   D DIARY   ESC BACK"
+	if len(ents) > 13 {
+		Hint = "UP/DOWN SCROLL   D DIARY   LEFT/RIGHT FILTER"
+	}
 }
 
 // closingScreen is the notice the courier sold or gave: eighteen stations and
